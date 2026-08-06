@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
+    <title>Moneylog</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="moneylog" />
+    <meta property="og:title" content="moneylog" />
+    <meta property="og:description" content="나만의 가계부" />
+    <meta property="og:image" content="https://moneylog-3c3d6.web.app/og-image.png" />
+    <meta property="og:url" content="https://moneylog-3c3d6.web.app" />
+    <meta property="og:type" content="website" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Source+Code+Pro:wght@700&display=swap">
+  </head>
+  <body>
+    <script>
+      (function() {
+        var mq = window.matchMedia('(prefers-color-scheme: dark)');
+        document.documentElement.setAttribute('data-theme', mq.matches ? 'dark' : 'light');
+        mq.addEventListener('change', function(e) {
+          document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+        });
+      })();
+    </script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
