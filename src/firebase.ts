@@ -218,17 +218,17 @@ export const exportAllData = async (uid: string) => {
   return {
     exportedAt: new Date().toISOString(),
     uid,
-    expenses: expensesSnap.docs.map(d => ({ id: d.id, ...d.data() })),
-    fixedMonthly: fixedMonthlySnap.docs.map(d => ({ id: d.id, ...d.data() })),
-    savingsMonthly: savingsMonthlySnap.docs.map(d => ({ id: d.id, ...d.data() })),
-    monthlyIncome: incomeSnap.docs.map(d => ({ id: d.id, ...d.data() })),
-    assetAccounts: assetAccountsSnap.docs.map(d => ({ id: d.id, ...d.data() })),
-    assetAccountsMonthly: assetAccountsMonthlySnap.docs.map(d => ({ id: d.id, ...d.data() })),
-    assetSnapshots: assetSnapshotsSnap.docs.map(d => ({ id: d.id, ...d.data() })),
-    paymentMethods: paymentMethodsSnap.exists() ? paymentMethodsSnap.data() : null,
-    categories: categoriesSnap.exists() ? categoriesSnap.data() : null,
-    assetTypes: assetTypesSnap.exists() ? assetTypesSnap.data() : null,
-    stockTrades: stockTradesSnap.docs.map(d => ({ id: d.id, ...d.data() })),
+    expenses: expensesSnap.docs.map(d => ({ id: d.id, ...d.data() } as Expense)),
+    fixedMonthly: fixedMonthlySnap.docs.map(d => ({ id: d.id, ...d.data() } as { id: string; uid: string; yearMonth: string; items: FixedItem[] })),
+    savingsMonthly: savingsMonthlySnap.docs.map(d => ({ id: d.id, ...d.data() } as { id: string; uid: string; yearMonth: string; items: SavingsItem[] })),
+    monthlyIncome: incomeSnap.docs.map(d => ({ id: d.id, ...d.data() } as { id: string } & MonthlyIncome)),
+    assetAccounts: assetAccountsSnap.docs.map(d => ({ id: d.id, ...d.data() } as AssetAccount)),
+    assetAccountsMonthly: assetAccountsMonthlySnap.docs.map(d => ({ id: d.id, ...d.data() } as { id: string; uid: string; yearMonth: string; items: AssetAccount[] })),
+    assetSnapshots: assetSnapshotsSnap.docs.map(d => ({ id: d.id, ...d.data() } as { id: string } & AssetSnapshot)),
+    paymentMethods: paymentMethodsSnap.exists() ? (paymentMethodsSnap.data() as { methods: PaymentMethodDef[] }) : null,
+    categories: categoriesSnap.exists() ? (categoriesSnap.data() as { categories: CategoryDef[] }) : null,
+    assetTypes: assetTypesSnap.exists() ? (assetTypesSnap.data() as { types: AssetTypeDef[] }) : null,
+    stockTrades: stockTradesSnap.docs.map(d => ({ id: d.id, ...d.data() } as StockTrade)),
   }
 }
 

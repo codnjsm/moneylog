@@ -17,7 +17,7 @@ interface Props {
 
 function addMonths(dateStr: string, n: number): { date: string; yearMonth: string } {
   const [y, m, d] = dateStr.split('-').map(Number)
-  let totalMonth = (m - 1) + n
+  const totalMonth = (m - 1) + n
   const newYear = y + Math.floor(totalMonth / 12)
   const newMonth = totalMonth % 12
   const lastDay = new Date(newYear, newMonth + 1, 0).getDate()

@@ -1,22 +1,26 @@
 import { useState } from 'react'
 import Modal from '../Modal'
 import type { User } from 'firebase/auth'
+import type { exportAllData } from '../../firebase'
+
+type ExportData = Awaited<ReturnType<typeof exportAllData>>
+type ExpenseRecord = ExportData['expenses'][number]
 
 const won = (n: number) => n.toLocaleString('ko-KR') + '원'
 
-function filterByRange(data: any, from: string, to: string): any {
+function filterByRange(data: ExportData, from: string, to: string): ExportData {
   const inRange = (ym: string) => (!from || ym >= from) && (!to || ym <= to)
   return {
     ...data,
-    expenses: data.expenses?.filter((e: any) => inRange(e.yearMonth)) ?? [],
-    fixedMonthly: data.fixedMonthly?.filter((e: any) => inRange(e.yearMonth)) ?? [],
-    savingsMonthly: data.savingsMonthly?.filter((e: any) => inRange(e.yearMonth)) ?? [],
-    monthlyIncome: data.monthlyIncome?.filter((e: any) => inRange(e.yearMonth)) ?? [],
-    assetSnapshots: data.assetSnapshots?.filter((e: any) => inRange(e.yearMonth)) ?? [],
+    expenses: data.expenses?.filter((e) => inRange(e.yearMonth)) ?? [],
+    fixedMonthly: data.fixedMonthly?.filter((e) => inRange(e.yearMonth)) ?? [],
+    savingsMonthly: data.savingsMonthly?.filter((e) => inRange(e.yearMonth)) ?? [],
+    monthlyIncome: data.monthlyIncome?.filter((e) => inRange(e.yearMonth)) ?? [],
+    assetSnapshots: data.assetSnapshots?.filter((e) => inRange(e.yearMonth)) ?? [],
   }
 }
 
-function formatAsText(data: any): string {
+function formatAsText(data: ExportData): string {
   const lines: string[] = []
   const catMap: Record<string, string> = {}
   for (const c of data.categories?.categories ?? []) catMap[c.id] = c.label
@@ -30,15 +34,15 @@ function formatAsText(data: any): string {
 
   // 지출/수입
   lines.push('\n\n━━━ 지출 / 수입 내역 ━━━')
-  const byMonth: Record<string, any[]> = {}
+  const byMonth: Record<string, ExpenseRecord[]> = {}
   for (const e of data.expenses ?? []) {
     (byMonth[e.yearMonth] ??= []).push(e)
   }
   for (const ym of Object.keys(byMonth).sort()) {
     lines.push(`\n[${ym}]`)
-    const sorted = byMonth[ym].sort((a: any, b: any) => a.date.localeCompare(b.date))
-    const incomes = sorted.filter((e: any) => e.type === 'income')
-    const expenses = sorted.filter((e: any) => e.type !== 'income')
+    const sorted = byMonth[ym].sort((a, b) => a.date.localeCompare(b.date))
+    const incomes = sorted.filter((e) => e.type === 'income')
+    const expenses = sorted.filter((e) => e.type !== 'income')
     if (incomes.length) {
       lines.push('  ▸ 수입')
       for (const e of incomes)
@@ -57,7 +61,7 @@ function formatAsText(data: any): string {
   // 고정 지출
   if (data.fixedMonthly?.length) {
     lines.push('\n\n━━━ 고정 지출 내역 ━━━')
-    for (const fm of [...data.fixedMonthly].sort((a: any, b: any) => a.yearMonth.localeCompare(b.yearMonth))) {
+    for (const fm of [...data.fixedMonthly].sort((a, b) => a.yearMonth.localeCompare(b.yearMonth))) {
       lines.push(`\n[${fm.yearMonth}]`)
       for (const item of fm.items ?? [])
         lines.push(`  ${item.label}: ${won(item.amount)}${item.paymentDay ? ` (매월 ${item.paymentDay}일)` : ''}`)
@@ -67,7 +71,7 @@ function formatAsText(data: any): string {
   // 적금
   if (data.savingsMonthly?.length) {
     lines.push('\n\n━━━ 적금 / 보험 내역 ━━━')
-    for (const sm of [...data.savingsMonthly].sort((a: any, b: any) => a.yearMonth.localeCompare(b.yearMonth))) {
+    for (const sm of [...data.savingsMonthly].sort((a, b) => a.yearMonth.localeCompare(b.yearMonth))) {
       lines.push(`\n[${sm.yearMonth}]`)
       for (const item of sm.items ?? []) {
         const day = item.paymentDay ? ` (매월 ${item.paymentDay}일)` : ''
@@ -80,7 +84,7 @@ function formatAsText(data: any): string {
   // 자산 스냅샷
   if (data.assetSnapshots?.length) {
     lines.push('\n\n━━━ 자산 현황 ━━━')
-    for (const snap of [...data.assetSnapshots].sort((a: any, b: any) => a.yearMonth.localeCompare(b.yearMonth))) {
+    for (const snap of [...data.assetSnapshots].sort((a, b) => a.yearMonth.localeCompare(b.yearMonth))) {
       const total = Object.values(snap.amounts as Record<string, number>).reduce((s, v) => s + v, 0)
       lines.push(`\n[${snap.yearMonth}] 기준일: ${snap.asOf}  /  합계: ${won(total)}`)
       for (const [id, amt] of Object.entries(snap.amounts as Record<string, number>))
@@ -126,7 +130,7 @@ export default function AccountModal({ user, mode, householdCode, onSwitchMode, 
   const handleExport = async () => {
     setExporting(true)
     try {
-      const raw = await onExport() as any
+      const raw = await onExport() as ExportData
       const data = filterByRange(raw, fromMonth, toMonth)
       const text = formatAsText(data)
       const blob = new Blob([text], { type: 'text/plain;charset=utf-8' })
