@@ -14,7 +14,7 @@ export default function FixedListModal({ items, onSave, onClose }: Props) {
   const [rows, setRows] = useState<Row[]>(
     items.length > 0
       ? items.map(i => ({ id: i.id, label: i.label, amount: i.amount.toString(), paymentDay: i.paymentDay?.toString() ?? '' }))
-      : [{ id: `new-${Date.now()}`, label: '', amount: '', paymentDay: '' }]
+      : [{ id: 'new-0', label: '', amount: '', paymentDay: '' }]
   )
 
   const update = (id: string, field: keyof Omit<Row, 'id'>, value: string) =>

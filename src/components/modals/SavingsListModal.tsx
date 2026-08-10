@@ -20,7 +20,7 @@ export default function SavingsListModal({ items, onSave, onClose }: Props) {
           paymentDay: i.paymentDay?.toString() ?? '',
           maturityDate: i.maturityDate ?? '',
         }))
-      : [{ id: `new-${Date.now()}`, label: '', amount: '', paymentDay: '', maturityDate: '' }]
+      : [{ id: 'new-0', label: '', amount: '', paymentDay: '', maturityDate: '' }]
   )
 
   const update = (id: string, field: keyof Omit<Row, 'id'>, value: string) =>
