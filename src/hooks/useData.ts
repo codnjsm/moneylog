@@ -7,7 +7,7 @@ import {
   subscribeExpenses, addExpense, updateExpense, deleteExpense, deleteExpensesByGroupId, subscribeExpensesExist,
   subscribeMonthlyIncome, setMonthlyIncome,
   subscribeStockTrades, addStockTrade as firebaseAddStockTrade, updateStockTrade as firebaseUpdateStockTrade, deleteStockTrade as firebaseDeleteStockTrade,
-  subscribeAssetAccounts, addAssetAccount, updateAssetAccount, deleteAssetAccount,
+  subscribeAssetAccountsMonthly, setAssetAccountsMonthly as firebaseSetAssetAccountsMonthly, getAssetAccountsFallback,
   subscribeAssetSnapshot, setAssetSnapshot as firebaseSetAssetSnapshot,
   subscribePaymentMethods, setPaymentMethods as firebaseSetPaymentMethods,
   subscribeCategories, setCategories as firebaseSetCategories,
@@ -23,7 +23,8 @@ export function useData(uid: string, yearMonth: string) {
   const [nextMonthHasData, setNextMonthHasData] = useState(false)
   const [income, setIncome] = useState<MonthlyIncome | null>(null)
   const [stockTrades, setStockTrades] = useState<StockTrade[]>([])
-  const [assetAccounts, setAssetAccounts] = useState<AssetAccount[]>([])
+  const [assetAccountsMonthly, setAssetAccountsMonthly] = useState<AssetAccount[] | null>(null)
+  const [assetAccountsFallback, setAssetAccountsFallback] = useState<AssetAccount[]>([])
   const [assetSnapshot, setAssetSnapshot] = useState<AssetSnapshot | null>(null)
   const [customMethods, setCustomMethods] = useState<PaymentMethodDef[] | null>(null)
   const [customCategories, setCustomCategories] = useState<CategoryDef[] | null>(null)
@@ -31,11 +32,10 @@ export function useData(uid: string, yearMonth: string) {
 
   useEffect(() => {
     if (!uid) return
-    const u1 = subscribeAssetAccounts(uid, setAssetAccounts)
-    const u2 = subscribePaymentMethods(uid, setCustomMethods)
-    const u3 = subscribeCategories(uid, setCustomCategories)
-    const u4 = subscribeAssetTypes(uid, setCustomAssetTypes)
-    return () => { u1(); u2(); u3(); u4() }
+    const u1 = subscribePaymentMethods(uid, setCustomMethods)
+    const u2 = subscribeCategories(uid, setCustomCategories)
+    const u3 = subscribeAssetTypes(uid, setCustomAssetTypes)
+    return () => { u1(); u2(); u3() }
   }, [uid])
 
   const nextYearMonth = (() => {
@@ -47,6 +47,7 @@ export function useData(uid: string, yearMonth: string) {
     if (!uid) return
     setFixedMonthly(null)
     setSavingsMonthly(null)
+    setAssetAccountsMonthly(null)
     const u1 = subscribeFixedItemsMonthly(uid, yearMonth, setFixedMonthly)
     const u2 = subscribeSavingsItemsMonthly(uid, yearMonth, setSavingsMonthly)
     const u3 = subscribeExpenses(uid, yearMonth, setExpenses)
@@ -54,7 +55,8 @@ export function useData(uid: string, yearMonth: string) {
     const u5 = subscribeAssetSnapshot(uid, yearMonth, setAssetSnapshot)
     const u6 = subscribeExpensesExist(uid, nextYearMonth, setNextMonthHasData)
     const u7 = subscribeStockTrades(uid, yearMonth, setStockTrades)
-    return () => { u1(); u2(); u3(); u4(); u5(); u6(); u7() }
+    const u8 = subscribeAssetAccountsMonthly(uid, yearMonth, setAssetAccountsMonthly)
+    return () => { u1(); u2(); u3(); u4(); u5(); u6(); u7(); u8() }
   }, [uid, yearMonth])
 
   useEffect(() => {
@@ -67,8 +69,14 @@ export function useData(uid: string, yearMonth: string) {
     getSavingsItemsFallback(uid, yearMonth).then(setSavingsFallback)
   }, [uid, yearMonth, savingsMonthly])
 
+  useEffect(() => {
+    if (!uid || assetAccountsMonthly !== null) return
+    getAssetAccountsFallback(uid, yearMonth).then(setAssetAccountsFallback)
+  }, [uid, yearMonth, assetAccountsMonthly])
+
   const fixedItems: FixedItem[] = fixedMonthly ?? fixedFallback
   const savingsItems: SavingsItem[] = savingsMonthly ?? savingsFallback
+  const assetAccounts: AssetAccount[] = assetAccountsMonthly ?? assetAccountsFallback
   const paymentMethods: PaymentMethodDef[] = customMethods ?? DEFAULT_PAYMENT_METHODS
   const categories: CategoryDef[] = customCategories ?? DEFAULT_CATEGORIES
   const assetTypes: AssetTypeDef[] = customAssetTypes ?? DEFAULT_ASSET_TYPES
@@ -135,13 +143,26 @@ export function useData(uid: string, yearMonth: string) {
     },
     addAssetAccount: (data: Omit<AssetAccount, 'id' | 'uid' | 'paymentDay' | 'maturityDate'> & { paymentDay?: number | null; maturityDate?: string | null }) => {
       const { paymentDay, maturityDate, ...rest } = data
-      const clean: Omit<AssetAccount, 'id' | 'uid'> = { ...rest, order: assetAccounts.length }
-      if (paymentDay != null) clean.paymentDay = paymentDay
-      if (maturityDate != null) clean.maturityDate = maturityDate
-      return addAssetAccount(uid, clean)
+      const account: AssetAccount = { ...rest, id: Date.now().toString(), uid, order: assetAccounts.length }
+      if (paymentDay != null) account.paymentDay = paymentDay
+      if (maturityDate != null) account.maturityDate = maturityDate
+      return firebaseSetAssetAccountsMonthly(uid, yearMonth, [...assetAccounts, account]).then(() => account)
     },
-    updateAssetAccount,
-    deleteAssetAccount,
+    updateAssetAccount: (id: string, data: Omit<AssetAccount, 'id' | 'uid' | 'paymentDay' | 'maturityDate'> & { paymentDay?: number | null; maturityDate?: string | null }) => {
+      const { paymentDay, maturityDate, ...rest } = data
+      const updated = assetAccounts.map((a) => {
+        if (a.id !== id) return a
+        const next: AssetAccount = { ...a, ...rest }
+        if (paymentDay === null) delete next.paymentDay
+        else if (paymentDay !== undefined) next.paymentDay = paymentDay
+        if (maturityDate === null) delete next.maturityDate
+        else if (maturityDate !== undefined) next.maturityDate = maturityDate
+        return next
+      })
+      return firebaseSetAssetAccountsMonthly(uid, yearMonth, updated)
+    },
+    deleteAssetAccount: (id: string) =>
+      firebaseSetAssetAccountsMonthly(uid, yearMonth, assetAccounts.filter((a) => a.id !== id)),
     setAssetSnapshot: (amounts: Record<string, number>, asOf: string) => firebaseSetAssetSnapshot(uid, yearMonth, amounts, asOf),
     setPaymentMethods: (methods: PaymentMethodDef[]) => firebaseSetPaymentMethods(uid, methods),
     setCategories: (cats: CategoryDef[]) => firebaseSetCategories(uid, cats),

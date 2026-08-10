@@ -247,8 +247,8 @@ export default function App() {
                 await data.updateAssetAccount(modal.item.id, d)
                 if (amount !== undefined) await data.setAssetSnapshot({ ...existing, [modal.item.id]: amount }, today)
               } else {
-                const ref = await data.addAssetAccount(d)
-                if (amount !== undefined) await data.setAssetSnapshot({ ...existing, [ref.id]: amount }, today)
+                const created = await data.addAssetAccount(d)
+                if (amount !== undefined) await data.setAssetSnapshot({ ...existing, [created.id]: amount }, today)
               }
               closeModal()
             } catch (e) {

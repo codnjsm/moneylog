@@ -2,7 +2,7 @@ import { initializeApp } from 'firebase/app'
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, type User } from 'firebase/auth'
 import {
   getFirestore, collection, doc, setDoc, addDoc, updateDoc, deleteDoc,
-  query, where, onSnapshot, getDoc, getDocs, arrayUnion, arrayRemove, limit, deleteField, type Unsubscribe,
+  query, where, onSnapshot, getDoc, getDocs, arrayUnion, arrayRemove, limit, type Unsubscribe,
 } from 'firebase/firestore'
 import type { FixedItem, SavingsItem, Expense, MonthlyIncome, AssetAccount, AssetSnapshot, IncomeItem, UserProfile, PaymentMethodDef, CategoryDef, AssetTypeDef, StockTrade } from './types'
 
@@ -114,22 +114,25 @@ export const updateStockTrade = (id: string, data: Partial<Omit<StockTrade, 'id'
 
 export const deleteStockTrade = (id: string) => deleteDoc(doc(db, 'stock_trades', id))
 
-// ── Asset Accounts ────────────────────────────────────────────
-export const subscribeAssetAccounts = (uid: string, cb: (accounts: AssetAccount[]) => void): Unsubscribe =>
-  onSnapshot(query(collection(db, 'asset_accounts'), where('uid', '==', uid)), (snap) =>
-    cb(snap.docs.map((d) => ({ id: d.id, ...d.data() } as AssetAccount)).sort((a, b) => a.order - b.order)))
+// ── Asset Accounts (monthly) ───────────────────────────────────
+export const subscribeAssetAccountsMonthly = (uid: string, yearMonth: string, cb: (items: AssetAccount[] | null) => void): Unsubscribe =>
+  onSnapshot(doc(db, 'asset_accounts_monthly', `${uid}_${yearMonth}`), (s) =>
+    cb(s.exists() ? (s.data().items as AssetAccount[]) : null))
 
-export const addAssetAccount = (uid: string, data: Omit<AssetAccount, 'id' | 'uid'>) =>
-  addDoc(collection(db, 'asset_accounts'), { ...data, uid })
+export const setAssetAccountsMonthly = (uid: string, yearMonth: string, items: AssetAccount[]) =>
+  setDoc(doc(db, 'asset_accounts_monthly', `${uid}_${yearMonth}`), { uid, yearMonth, items })
 
-export const updateAssetAccount = (id: string, data: Omit<AssetAccount, 'id' | 'uid' | 'paymentDay' | 'maturityDate'> & { paymentDay?: number | null; maturityDate?: string | null }) => {
-  const updates: Record<string, unknown> = { label: data.label, type: data.type, order: data.order, liquid: data.liquid ?? true }
-  if ('paymentDay' in data) updates.paymentDay = data.paymentDay == null ? deleteField() : data.paymentDay
-  if ('maturityDate' in data) updates.maturityDate = data.maturityDate == null ? deleteField() : data.maturityDate
-  return updateDoc(doc(db, 'asset_accounts', id), updates)
+export const getAssetAccountsFallback = async (uid: string, yearMonth: string): Promise<AssetAccount[]> => {
+  for (let i = 1; i <= 12; i++) {
+    const d = new Date(yearMonth + '-01')
+    d.setMonth(d.getMonth() - i)
+    const ym = d.toISOString().slice(0, 7)
+    const snap = await getDoc(doc(db, 'asset_accounts_monthly', `${uid}_${ym}`))
+    if (snap.exists()) return snap.data().items as AssetAccount[]
+  }
+  const snap = await getDocs(query(collection(db, 'asset_accounts'), where('uid', '==', uid)))
+  return snap.docs.map(d => ({ id: d.id, ...d.data() } as AssetAccount)).sort((a, b) => a.order - b.order)
 }
-
-export const deleteAssetAccount = (id: string) => deleteDoc(doc(db, 'asset_accounts', id))
 
 // ── Asset Snapshots ───────────────────────────────────────────
 export const subscribeAssetSnapshot = (uid: string, yearMonth: string, cb: (snap: AssetSnapshot | null) => void): Unsubscribe =>
@@ -181,6 +184,7 @@ export const exportAllData = async (uid: string) => {
     savingsMonthlySnap,
     incomeSnap,
     assetAccountsSnap,
+    assetAccountsMonthlySnap,
     assetSnapshotsSnap,
     paymentMethodsSnap,
     categoriesSnap,
@@ -192,6 +196,7 @@ export const exportAllData = async (uid: string) => {
     getDocs(query(collection(db, 'savings_monthly'), where('uid', '==', uid))),
     getDocs(query(collection(db, 'monthly_income'), where('uid', '==', uid))),
     getDocs(query(collection(db, 'asset_accounts'), where('uid', '==', uid))),
+    getDocs(query(collection(db, 'asset_accounts_monthly'), where('uid', '==', uid))),
     getDocs(query(collection(db, 'asset_snapshots'), where('uid', '==', uid))),
     getDoc(doc(db, 'payment_labels', uid)),
     getDoc(doc(db, 'expense_categories', uid)),
@@ -207,6 +212,7 @@ export const exportAllData = async (uid: string) => {
     savingsMonthly: savingsMonthlySnap.docs.map(d => ({ id: d.id, ...d.data() })),
     monthlyIncome: incomeSnap.docs.map(d => ({ id: d.id, ...d.data() })),
     assetAccounts: assetAccountsSnap.docs.map(d => ({ id: d.id, ...d.data() })),
+    assetAccountsMonthly: assetAccountsMonthlySnap.docs.map(d => ({ id: d.id, ...d.data() })),
     assetSnapshots: assetSnapshotsSnap.docs.map(d => ({ id: d.id, ...d.data() })),
     paymentMethods: paymentMethodsSnap.exists() ? paymentMethodsSnap.data() : null,
     categories: categoriesSnap.exists() ? categoriesSnap.data() : null,
