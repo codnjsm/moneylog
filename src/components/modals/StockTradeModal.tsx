@@ -1,23 +1,22 @@
 import { useState } from 'react'
 import Modal from '../Modal'
 import CustomSelect from '../CustomSelect'
-import { STOCK_CATEGORY_LABELS, type StockCategory, type StockTrade } from '../../types'
-
-const CATEGORY_OPTIONS = (Object.entries(STOCK_CATEGORY_LABELS) as [StockCategory, string][])
-  .map(([value, label]) => ({ value, label }))
+import type { StockCategory, StockCategoryDef, StockTrade } from '../../types'
 
 interface Props {
   trade?: StockTrade
+  categories: StockCategoryDef[]
   onSave: (data: Omit<StockTrade, 'id' | 'uid' | 'yearMonth' | 'linkedExpenseId'>) => void
   onDelete?: () => void
   onClose: () => void
 }
 
-export default function StockTradeModal({ trade, onSave, onDelete, onClose }: Props) {
+export default function StockTradeModal({ trade, categories, onSave, onDelete, onClose }: Props) {
   const today = new Date().toISOString().slice(0, 10)
+  const categoryOptions = categories.map(c => ({ value: c.id, label: c.label }))
 
   const [label, setLabel] = useState(trade?.label ?? '')
-  const [category, setCategory] = useState<StockCategory>(trade?.category ?? 'ipo')
+  const [category, setCategory] = useState<StockCategory>(trade?.category ?? categories[0]?.id ?? '')
   const [buyPrice, setBuyPrice] = useState(trade?.buyPrice?.toString() ?? '')
   const [sellPrice, setSellPrice] = useState(trade?.sellPrice?.toString() ?? '')
   const [quantity, setQuantity] = useState(trade?.quantity?.toString() ?? '')
@@ -41,7 +40,7 @@ export default function StockTradeModal({ trade, onSave, onDelete, onClose }: Pr
         <div className="modal-body">
           <div className="form-group">
             <label>구분</label>
-            <CustomSelect value={category} options={CATEGORY_OPTIONS} onChange={(v) => setCategory(v as StockCategory)} />
+            <CustomSelect value={category} options={categoryOptions} onChange={(v) => setCategory(v as StockCategory)} />
           </div>
           <div className="form-group">
             <label>종목명 <span className="required">*</span></label>

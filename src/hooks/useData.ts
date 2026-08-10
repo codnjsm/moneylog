@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import type { FixedItem, SavingsItem, Expense, MonthlyIncome, AssetAccount, AssetSnapshot, IncomeItem, PaymentMethodDef, CategoryDef, AssetTypeDef, StockTrade } from '../types'
-import { DEFAULT_PAYMENT_METHODS, DEFAULT_CATEGORIES, DEFAULT_ASSET_TYPES } from '../types'
+import type { FixedItem, SavingsItem, Expense, MonthlyIncome, AssetAccount, AssetSnapshot, IncomeItem, PaymentMethodDef, CategoryDef, AssetTypeDef, StockTrade, StockCategoryDef } from '../types'
+import { DEFAULT_PAYMENT_METHODS, DEFAULT_CATEGORIES, DEFAULT_ASSET_TYPES, DEFAULT_STOCK_CATEGORIES } from '../types'
 import {
   subscribeFixedItemsMonthly, setFixedItemsMonthly, getFixedItemsFallback,
   subscribeSavingsItemsMonthly, setSavingsItemsMonthly, getSavingsItemsFallback,
@@ -12,6 +12,7 @@ import {
   subscribePaymentMethods, setPaymentMethods as firebaseSetPaymentMethods,
   subscribeCategories, setCategories as firebaseSetCategories,
   subscribeAssetTypes, setAssetTypes as firebaseSetAssetTypes,
+  subscribeStockCategories, setStockCategories as firebaseSetStockCategories,
 } from '../firebase'
 
 export function useData(uid: string, yearMonth: string) {
@@ -29,13 +30,15 @@ export function useData(uid: string, yearMonth: string) {
   const [customMethods, setCustomMethods] = useState<PaymentMethodDef[] | null>(null)
   const [customCategories, setCustomCategories] = useState<CategoryDef[] | null>(null)
   const [customAssetTypes, setCustomAssetTypes] = useState<AssetTypeDef[] | null>(null)
+  const [customStockCategories, setCustomStockCategories] = useState<StockCategoryDef[] | null>(null)
 
   useEffect(() => {
     if (!uid) return
     const u1 = subscribePaymentMethods(uid, setCustomMethods)
     const u2 = subscribeCategories(uid, setCustomCategories)
     const u3 = subscribeAssetTypes(uid, setCustomAssetTypes)
-    return () => { u1(); u2(); u3() }
+    const u4 = subscribeStockCategories(uid, setCustomStockCategories)
+    return () => { u1(); u2(); u3(); u4() }
   }, [uid])
 
   const nextYearMonth = (() => {
@@ -80,9 +83,10 @@ export function useData(uid: string, yearMonth: string) {
   const paymentMethods: PaymentMethodDef[] = customMethods ?? DEFAULT_PAYMENT_METHODS
   const categories: CategoryDef[] = customCategories ?? DEFAULT_CATEGORIES
   const assetTypes: AssetTypeDef[] = customAssetTypes ?? DEFAULT_ASSET_TYPES
+  const stockCategories: StockCategoryDef[] = customStockCategories ?? DEFAULT_STOCK_CATEGORIES
 
   return {
-    fixedItems, savingsItems, expenses, income, stockTrades, assetAccounts, assetSnapshot, paymentMethods, categories, assetTypes, nextMonthHasData,
+    fixedItems, savingsItems, expenses, income, stockTrades, assetAccounts, assetSnapshot, paymentMethods, categories, assetTypes, stockCategories, nextMonthHasData,
     bulkSaveFixedItems: async (newItems: Array<{ id: string; label: string; amount: number; paymentDay?: number }>) => {
       const items: FixedItem[] = newItems.map((n, i) => ({
         id: n.id.startsWith('new-') ? Date.now().toString() + i : n.id,
@@ -167,5 +171,6 @@ export function useData(uid: string, yearMonth: string) {
     setPaymentMethods: (methods: PaymentMethodDef[]) => firebaseSetPaymentMethods(uid, methods),
     setCategories: (cats: CategoryDef[]) => firebaseSetCategories(uid, cats),
     setAssetTypes: (types: AssetTypeDef[]) => firebaseSetAssetTypes(uid, types),
+    setStockCategories: (categories: StockCategoryDef[]) => firebaseSetStockCategories(uid, categories),
   }
 }

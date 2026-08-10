@@ -20,6 +20,7 @@ import AssetAccountModal from './components/modals/AssetAccountModal'
 import AssetTypeModal from './components/modals/AssetTypeModal'
 import PaymentLabelsModal from './components/modals/PaymentLabelsModal'
 import CategoryModal from './components/modals/CategoryModal'
+import StockCategoryModal from './components/modals/StockCategoryModal'
 import AccountModal from './components/modals/AccountModal'
 import CalendarTab from './components/tabs/CalendarTab'
 import type { Expense, AssetAccount, StockTrade } from './types'
@@ -34,6 +35,7 @@ type ModalState =
   | { type: 'assetTypes' }
   | { type: 'paymentLabels' }
   | { type: 'categories' }
+  | { type: 'stockCategories' }
   | { type: 'account' }
   | null
 
@@ -146,8 +148,10 @@ export default function App() {
         {tab === 'stocks' && (
           <StockTab
             trades={data.stockTrades}
+            categories={data.stockCategories}
             onAdd={() => setModal({ type: 'stockTrade' })}
             onEdit={(item) => setModal({ type: 'stockTrade', item })}
+            onEditCategories={() => setModal({ type: 'stockCategories' })}
           />
         )}
         {tab === 'fixed' && (
@@ -210,6 +214,7 @@ export default function App() {
       {modal?.type === 'stockTrade' && (
         <StockTradeModal
           trade={modal.item}
+          categories={data.stockCategories}
           onSave={async (d) => {
             await (modal.item
               ? data.updateStockTrade(modal.item.id, modal.item.linkedExpenseId, d)
@@ -276,6 +281,13 @@ export default function App() {
         <AssetTypeModal
           assetTypes={data.assetTypes}
           onSave={async (types) => { await data.setAssetTypes(types); closeModal() }}
+          onClose={closeModal}
+        />
+      )}
+      {modal?.type === 'stockCategories' && (
+        <StockCategoryModal
+          categories={data.stockCategories}
+          onSave={async (cats) => { await data.setStockCategories(cats); closeModal() }}
           onClose={closeModal}
         />
       )}

@@ -4,7 +4,7 @@ import {
   getFirestore, collection, doc, setDoc, addDoc, updateDoc, deleteDoc,
   query, where, onSnapshot, getDoc, getDocs, arrayUnion, arrayRemove, limit, type Unsubscribe,
 } from 'firebase/firestore'
-import type { FixedItem, SavingsItem, Expense, MonthlyIncome, AssetAccount, AssetSnapshot, IncomeItem, UserProfile, PaymentMethodDef, CategoryDef, AssetTypeDef, StockTrade } from './types'
+import type { FixedItem, SavingsItem, Expense, MonthlyIncome, AssetAccount, AssetSnapshot, IncomeItem, UserProfile, PaymentMethodDef, CategoryDef, AssetTypeDef, StockTrade, StockCategoryDef } from './types'
 
 const firebaseConfig = {
   apiKey: 'AIzaSyA7jMyOyO_FCqXoGouKwDKBpfnBhvFk2LY',
@@ -175,6 +175,17 @@ export const subscribeAssetTypes = (uid: string, cb: (types: AssetTypeDef[] | nu
 
 export const setAssetTypes = (uid: string, types: AssetTypeDef[]) =>
   setDoc(doc(db, 'asset_types', uid), { types })
+
+// ── Stock Categories ───────────────────────────────────────────
+export const subscribeStockCategories = (uid: string, cb: (cats: StockCategoryDef[] | null) => void): Unsubscribe =>
+  onSnapshot(doc(db, 'stock_categories', uid), (s) => {
+    if (!s.exists()) { cb(null); return }
+    const data = s.data()
+    cb(Array.isArray(data.categories) ? (data.categories as StockCategoryDef[]) : null)
+  })
+
+export const setStockCategories = (uid: string, categories: StockCategoryDef[]) =>
+  setDoc(doc(db, 'stock_categories', uid), { categories })
 
 // ── Data Export ──────────────────────────────────────────────
 export const exportAllData = async (uid: string) => {

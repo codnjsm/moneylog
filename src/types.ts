@@ -124,13 +124,19 @@ export interface AssetSnapshot {
   asOf: string
 }
 
-export type StockCategory = 'ipo' | 'stock' | 'etf'
+export type StockCategory = string
 
-export const STOCK_CATEGORY_LABELS: Record<StockCategory, string> = {
-  ipo: '공모주',
-  stock: '주식',
-  etf: 'ETF',
+export interface StockCategoryDef {
+  id: string
+  label: string
+  color: string
 }
+
+export const DEFAULT_STOCK_CATEGORIES: StockCategoryDef[] = [
+  { id: 'ipo', label: '공모주', color: '#4FA3E0' },
+  { id: 'stock', label: '주식', color: '#34D399' },
+  { id: 'etf', label: 'ETF', color: '#FBBF24' },
+]
 
 export interface StockTrade {
   id: string
