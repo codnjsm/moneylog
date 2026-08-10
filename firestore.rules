@@ -1,0 +1,108 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isHouseholdMember(code) {
+      return exists(/databases/$(database)/documents/households/$(code))
+        && request.auth.uid in get(/databases/$(database)/documents/households/$(code)).data.members;
+    }
+
+    // Most documents in this app are keyed by a "space id": the user's own
+    // uid in personal mode, or a shared household's invite code in shared
+    // mode (see useHousehold.ts / App.tsx spaceId).
+    function ownsSpace(spaceId) {
+      return signedIn() && (request.auth.uid == spaceId || isHouseholdMember(spaceId));
+    }
+
+    // Keyed by the real auth uid (not a space id).
+    match /user_profiles/{uid} {
+      allow read, write: if signedIn() && request.auth.uid == uid;
+    }
+
+    // Invite-code based household sharing. Knowing the code is this app's
+    // join mechanism, so any signed-in user may look one up by exact code
+    // or update membership; listing/enumerating all codes is blocked.
+    match /households/{code} {
+      allow get: if signedIn();
+      allow list: if false;
+      allow create: if signedIn()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.members == [request.auth.uid];
+      allow update: if signedIn();
+      allow delete: if false;
+    }
+
+    // Auto-id documents with a `uid` (space id) field.
+    match /expenses/{id} {
+      allow read, delete: if ownsSpace(resource.data.uid);
+      allow create: if ownsSpace(request.resource.data.uid);
+      allow update: if ownsSpace(resource.data.uid) && request.resource.data.uid == resource.data.uid;
+    }
+    match /stock_trades/{id} {
+      allow read, delete: if ownsSpace(resource.data.uid);
+      allow create: if ownsSpace(request.resource.data.uid);
+      allow update: if ownsSpace(resource.data.uid) && request.resource.data.uid == resource.data.uid;
+    }
+    match /asset_accounts/{id} {
+      allow read, delete: if ownsSpace(resource.data.uid);
+      allow create: if ownsSpace(request.resource.data.uid);
+      allow update: if ownsSpace(resource.data.uid) && request.resource.data.uid == resource.data.uid;
+    }
+    match /fixed_items/{id} {
+      allow read, delete: if ownsSpace(resource.data.uid);
+      allow create: if ownsSpace(request.resource.data.uid);
+      allow update: if ownsSpace(resource.data.uid) && request.resource.data.uid == resource.data.uid;
+    }
+    match /savings_items/{id} {
+      allow read, delete: if ownsSpace(resource.data.uid);
+      allow create: if ownsSpace(request.resource.data.uid);
+      allow update: if ownsSpace(resource.data.uid) && request.resource.data.uid == resource.data.uid;
+    }
+
+    // Documents keyed by `{spaceId}_{yearMonth}`, with a `uid` (space id) field inside.
+    match /fixed_monthly/{id} {
+      allow read: if ownsSpace(resource.data.uid);
+      allow create: if ownsSpace(request.resource.data.uid);
+      allow update: if ownsSpace(resource.data.uid) && request.resource.data.uid == resource.data.uid;
+    }
+    match /savings_monthly/{id} {
+      allow read: if ownsSpace(resource.data.uid);
+      allow create: if ownsSpace(request.resource.data.uid);
+      allow update: if ownsSpace(resource.data.uid) && request.resource.data.uid == resource.data.uid;
+    }
+    match /monthly_income/{id} {
+      allow read: if ownsSpace(resource.data.uid);
+      allow create: if ownsSpace(request.resource.data.uid);
+      allow update: if ownsSpace(resource.data.uid) && request.resource.data.uid == resource.data.uid;
+    }
+    match /asset_accounts_monthly/{id} {
+      allow read: if ownsSpace(resource.data.uid);
+      allow create: if ownsSpace(request.resource.data.uid);
+      allow update: if ownsSpace(resource.data.uid) && request.resource.data.uid == resource.data.uid;
+    }
+    match /asset_snapshots/{id} {
+      allow read: if ownsSpace(resource.data.uid);
+      allow create: if ownsSpace(request.resource.data.uid);
+      allow update: if ownsSpace(resource.data.uid) && request.resource.data.uid == resource.data.uid;
+    }
+
+    // Documents keyed directly by the space id (no `uid` field inside).
+    match /payment_labels/{spaceId} {
+      allow read, write: if ownsSpace(spaceId);
+    }
+    match /expense_categories/{spaceId} {
+      allow read, write: if ownsSpace(spaceId);
+    }
+    match /asset_types/{spaceId} {
+      allow read, write: if ownsSpace(spaceId);
+    }
+    match /stock_categories/{spaceId} {
+      allow read, write: if ownsSpace(spaceId);
+    }
+  }
+}
