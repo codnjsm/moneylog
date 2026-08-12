@@ -12,6 +12,10 @@ interface Props {
 
 const fmt = (n: number) => n.toLocaleString('ko-KR')
 const profitOf = (t: StockTrade) => (t.sellPrice - t.buyPrice) * t.quantity
+const profitPercentOf = (t: StockTrade) => t.buyPrice === 0 ? null : ((t.sellPrice - t.buyPrice) / t.buyPrice) * 100
+const fmtPercent = (p: number | null) => p === null ? '—' : p === 0 ? '0.0%' : `${p < 0 ? '−' : '+'}${Math.abs(p).toFixed(1)}%`
+const signColor = (n: number) => n === 0 ? 'var(--text-dim)' : n < 0 ? 'var(--accent)' : 'var(--danger)'
+const percentColor = (p: number | null) => p === null ? 'var(--text-dim)' : signColor(p)
 
 export default function StockTab({ trades, categories, onAdd, onEdit, onEditCategories }: Props) {
   const [filterCategory, setFilterCategory] = useState('all')
@@ -28,7 +32,7 @@ export default function StockTab({ trades, categories, onAdd, onEdit, onEditCate
       <div className="dash-section dash-remaining-section">
         <div className="dash-remaining-item">
           <span className="dash-section-title">이번 달 주식 수익</span>
-          <span className={`dash-remaining-value${totalProfit < 0 ? ' expense' : ' income'}`}>
+          <span className="dash-remaining-value" style={{ color: signColor(totalProfit) }}>
             {totalProfit < 0 ? '−' : ''}{fmt(Math.abs(totalProfit))}원
           </span>
         </div>
@@ -52,6 +56,7 @@ export default function StockTab({ trades, categories, onAdd, onEdit, onEditCate
         <div className="expense-list">
           {filtered.map((t) => {
             const profit = profitOf(t)
+            const percent = profitPercentOf(t)
             const cat = categories.find(c => c.id === t.category)
             const color = cat?.color ?? '#94A3B8'
             return (
@@ -65,8 +70,8 @@ export default function StockTab({ trades, categories, onAdd, onEdit, onEditCate
                 </div>
                 <div className="expense-card-row2">
                   <div className="expense-label">{t.label}</div>
-                  <div className={`expense-amount${profit < 0 ? ' expense' : ' income'}`}>
-                    {profit < 0 ? '−' : ''}{fmt(Math.abs(profit))}원
+                  <div className="expense-amount" style={{ color: signColor(profit) }}>
+                    {profit < 0 ? '−' : ''}{fmt(Math.abs(profit))}원 <span style={{ fontSize: 12, fontWeight: 400, color: percentColor(percent) }}>({fmtPercent(percent)})</span>
                   </div>
                 </div>
               </div>

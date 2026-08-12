@@ -23,7 +23,11 @@ export default function StockTradeModal({ trade, categories, onSave, onDelete, o
   const [sellDate, setSellDate] = useState(trade?.sellDate ?? today)
 
   const profit = (Number(sellPrice) - Number(buyPrice)) * Number(quantity)
-  const valid = !!label.trim() && !!buyPrice && !!sellPrice && !!quantity && !!sellDate
+  const profitPercent = Number(buyPrice) === 0 ? null : ((Number(sellPrice) - Number(buyPrice)) / Number(buyPrice)) * 100
+  const profitPercentText = profitPercent === null ? '—' : profitPercent === 0 ? '0.0%' : `${profitPercent < 0 ? '−' : '+'}${Math.abs(profitPercent).toFixed(1)}%`
+  const signColor = (n: number) => n === 0 ? 'var(--text-dim)' : n < 0 ? 'var(--accent)' : 'var(--danger)'
+  const profitPercentColor = profitPercent === null ? 'var(--text-dim)' : signColor(profitPercent)
+  const valid = !!label.trim() && Number(buyPrice) > 0 && !!sellPrice && Number(quantity) > 0 && !!sellDate
 
   const handleSave = () => {
     if (!valid) return
@@ -65,8 +69,8 @@ export default function StockTradeModal({ trade, categories, onSave, onDelete, o
           {buyPrice && sellPrice && quantity && (
             <div className="form-group">
               <label>예상 수익</label>
-              <div className={profit < 0 ? 'expense' : 'income'} style={{ fontWeight: 700 }}>
-                {profit < 0 ? '−' : ''}{Math.abs(profit).toLocaleString('ko-KR')}원
+              <div style={{ fontWeight: 700, color: signColor(profit) }}>
+                {profit < 0 ? '−' : ''}{Math.abs(profit).toLocaleString('ko-KR')}원 <span style={{ fontSize: 12, fontWeight: 400, color: profitPercentColor }}>({profitPercentText})</span>
               </div>
             </div>
           )}
