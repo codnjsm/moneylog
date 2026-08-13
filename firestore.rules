@@ -19,6 +19,18 @@ service cloud.firestore {
       return signedIn() && (request.auth.uid == spaceId || isHouseholdMember(spaceId));
     }
 
+    // Documents keyed by `{spaceId}_{yearMonth}` are read by exact id even
+    // when they don't exist yet (the app's "carry forward from the nearest
+    // past month" fallback walks back month by month looking for the first
+    // one that exists). For a nonexistent document `resource` is null, so a
+    // rule that reaches into `resource.data` throws and the read is denied
+    // outright — breaking that fallback for every month that has no doc of
+    // its own. Fall back to checking ownership from the id's spaceId prefix
+    // instead of the (absent) document body in that case.
+    function ownsMonthlyDoc(id) {
+      return resource == null ? ownsSpace(id.split('_')[0]) : ownsSpace(resource.data.uid);
+    }
+
     // Keyed by the real auth uid (not a space id).
     match /user_profiles/{uid} {
       allow read, write: if signedIn() && request.auth.uid == uid;
@@ -74,27 +86,27 @@ service cloud.firestore {
 
     // Documents keyed by `{spaceId}_{yearMonth}`, with a `uid` (space id) field inside.
     match /fixed_monthly/{id} {
-      allow read: if ownsSpace(resource.data.uid);
+      allow read: if ownsMonthlyDoc(id);
       allow create: if ownsSpace(request.resource.data.uid);
       allow update: if ownsSpace(resource.data.uid) && request.resource.data.uid == resource.data.uid;
     }
     match /savings_monthly/{id} {
-      allow read: if ownsSpace(resource.data.uid);
+      allow read: if ownsMonthlyDoc(id);
       allow create: if ownsSpace(request.resource.data.uid);
       allow update: if ownsSpace(resource.data.uid) && request.resource.data.uid == resource.data.uid;
     }
     match /monthly_income/{id} {
-      allow read: if ownsSpace(resource.data.uid);
+      allow read: if ownsMonthlyDoc(id);
       allow create: if ownsSpace(request.resource.data.uid);
       allow update: if ownsSpace(resource.data.uid) && request.resource.data.uid == resource.data.uid;
     }
     match /asset_accounts_monthly/{id} {
-      allow read: if ownsSpace(resource.data.uid);
+      allow read: if ownsMonthlyDoc(id);
       allow create: if ownsSpace(request.resource.data.uid);
       allow update: if ownsSpace(resource.data.uid) && request.resource.data.uid == resource.data.uid;
     }
     match /asset_snapshots/{id} {
-      allow read: if ownsSpace(resource.data.uid);
+      allow read: if ownsMonthlyDoc(id);
       allow create: if ownsSpace(request.resource.data.uid);
       allow update: if ownsSpace(resource.data.uid) && request.resource.data.uid == resource.data.uid;
     }
