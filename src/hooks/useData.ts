@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import type { FixedItem, SavingsItem, Expense, MonthlyIncome, AssetAccount, AssetSnapshot, IncomeItem, PaymentMethodDef, CategoryDef, AssetTypeDef, StockTrade, StockCategoryDef } from '../types'
 import { DEFAULT_PAYMENT_METHODS, DEFAULT_CATEGORIES, DEFAULT_ASSET_TYPES, DEFAULT_STOCK_CATEGORIES } from '../types'
+import { stockProfitOf } from '../utils'
 import {
   subscribeFixedItemsMonthly, setFixedItemsMonthly, getFixedItemsFallback,
   subscribeSavingsItemsMonthly, setSavingsItemsMonthly, getSavingsItemsFallback,
   subscribeExpenses, addExpense, updateExpense, deleteExpense, deleteExpensesByGroupId, subscribeExpensesExist,
   subscribeMonthlyIncome, setMonthlyIncome,
-  subscribeStockTrades, addStockTrade as firebaseAddStockTrade, updateStockTrade as firebaseUpdateStockTrade, deleteStockTrade as firebaseDeleteStockTrade,
+  subscribeStockTrades, addStockTradeWithExpense, updateStockTradeWithExpense, deleteStockTradeWithExpense,
   subscribeAssetAccountsMonthly, setAssetAccountsMonthly as firebaseSetAssetAccountsMonthly, getAssetAccountsFallback,
   subscribeAssetSnapshot, setAssetSnapshot as firebaseSetAssetSnapshot,
   subscribePaymentMethods, setPaymentMethods as firebaseSetPaymentMethods,
@@ -116,34 +117,26 @@ export function useData(uid: string, yearMonth: string) {
     deleteExpenseGroup: (groupId: string) => deleteExpensesByGroupId(uid, groupId),
     setIncome: (items: IncomeItem[]) => setMonthlyIncome(uid, yearMonth, items),
     addStockTrade: async (data: Omit<StockTrade, 'id' | 'uid' | 'yearMonth' | 'linkedExpenseId'>) => {
-      const profit = (data.sellPrice - data.buyPrice) * data.quantity
+      const profit = stockProfitOf(data)
       const tradeYearMonth = data.sellDate.slice(0, 7)
-      const expenseRef = await addExpense(uid, {
-        yearMonth: tradeYearMonth,
-        date: data.sellDate,
-        label: `주식 수익 - ${data.label}`,
-        amount: profit,
-        paymentMethod: '',
-        type: 'income',
-      })
-      return firebaseAddStockTrade(uid, { ...data, yearMonth: tradeYearMonth, linkedExpenseId: expenseRef.id })
+      return addStockTradeWithExpense(
+        uid,
+        { ...data, yearMonth: tradeYearMonth },
+        { yearMonth: tradeYearMonth, date: data.sellDate, label: `주식 수익 - ${data.label}`, amount: profit, paymentMethod: '', type: 'income' },
+      )
     },
     updateStockTrade: async (id: string, linkedExpenseId: string | undefined, data: Omit<StockTrade, 'id' | 'uid' | 'yearMonth' | 'linkedExpenseId'>) => {
-      const profit = (data.sellPrice - data.buyPrice) * data.quantity
+      const profit = stockProfitOf(data)
       const tradeYearMonth = data.sellDate.slice(0, 7)
-      if (linkedExpenseId) {
-        await updateExpense(linkedExpenseId, {
-          yearMonth: tradeYearMonth,
-          date: data.sellDate,
-          label: `주식 수익 - ${data.label}`,
-          amount: profit,
-        })
-      }
-      return firebaseUpdateStockTrade(id, { ...data, yearMonth: tradeYearMonth })
+      return updateStockTradeWithExpense(
+        id,
+        { ...data, yearMonth: tradeYearMonth },
+        linkedExpenseId,
+        { yearMonth: tradeYearMonth, date: data.sellDate, label: `주식 수익 - ${data.label}`, amount: profit },
+      )
     },
     deleteStockTrade: async (id: string, linkedExpenseId?: string) => {
-      if (linkedExpenseId) await deleteExpense(linkedExpenseId)
-      return firebaseDeleteStockTrade(id)
+      return deleteStockTradeWithExpense(id, linkedExpenseId)
     },
     addAssetAccount: (data: Omit<AssetAccount, 'id' | 'uid' | 'paymentDay' | 'maturityDate'> & { paymentDay?: number | null; maturityDate?: string | null }) => {
       const { paymentDay, maturityDate, ...rest } = data

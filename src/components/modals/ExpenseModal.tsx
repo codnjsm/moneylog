@@ -42,7 +42,7 @@ export default function ExpenseModal({ expense, yearMonth, initialDate, methods,
   const monthlyAmount = installments > 1 ? Math.floor(totalAmount / installments) : totalAmount
 
   const handleSave = () => {
-    if (!label.trim() || !amount || !method) return
+    if (!label.trim() || Number(amount) <= 0 || !method) return
 
     if (installments <= 1 || isEdit) {
       const data: Omit<Expense, 'id' | 'uid'> = {
@@ -159,7 +159,7 @@ export default function ExpenseModal({ expense, yearMonth, initialDate, methods,
         </div>
         <div className="modal-actions">
           <button className="btn btn-secondary" onClick={onClose}>취소</button>
-          <button className="btn btn-primary" onClick={handleSave} disabled={!label.trim() || !amount || !method || !date}>저장</button>
+          <button className="btn btn-primary" onClick={handleSave} disabled={!label.trim() || Number(amount) <= 0 || !method || !date}>저장</button>
         </div>
       </div>
     </Modal>

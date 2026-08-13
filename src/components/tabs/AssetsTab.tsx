@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { AssetAccount, AssetSnapshot, AssetTypeDef } from '../../types'
 import CustomSelect from '../CustomSelect'
+import { fmtWon as fmt } from '../../utils'
 
 interface Props {
   accounts: AssetAccount[]
@@ -13,7 +14,6 @@ interface Props {
   onEditTypes: () => void
 }
 
-const fmt = (n: number) => n.toLocaleString('ko-KR') + '원'
 
 export default function AssetsTab({ accounts, snapshot, assetTypes, onAddAccount, onEditAccount, onDeleteAccount, onSaveSnapshot, onEditTypes }: Props) {
   const today = new Date().toISOString().slice(0, 10)

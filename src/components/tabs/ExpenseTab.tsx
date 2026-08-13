@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { Expense, PaymentMethodDef, CategoryDef } from '../../types'
 import CustomSelect from '../CustomSelect'
+import { fmtNum as fmt } from '../../utils'
 
 interface Props {
   expenses: Expense[]
@@ -16,7 +17,6 @@ interface Props {
   onEditCategories: () => void
 }
 
-const fmt = (n: number) => n.toLocaleString('ko-KR')
 
 export default function ExpenseTab({ expenses, methods, categories, totalIncome, totalFixed, totalSavings, onAdd, onEdit, onEditMethods, onEditCategories }: Props) {
   const [filterMethod, setFilterMethod] = useState('all')

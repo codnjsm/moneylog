@@ -1,5 +1,6 @@
 import type { FixedItem, SavingsItem, Expense, CategoryDef, AssetAccount, AssetSnapshot } from '../../types'
 import DonutChart from '../DonutChart'
+import { fmtWon as fmt } from '../../utils'
 
 interface Props {
   incomeEntries: Expense[]
@@ -11,7 +12,6 @@ interface Props {
   snapshot: AssetSnapshot | null
 }
 
-const fmt = (n: number) => n.toLocaleString('ko-KR') + '원'
 
 const PALETTE = ['#4FA3E0', '#F87171', '#FBBF24', '#A78BFA', '#34D399', '#F472B6', '#FB923C', '#94A3B8']
 

@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, type User } from 'firebase/auth'
 import {
-  getFirestore, collection, doc, setDoc, addDoc, updateDoc, deleteDoc,
+  getFirestore, collection, doc, setDoc, addDoc, updateDoc, deleteDoc, writeBatch,
   query, where, onSnapshot, getDoc, getDocs, arrayUnion, arrayRemove, limit, type Unsubscribe,
 } from 'firebase/firestore'
 import type { FixedItem, SavingsItem, Expense, MonthlyIncome, AssetAccount, AssetSnapshot, IncomeItem, UserProfile, PaymentMethodDef, CategoryDef, AssetTypeDef, StockTrade, StockCategoryDef } from './types'
@@ -106,13 +106,41 @@ export const subscribeStockTrades = (uid: string, yearMonth: string, cb: (items:
   onSnapshot(query(collection(db, 'stock_trades'), where('uid', '==', uid), where('yearMonth', '==', yearMonth)), (snap) =>
     cb(snap.docs.map((d) => ({ id: d.id, ...d.data() } as StockTrade)).sort((a, b) => b.sellDate.localeCompare(a.sellDate))))
 
-export const addStockTrade = (uid: string, data: Omit<StockTrade, 'id' | 'uid'>) =>
-  addDoc(collection(db, 'stock_trades'), { ...data, uid, createdAt: Date.now() })
+// A stock trade always writes alongside its linked income `expenses` doc.
+// Both writes go through a single writeBatch so a mid-way failure can never
+// leave an orphaned expense or a trade/expense pair out of sync.
+export const addStockTradeWithExpense = async (
+  uid: string,
+  stockData: Omit<StockTrade, 'id' | 'uid' | 'linkedExpenseId'>,
+  expenseData: Omit<Expense, 'id' | 'uid'>,
+): Promise<{ id: string }> => {
+  const batch = writeBatch(db)
+  const expenseRef = doc(collection(db, 'expenses'))
+  const stockRef = doc(collection(db, 'stock_trades'))
+  batch.set(expenseRef, { ...expenseData, uid, createdAt: Date.now() })
+  batch.set(stockRef, { ...stockData, uid, linkedExpenseId: expenseRef.id, createdAt: Date.now() })
+  await batch.commit()
+  return { id: stockRef.id }
+}
 
-export const updateStockTrade = (id: string, data: Partial<Omit<StockTrade, 'id' | 'uid'>>) =>
-  updateDoc(doc(db, 'stock_trades', id), data)
+export const updateStockTradeWithExpense = async (
+  id: string,
+  stockData: Partial<Omit<StockTrade, 'id' | 'uid'>>,
+  linkedExpenseId: string | undefined,
+  expenseData: Partial<Omit<Expense, 'id' | 'uid'>>,
+) => {
+  const batch = writeBatch(db)
+  batch.update(doc(db, 'stock_trades', id), stockData)
+  if (linkedExpenseId) batch.update(doc(db, 'expenses', linkedExpenseId), expenseData)
+  await batch.commit()
+}
 
-export const deleteStockTrade = (id: string) => deleteDoc(doc(db, 'stock_trades', id))
+export const deleteStockTradeWithExpense = async (id: string, linkedExpenseId?: string) => {
+  const batch = writeBatch(db)
+  batch.delete(doc(db, 'stock_trades', id))
+  if (linkedExpenseId) batch.delete(doc(db, 'expenses', linkedExpenseId))
+  await batch.commit()
+}
 
 // ── Asset Accounts (monthly) ───────────────────────────────────
 export const subscribeAssetAccountsMonthly = (uid: string, yearMonth: string, cb: (items: AssetAccount[] | null) => void): Unsubscribe =>

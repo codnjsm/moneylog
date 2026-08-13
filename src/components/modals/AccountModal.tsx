@@ -2,11 +2,10 @@ import { useState } from 'react'
 import Modal from '../Modal'
 import type { User } from 'firebase/auth'
 import type { exportAllData } from '../../firebase'
+import { fmtWon as won } from '../../utils'
 
 type ExportData = Awaited<ReturnType<typeof exportAllData>>
 type ExpenseRecord = ExportData['expenses'][number]
-
-const won = (n: number) => n.toLocaleString('ko-KR') + '원'
 
 function filterByRange(data: ExportData, from: string, to: string): ExportData {
   const inRange = (ym: string) => (!from || ym >= from) && (!to || ym <= to)
@@ -141,6 +140,8 @@ export default function AccountModal({ user, mode, householdCode, onSwitchMode, 
       a.click()
       URL.revokeObjectURL(url)
       setView('main')
+    } catch (e) {
+      alert('내보내기 중 오류가 발생했어요: ' + (e instanceof Error ? e.message : String(e)))
     } finally {
       setExporting(false)
     }

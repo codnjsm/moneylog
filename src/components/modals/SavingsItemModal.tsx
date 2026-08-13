@@ -16,7 +16,7 @@ export default function SavingsItemModal({ item, onSave, onDelete, onClose }: Pr
   const [maturityDate, setMaturityDate] = useState(item?.maturityDate ?? '')
 
   const handleSave = () => {
-    if (!label.trim() || !amount) return
+    if (!label.trim() || Number(amount) <= 0) return
     onSave({
       label: label.trim(),
       amount: Number(amount),
@@ -57,7 +57,7 @@ export default function SavingsItemModal({ item, onSave, onDelete, onClose }: Pr
             <button className="btn btn-danger" onClick={() => { if (confirm('삭제할까요?')) onDelete() }} style={{ marginRight: 'auto' }}>삭제</button>
           )}
           <button className="btn btn-secondary" onClick={onClose}>취소</button>
-          <button className="btn btn-primary" onClick={handleSave} disabled={!label.trim() || !amount}>저장</button>
+          <button className="btn btn-primary" onClick={handleSave} disabled={!label.trim() || Number(amount) <= 0}>저장</button>
         </div>
       </div>
     </Modal>

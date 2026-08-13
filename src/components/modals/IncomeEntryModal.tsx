@@ -20,7 +20,7 @@ export default function IncomeEntryModal({ expense, yearMonth, initialDate, onSa
   const [date, setDate] = useState(expense?.date ?? defaultDate)
 
   const handleSave = () => {
-    if (!label.trim() || !amount) return
+    if (!label.trim() || Number(amount) <= 0) return
     onSave({ yearMonth, label: label.trim(), amount: Number(amount), paymentMethod: '', date, type: 'income' })
   }
 
@@ -50,7 +50,7 @@ export default function IncomeEntryModal({ expense, yearMonth, initialDate, onSa
         </div>
         <div className="modal-actions">
           <button className="btn btn-secondary" onClick={onClose}>취소</button>
-          <button className="btn btn-primary" onClick={handleSave} disabled={!label.trim() || !amount || !date}>저장</button>
+          <button className="btn btn-primary" onClick={handleSave} disabled={!label.trim() || Number(amount) <= 0 || !date}>저장</button>
         </div>
       </div>
     </Modal>

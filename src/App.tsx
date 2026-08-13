@@ -45,6 +45,16 @@ function getYearMonth(offset = 0) {
   return d.toISOString().slice(0, 7)
 }
 
+function withErrorAlert<A extends unknown[]>(action: string, fn: (...args: A) => Promise<void>) {
+  return async (...args: A) => {
+    try {
+      await fn(...args)
+    } catch (e) {
+      alert(`${action} 중 오류가 발생했어요: ` + (e instanceof Error ? e.message : String(e)))
+    }
+  }
+}
+
 export default function App() {
   const { user, loading } = useAuth()
   const [tab, setTab] = useState<Tab>(() => {
@@ -188,16 +198,16 @@ export default function App() {
           initialDate={modal.initialDate}
           methods={data.paymentMethods}
           categories={data.categories}
-          onSave={async (items) => {
+          onSave={withErrorAlert('저장', async (items) => {
             if (modal.item && items.length === 1) {
               await data.updateExpense(modal.item.id, items[0])
             } else {
               await Promise.all(items.map(d => data.addExpense(d)))
             }
             closeModal()
-          }}
-          onDelete={modal.item ? async () => { await data.deleteExpense(modal.item!.id); closeModal() } : undefined}
-          onDeleteGroup={modal.item?.installmentGroupId ? async () => { await data.deleteExpenseGroup(modal.item!.installmentGroupId!); closeModal() } : undefined}
+          })}
+          onDelete={modal.item ? withErrorAlert('삭제', async () => { await data.deleteExpense(modal.item!.id); closeModal() }) : undefined}
+          onDeleteGroup={modal.item?.installmentGroupId ? withErrorAlert('삭제', async () => { await data.deleteExpenseGroup(modal.item!.installmentGroupId!); closeModal() }) : undefined}
           onClose={closeModal}
         />
       )}
@@ -206,8 +216,8 @@ export default function App() {
           expense={modal.item}
           yearMonth={yearMonth}
           initialDate={modal.initialDate}
-          onSave={async (d) => { await (modal.item ? data.updateExpense(modal.item.id, d) : data.addExpense(d)); closeModal() }}
-          onDelete={modal.item ? async () => { await data.deleteExpense(modal.item!.id); closeModal() } : undefined}
+          onSave={withErrorAlert('저장', async (d) => { await (modal.item ? data.updateExpense(modal.item.id, d) : data.addExpense(d)); closeModal() })}
+          onDelete={modal.item ? withErrorAlert('삭제', async () => { await data.deleteExpense(modal.item!.id); closeModal() }) : undefined}
           onClose={closeModal}
         />
       )}
@@ -215,27 +225,27 @@ export default function App() {
         <StockTradeModal
           trade={modal.item}
           categories={data.stockCategories}
-          onSave={async (d) => {
+          onSave={withErrorAlert('저장', async (d) => {
             await (modal.item
               ? data.updateStockTrade(modal.item.id, modal.item.linkedExpenseId, d)
               : data.addStockTrade(d))
             closeModal()
-          }}
-          onDelete={modal.item ? async () => { await data.deleteStockTrade(modal.item!.id, modal.item!.linkedExpenseId); closeModal() } : undefined}
+          })}
+          onDelete={modal.item ? withErrorAlert('삭제', async () => { await data.deleteStockTrade(modal.item!.id, modal.item!.linkedExpenseId); closeModal() }) : undefined}
           onClose={closeModal}
         />
       )}
       {modal?.type === 'fixed' && (
         <FixedListModal
           items={data.fixedItems}
-          onSave={async (items) => { await data.bulkSaveFixedItems(items); closeModal() }}
+          onSave={withErrorAlert('저장', async (items) => { await data.bulkSaveFixedItems(items); closeModal() })}
           onClose={closeModal}
         />
       )}
       {modal?.type === 'savings' && (
         <SavingsListModal
           items={data.savingsItems}
-          onSave={async (items) => { await data.bulkSaveSavingsItems(items); closeModal() }}
+          onSave={withErrorAlert('저장', async (items) => { await data.bulkSaveSavingsItems(items); closeModal() })}
           onClose={closeModal}
         />
       )}
@@ -244,50 +254,46 @@ export default function App() {
           account={modal.item}
           currentAmount={modal.item ? data.assetSnapshot?.amounts[modal.item.id] : undefined}
           assetTypes={data.assetTypes}
-          onSave={async (d, amount) => {
-            try {
-              const today = new Date().toISOString().slice(0, 10)
-              const existing = data.assetSnapshot?.amounts ?? {}
-              if (modal.item) {
-                await data.updateAssetAccount(modal.item.id, d)
-                if (amount !== undefined) await data.setAssetSnapshot({ ...existing, [modal.item.id]: amount }, today)
-              } else {
-                const created = await data.addAssetAccount(d)
-                if (amount !== undefined) await data.setAssetSnapshot({ ...existing, [created.id]: amount }, today)
-              }
-              closeModal()
-            } catch (e) {
-              alert('저장 중 오류가 발생했어요: ' + (e instanceof Error ? e.message : String(e)))
+          onSave={withErrorAlert('저장', async (d, amount) => {
+            const today = new Date().toISOString().slice(0, 10)
+            const existing = data.assetSnapshot?.amounts ?? {}
+            if (modal.item) {
+              await data.updateAssetAccount(modal.item.id, d)
+              if (amount !== undefined) await data.setAssetSnapshot({ ...existing, [modal.item.id]: amount }, today)
+            } else {
+              const created = await data.addAssetAccount(d)
+              if (amount !== undefined) await data.setAssetSnapshot({ ...existing, [created.id]: amount }, today)
             }
-          }}
+            closeModal()
+          })}
           onClose={closeModal}
         />
       )}
       {modal?.type === 'paymentLabels' && (
         <PaymentLabelsModal
           methods={data.paymentMethods}
-          onSave={async (m) => { await data.setPaymentMethods(m); closeModal() }}
+          onSave={withErrorAlert('저장', async (m) => { await data.setPaymentMethods(m); closeModal() })}
           onClose={closeModal}
         />
       )}
       {modal?.type === 'categories' && (
         <CategoryModal
           categories={data.categories}
-          onSave={async (cats) => { await data.setCategories(cats); closeModal() }}
+          onSave={withErrorAlert('저장', async (cats) => { await data.setCategories(cats); closeModal() })}
           onClose={closeModal}
         />
       )}
       {modal?.type === 'assetTypes' && (
         <AssetTypeModal
           assetTypes={data.assetTypes}
-          onSave={async (types) => { await data.setAssetTypes(types); closeModal() }}
+          onSave={withErrorAlert('저장', async (types) => { await data.setAssetTypes(types); closeModal() })}
           onClose={closeModal}
         />
       )}
       {modal?.type === 'stockCategories' && (
         <StockCategoryModal
           categories={data.stockCategories}
-          onSave={async (cats) => { await data.setStockCategories(cats); closeModal() }}
+          onSave={withErrorAlert('저장', async (cats) => { await data.setStockCategories(cats); closeModal() })}
           onClose={closeModal}
         />
       )}

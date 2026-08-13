@@ -22,7 +22,7 @@ export default function AssetAccountModal({ account, currentAmount, assetTypes, 
   const [maturityDate, setMaturityDate] = useState(account?.maturityDate ?? '')
 
   const handleSave = () => {
-    if (!label.trim()) return
+    if (!label.trim() || Number(amount) < 0) return
     const isEdit = !!account
     const data: SaveData = {
       label: label.trim(),
@@ -89,7 +89,7 @@ export default function AssetAccountModal({ account, currentAmount, assetTypes, 
         </div>
         <div className="modal-actions">
           <button className="btn btn-secondary" onClick={onClose}>취소</button>
-          <button className="btn btn-primary" onClick={handleSave} disabled={!label.trim()}>저장</button>
+          <button className="btn btn-primary" onClick={handleSave} disabled={!label.trim() || Number(amount) < 0}>저장</button>
         </div>
       </div>
     </Modal>

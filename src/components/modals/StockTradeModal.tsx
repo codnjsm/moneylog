@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Modal from '../Modal'
 import CustomSelect from '../CustomSelect'
 import type { StockCategory, StockCategoryDef, StockTrade } from '../../types'
+import { stockProfitOf, stockProfitPercentOf, fmtStockPercent, signColor, percentColor } from '../../utils'
 
 interface Props {
   trade?: StockTrade
@@ -22,12 +23,11 @@ export default function StockTradeModal({ trade, categories, onSave, onDelete, o
   const [quantity, setQuantity] = useState(trade?.quantity?.toString() ?? '')
   const [sellDate, setSellDate] = useState(trade?.sellDate ?? today)
 
-  const profit = (Number(sellPrice) - Number(buyPrice)) * Number(quantity)
-  const profitPercent = Number(buyPrice) === 0 ? null : ((Number(sellPrice) - Number(buyPrice)) / Number(buyPrice)) * 100
-  const profitPercentText = profitPercent === null ? '—' : profitPercent === 0 ? '0.0%' : `${profitPercent < 0 ? '−' : '+'}${Math.abs(profitPercent).toFixed(1)}%`
-  const signColor = (n: number) => n === 0 ? 'var(--text-dim)' : n < 0 ? 'var(--accent)' : 'var(--danger)'
-  const profitPercentColor = profitPercent === null ? 'var(--text-dim)' : signColor(profitPercent)
-  const valid = !!label.trim() && Number(buyPrice) > 0 && !!sellPrice && Number(quantity) > 0 && !!sellDate
+  const profit = stockProfitOf({ buyPrice: Number(buyPrice), sellPrice: Number(sellPrice), quantity: Number(quantity) })
+  const profitPercent = stockProfitPercentOf({ buyPrice: Number(buyPrice), sellPrice: Number(sellPrice) })
+  const profitPercentText = fmtStockPercent(profitPercent)
+  const profitPercentColor = percentColor(profitPercent)
+  const valid = !!label.trim() && Number(buyPrice) > 0 && Number(sellPrice) > 0 && Number(quantity) > 0 && !!sellDate
 
   const handleSave = () => {
     if (!valid) return

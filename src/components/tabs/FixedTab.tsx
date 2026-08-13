@@ -1,4 +1,5 @@
 import type { FixedItem, SavingsItem, Expense } from '../../types'
+import { fmtWon as fmt } from '../../utils'
 
 interface Props {
   incomeEntries: Expense[]
@@ -10,7 +11,6 @@ interface Props {
   onManageSavings: () => void
 }
 
-const fmt = (n: number) => n.toLocaleString('ko-KR') + '원'
 
 export default function FixedTab({ incomeEntries, fixedItems, savingsItems, onAddIncome, onEditIncomeEntry, onManageFixed, onManageSavings }: Props) {
   const totalFixed = fixedItems.reduce((s, i) => s + i.amount, 0)

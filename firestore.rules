@@ -25,15 +25,23 @@ service cloud.firestore {
     }
 
     // Invite-code based household sharing. Knowing the code is this app's
-    // join mechanism, so any signed-in user may look one up by exact code
-    // or update membership; listing/enumerating all codes is blocked.
+    // join mechanism, so any signed-in user may look one up by exact code;
+    // listing/enumerating all codes is blocked. Updates are restricted to
+    // the `members` field, and only to adding or removing the caller's own
+    // uid (matching arrayUnion/arrayRemove) — not arbitrary field rewrites.
     match /households/{code} {
       allow get: if signedIn();
       allow list: if false;
       allow create: if signedIn()
         && request.resource.data.createdBy == request.auth.uid
         && request.resource.data.members == [request.auth.uid];
-      allow update: if signedIn();
+      allow update: if signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members'])
+        && (
+          request.resource.data.members == resource.data.members
+          || request.resource.data.members == resource.data.members.concat([request.auth.uid])
+          || request.resource.data.members == resource.data.members.removeAll([request.auth.uid])
+        );
       allow delete: if false;
     }
 
