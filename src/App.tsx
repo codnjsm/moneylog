@@ -6,7 +6,8 @@ import { signIn, signOutUser, exportAllData } from './firebase'
 import Header from './components/Header'
 import TabBar, { type Tab } from './components/TabBar'
 import Sidebar from './components/Sidebar'
-import DashboardTab from './components/tabs/DashboardTab'
+import HomeTab from './components/tabs/HomeTab'
+import MoreTab from './components/tabs/MoreTab'
 import ExpenseTab from './components/tabs/ExpenseTab'
 import FixedTab from './components/tabs/FixedTab'
 import AssetsTab from './components/tabs/AssetsTab'
@@ -21,7 +22,6 @@ import AssetTypeModal from './components/modals/AssetTypeModal'
 import PaymentLabelsModal from './components/modals/PaymentLabelsModal'
 import CategoryModal from './components/modals/CategoryModal'
 import StockCategoryModal from './components/modals/StockCategoryModal'
-import AccountModal from './components/modals/AccountModal'
 import CalendarTab from './components/tabs/CalendarTab'
 import type { Expense, AssetAccount, StockTrade } from './types'
 
@@ -36,7 +36,6 @@ type ModalState =
   | { type: 'paymentLabels' }
   | { type: 'categories' }
   | { type: 'stockCategories' }
-  | { type: 'account' }
   | null
 
 function getYearMonth(offset = 0) {
@@ -59,11 +58,20 @@ export default function App() {
   const { user, loading } = useAuth()
   const [tab, setTab] = useState<Tab>(() => {
     const saved = localStorage.getItem('moneylog-tab') as Tab | null
-    const valid: Tab[] = ['dashboard', 'calendar', 'expense', 'fixed', 'assets', 'stocks']
-    return saved && valid.includes(saved) ? saved : 'calendar'
+    const valid: Tab[] = ['home', 'calendar', 'expense', 'fixed', 'assets', 'stocks', 'more']
+    return saved && valid.includes(saved) ? saved : 'home'
   })
+  const [theme, setThemeState] = useState<'light' | 'dark'>(() =>
+    (document.documentElement.getAttribute('data-theme') as 'light' | 'dark' | null) ?? 'light'
+  )
   const [monthOffset, setMonthOffset] = useState(0)
   const [modal, setModal] = useState<ModalState>(null)
+
+  const setTheme = useCallback((t: 'light' | 'dark') => {
+    setThemeState(t)
+    localStorage.setItem('moneylog-theme', t)
+    document.documentElement.setAttribute('data-theme', t)
+  }, [])
 
   const yearMonth = getYearMonth(monthOffset)
   const household = useHousehold(user?.uid ?? '')
@@ -90,7 +98,7 @@ export default function App() {
     return (
       <div className="login-overlay">
         <div className="login-card">
-          <div className="login-logo">💰</div>
+          <div className="login-logo">Moneylog</div>
           <h2>가계부</h2>
           <p>Google 계정으로 로그인하여 가계부를 시작하세요</p>
           <button className="google-btn" onClick={signIn}>
@@ -109,16 +117,18 @@ export default function App() {
         onChange={changeTab}
         user={user}
         mode={household.mode}
-        onAvatarClick={() => setModal({ type: 'account' })}
+        onAvatarClick={() => changeTab('more')}
       />
-      <Header user={user} mode={household.mode} onAvatarClick={() => setModal({ type: 'account' })} />
+      <Header user={user} mode={household.mode} onAvatarClick={() => changeTab('more')} />
       <main className="app-main">
         <div className="main-container">
-        <div className="month-nav">
+        {tab !== 'more' && (
+          <div className="month-nav">
             <button className="month-btn" onClick={() => setMonthOffset((o) => o - 1)}>‹</button>
             <span className="month-label">{yearMonth.replace('-', '년 ').replace(/(\d+)$/, (m) => `${Number(m)}월`)}</span>
             <button className="month-btn" onClick={() => setMonthOffset((o) => o + 1)} disabled={!data.nextMonthHasData}>›</button>
           </div>
+        )}
         {tab === 'calendar' && (
           <CalendarTab
             expenses={data.expenses}
@@ -129,15 +139,20 @@ export default function App() {
             onEditEntry={(item) => item.type === 'income' ? openIncomeEntry(item) : setModal({ type: 'expense', item })}
           />
         )}
-        {tab === 'dashboard' && (
-          <DashboardTab
-            incomeEntries={incomeEntries}
+        {tab === 'home' && (
+          <HomeTab
+            yearMonth={yearMonth}
+            expenses={data.expenses}
             fixedItems={data.fixedItems}
             savingsItems={data.savingsItems}
-            expenses={expenseEntries}
             categories={data.categories}
-            accounts={data.assetAccounts}
-            snapshot={data.assetSnapshot}
+            methods={data.paymentMethods}
+            assetAccounts={data.assetAccounts}
+            assetSnapshot={data.assetSnapshot}
+            assetTypes={data.assetTypes}
+            onAddExpense={() => setModal({ type: 'expense' })}
+            onAddIncome={() => setModal({ type: 'incomeEntry' })}
+            onEditIncomeEntry={openIncomeEntry}
           />
         )}
         {tab === 'expense' && (
@@ -185,6 +200,21 @@ export default function App() {
             onDeleteAccount={data.deleteAssetAccount}
             onSaveSnapshot={data.setAssetSnapshot}
             onEditTypes={() => setModal({ type: 'assetTypes' })}
+          />
+        )}
+        {tab === 'more' && (
+          <MoreTab
+            user={user}
+            mode={household.mode}
+            householdCode={household.householdCode}
+            theme={theme}
+            onSetTheme={setTheme}
+            onSwitchMode={household.switchMode}
+            onCreate={household.create}
+            onJoin={household.join}
+            onLeave={household.leave}
+            onSignOut={signOutUser}
+            onExport={() => exportAllData(user.uid)}
           />
         )}
         </div>
@@ -294,20 +324,6 @@ export default function App() {
         <StockCategoryModal
           categories={data.stockCategories}
           onSave={withErrorAlert('저장', async (cats) => { await data.setStockCategories(cats); closeModal() })}
-          onClose={closeModal}
-        />
-      )}
-      {modal?.type === 'account' && (
-        <AccountModal
-          user={user}
-          mode={household.mode}
-          householdCode={household.householdCode}
-          onSwitchMode={household.switchMode}
-          onCreate={household.create}
-          onJoin={household.join}
-          onLeave={household.leave}
-          onSignOut={signOutUser}
-          onExport={() => exportAllData(user.uid)}
           onClose={closeModal}
         />
       )}

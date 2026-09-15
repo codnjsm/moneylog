@@ -45,6 +45,7 @@ export default function StockTab({ trades, categories, onAdd, onEdit, onEditCate
         <div className="empty-state">
           <p>주식 거래 내역이 없어요</p>
           <p className="empty-sub">아래 + 버튼으로 추가하세요</p>
+          <button className="btn btn-primary btn-sm" onClick={onAdd}>+ 거래 추가</button>
         </div>
       ) : (
         <div className="expense-list">

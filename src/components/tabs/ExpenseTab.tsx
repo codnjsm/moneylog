@@ -86,6 +86,7 @@ export default function ExpenseTab({ expenses, methods, categories, totalIncome,
         <div className="empty-state">
           <p>지출 내역이 없어요</p>
           <p className="empty-sub">아래 + 버튼으로 추가하세요</p>
+          <button className="btn btn-primary btn-sm" onClick={onAdd}>+ 지출 추가</button>
         </div>
       ) : (
         <div className="expense-list">

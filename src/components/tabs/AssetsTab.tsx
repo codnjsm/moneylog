@@ -42,6 +42,9 @@ export default function AssetsTab({ accounts, snapshot, assetTypes, onAddAccount
 
   const currentAmounts = snapshot?.amounts ?? {}
   const total = accounts.reduce((s, a) => s + (currentAmounts[a.id] ?? 0), 0)
+  const allLiquidTotal = accounts.filter((a) => a.liquid !== false).reduce((s, a) => s + (currentAmounts[a.id] ?? 0), 0)
+  const allIlliquidTotal = accounts.filter((a) => a.liquid === false).reduce((s, a) => s + (currentAmounts[a.id] ?? 0), 0)
+  const liquidPct = total > 0 ? Math.round((allLiquidTotal / total) * 100) : 0
 
   const typeOrder = Object.fromEntries(assetTypes.map((t, i) => [t.id, i]))
   const sorted = [...accounts].sort((a, b) => (typeOrder[a.type] ?? 999) - (typeOrder[b.type] ?? 999))
@@ -99,6 +102,17 @@ export default function AssetsTab({ accounts, snapshot, assetTypes, onAddAccount
         </div>
         <div className="assets-total">{fmt(total)}</div>
         {snapshot?.asOf && <div className="assets-asof">{snapshot.asOf} 기준</div>}
+        {allLiquidTotal > 0 && allIlliquidTotal > 0 && (
+          <div className="asset-split">
+            <div className="asset-split-track">
+              <div className="asset-split-fill" style={{ width: `${liquidPct}%` }} />
+            </div>
+            <div className="asset-split-legend">
+              <span><i className="asset-split-dot liquid" />유동 {liquidPct}%</span>
+              <span><i className="asset-split-dot illiquid" />비유동 {100 - liquidPct}%</span>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="filter-row-wrap">
@@ -140,6 +154,7 @@ export default function AssetsTab({ accounts, snapshot, assetTypes, onAddAccount
         <div className="empty-state">
           <p>등록된 계좌가 없어요</p>
           <p className="empty-sub">위 버튼으로 계좌를 추가하세요</p>
+          <button className="btn btn-primary btn-sm" onClick={onAddAccount}>+ 계좌 추가</button>
         </div>
       ) : showGroups ? (
         <>

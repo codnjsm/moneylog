@@ -36,7 +36,10 @@ export default function FixedTab({ incomeEntries, fixedItems, savingsItems, onAd
           <button className="add-btn" onClick={onAddIncome}>+ 추가</button>
         </div>
         {sortedIncome.length === 0 ? (
-          <div className="fixed-empty">항목이 없어요</div>
+          <div className="fixed-empty-block">
+            <div className="fixed-empty">항목이 없어요</div>
+            <button className="btn btn-secondary btn-sm" onClick={onAddIncome}>+ 추가</button>
+          </div>
         ) : (
           sortedIncome.map((item) => (
             <div key={item.id} className="fixed-row clickable" onClick={() => onEditIncomeEntry(item)}>
@@ -63,7 +66,10 @@ export default function FixedTab({ incomeEntries, fixedItems, savingsItems, onAd
           <button className="add-btn" onClick={onManageFixed}>{fixedItems.length === 0 ? '+ 추가' : '수정'}</button>
         </div>
         {fixedItems.length === 0 ? (
-          <div className="fixed-empty">항목이 없어요</div>
+          <div className="fixed-empty-block">
+            <div className="fixed-empty">항목이 없어요</div>
+            <button className="btn btn-secondary btn-sm" onClick={onManageFixed}>+ 추가</button>
+          </div>
         ) : (
           fixedItems.map((item) => (
             <div key={item.id} className="fixed-row clickable" onClick={onManageFixed}>
@@ -95,7 +101,10 @@ export default function FixedTab({ incomeEntries, fixedItems, savingsItems, onAd
           <button className="add-btn" onClick={onManageSavings}>{savingsItems.length === 0 ? '+ 추가' : '수정'}</button>
         </div>
         {savingsItems.length === 0 ? (
-          <div className="fixed-empty">항목이 없어요</div>
+          <div className="fixed-empty-block">
+            <div className="fixed-empty">항목이 없어요</div>
+            <button className="btn btn-secondary btn-sm" onClick={onManageSavings}>+ 추가</button>
+          </div>
         ) : (
           sortedSavings.map((item) => (
             <div key={item.id} className="fixed-row clickable" onClick={onManageSavings}>

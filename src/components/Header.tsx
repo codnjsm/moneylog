@@ -17,8 +17,8 @@ export default function Header({ user, mode, onAvatarClick }: Props) {
       </div>
       <div className="header-right">
         {user.photoURL
-          ? <img className="user-avatar" src={user.photoURL} referrerPolicy="no-referrer" alt="" onClick={onAvatarClick} title="계정 설정" />
-          : <button className="user-avatar user-avatar-initial" onClick={onAvatarClick} title="계정 설정">
+          ? <img className="user-avatar" src={user.photoURL} referrerPolicy="no-referrer" alt="" onClick={onAvatarClick} title="더보기" />
+          : <button className="user-avatar user-avatar-initial" onClick={onAvatarClick} title="더보기">
               {(user.displayName || user.email || '?')[0].toUpperCase()}
             </button>
         }

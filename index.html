@@ -20,6 +20,11 @@
   <body>
     <script>
       (function() {
+        var saved = localStorage.getItem('moneylog-theme');
+        if (saved === 'light' || saved === 'dark') {
+          document.documentElement.setAttribute('data-theme', saved);
+          return;
+        }
         var mq = window.matchMedia('(prefers-color-scheme: dark)');
         document.documentElement.setAttribute('data-theme', mq.matches ? 'dark' : 'light');
         mq.addEventListener('change', function(e) {

@@ -3,10 +3,11 @@ import type { User } from 'firebase/auth'
 import type { Tab } from './TabBar'
 
 const ICONS: Record<Tab, React.ReactElement> = {
-  dashboard: (
+  home: (
     <svg width="18" height="18" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="12" y="3" width="7" height="7" rx="1"/>
-      <rect x="3" y="12" width="7" height="7" rx="1"/><rect x="12" y="12" width="7" height="7" rx="1"/>
+      <path d="M3 10l8-7 8 7"/>
+      <path d="M5 9v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V9"/>
+      <path d="M9 19v-6h4v6"/>
     </svg>
   ),
   calendar: (
@@ -39,15 +40,22 @@ const ICONS: Record<Tab, React.ReactElement> = {
       <path d="M3 17l5-6 4 3 6-8"/><path d="M14 6h4v4"/>
     </svg>
   ),
+  more: (
+    <svg width="18" height="18" viewBox="0 0 22 22" fill="none">
+      <circle cx="5" cy="11" r="1.6" fill="currentColor"/>
+      <circle cx="11" cy="11" r="1.6" fill="currentColor"/>
+      <circle cx="17" cy="11" r="1.6" fill="currentColor"/>
+    </svg>
+  ),
 }
 
 const TABS: { id: Tab; label: string }[] = [
+  { id: 'home', label: '홈' },
   { id: 'calendar', label: '캘린더' },
   { id: 'fixed', label: '예산' },
   { id: 'expense', label: '지출' },
   { id: 'stocks', label: '주식' },
   { id: 'assets', label: '자산' },
-  { id: 'dashboard', label: '차트' },
 ]
 
 interface Props {
