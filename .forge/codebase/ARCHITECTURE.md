@@ -1,6 +1,6 @@
 ---
-last_mapped_commit: d7cb05506bb3373788498af458bd8c8e4ef63412
-mapped: 2026-08-12
+last_mapped_commit: a28aa9e61a6b8610bdfe37adc648b11f2eb413de
+mapped: 2026-09-15
 ---
 
 # 아키텍처
@@ -40,9 +40,14 @@ mapped: 2026-08-12
 - Context API나 전역 상태 라이브러리는 사용하지 않는다 — `App.tsx` 자체가 유일한 상태 컨테이너이고, 하위 컴포넌트는 props로만 데이터를 받는다.
 
 ### 레이어 4 — 화면 컴포넌트
-- 탭: `src/components/tabs/{DashboardTab,ExpenseTab,FixedTab,AssetsTab,StockTab,CalendarTab}.tsx` — `App.tsx`에서 받은 데이터를 렌더링하고, 사용자 액션(추가/수정 버튼 클릭 등)을 `onAdd`/`onEdit`/`onEditCategories` 같은 콜백 prop 호출로 상위에 위임한다. Firebase나 `useData`를 직접 import하지 않는다.
-- 모달: `src/components/modals/*.tsx` (14개 파일) — 각 모달은 `src/components/Modal.tsx`(오버레이/ESC 닫기/스크롤 잠금을 담당하는 공용 래퍼)로 감싸며, 폼 입력값은 모달 내부의 로컬 `useState`로 관리하고, 저장/삭제 시 `onSave`/`onDelete` 콜백을 호출한다. Firebase를 직접 호출하지 않고 항상 `App.tsx`가 넘겨준 콜백을 통해서만 데이터를 변경한다.
-- 공용 컴포넌트: `src/components/Modal.tsx`(모달 오버레이), `src/components/CustomSelect.tsx`(커스텀 드롭다운), `src/components/DonutChart.tsx`(도넛 차트 SVG), `src/components/Header.tsx`/`src/components/Sidebar.tsx`(상단/좌측 네비게이션 UI), `src/components/TabBar.tsx`(하단 탭 바, `Tab` 타입 정의).
+- 탭: `src/components/tabs/{HomeTab,ExpenseTab,FixedTab,AssetsTab,StockTab,CalendarTab,MoreTab}.tsx` — `App.tsx`에서 받은 데이터를 렌더링하고, 사용자 액션(추가/수정 버튼 클릭 등)을 `onAdd`/`onEdit`/`onEditCategories` 같은 콜백 prop 호출로 상위에 위임한다. Firebase나 `useData`를 직접 import하지 않는다.
+  - `src/components/tabs/HomeTab.tsx`는 `Tab` 값 `'home'`에 대응하는 앱의 기본 랜딩 탭이다(기존 도넛 차트 전용 `DashboardTab.tsx`는 삭제됨). 남은 지출 가능액 히어로 + 다가오는 결제, 예산 사용률 진행바, 최다 지출 카테고리 하이라이트, 카테고리 도넛 차트, 수입 목록+합계, 자산종류별 목록+합계, 최근 활동 피드를 한 화면에서 보여준다.
+  - `src/components/tabs/MoreTab.tsx`는 `Tab` 값 `'more'`에 대응하며, `Header`/`Sidebar`의 아바타 클릭으로만 진입한다(하단 탭 바 버튼 없음). 기존 `AccountModal.tsx`(삭제됨)를 대체하며, 계정 정보 카드·테마 토글(라이트/다크)·가계부 모드(개인/공유) 섹션·데이터 내보내기 행·로그아웃을 담는다.
+- 모달: `src/components/modals/*.tsx` — 각 모달은 `src/components/Modal.tsx`(오버레이/ESC 닫기/스크롤 잠금을 담당하는 공용 래퍼)로 감싸며, 폼 입력값은 모달 내부의 로컬 `useState`로 관리하고, 저장/삭제 시 `onSave`/`onDelete` 콜백을 호출한다. Firebase를 직접 호출하지 않고 항상 `App.tsx`가 넘겨준 콜백을 통해서만 데이터를 변경한다. (기존 `AccountModal.tsx`는 삭제되고 `MoreTab`과 아래 두 공용 컴포넌트로 대체되었다.)
+- 공용 컴포넌트: `src/components/Modal.tsx`(모달 오버레이), `src/components/CustomSelect.tsx`(커스텀 드롭다운), `src/components/DonutChart.tsx`(도넛 차트 SVG), `src/components/Header.tsx`/`src/components/Sidebar.tsx`(상단/좌측 네비게이션 UI, 아바타 클릭 시 `onAvatarClick`으로 `more` 탭 진입 위임), `src/components/TabBar.tsx`(하단 탭 바, `Tab` 타입 정의).
+  - `src/components/HouseholdSection.tsx` — 개인/공유 가계부 모드 토글 + 초대 코드 UI. 기존 `useHousehold` 훅을 그대로 사용하며, `MoreTab`(그리고 예전에는 `AccountModal`)에서 재사용하기 위해 별도 컴포넌트로 추출됨.
+  - `src/components/ExportModal.tsx` — 날짜 범위를 입력받아 데이터 내보내기를 실행하는 서브 다이얼로그. `src/export.ts`의 `filterByRange`/`formatAsText`로 실제 필터링·텍스트 포맷팅을 수행하고, 결과를 `.txt` 파일로 다운로드한다. `App.tsx`가 넘겨준 `onExport`(= `firebase.ts`의 `exportAllData(uid)`) 콜백으로 원본 데이터를 받아온다.
+- 순수 헬퍼 모듈: `src/utils.ts`(금액/퍼센트 포맷팅 등 `fmtWon`/`fmtNum`/`stockProfitOf`/`stockProfitPercentOf`/`fmtStockPercent`/`signColor`/`percentColor`, React를 import하지 않는 순수 함수 모음), `src/export.ts`(내보내기 데이터 필터링/텍스트 포맷팅 순수 함수, `exportAllData`의 반환 타입을 `ExportData`로 재사용). 여러 탭/모달(`HomeTab`, `StockTradeModal`, `useData.ts` 등)이 `utils.ts`를 공통으로 import한다.
 
 ## 3. 데이터 흐름 (실제 코드 추적)
 
@@ -53,10 +58,11 @@ mapped: 2026-08-12
 4. `data.addExpense`는 `useData.ts`(113행)에서 `(d) => addExpense(uid, d)`로 정의되어 있고, 이는 `firebase.ts`의 `addExpense(uid, data)`(80~81행)를 호출한다.
 5. `firebase.ts`의 `addExpense`는 `addDoc(collection(db, 'expenses'), { ...data, uid, createdAt: Date.now() })`로 Firestore에 직접 문서를 생성한다.
 6. Firestore에 문서가 생성되면, `useData.ts`에서 이미 구독 중인 `subscribeExpenses(uid, yearMonth, setExpenses)`(useData.ts:56)의 `onSnapshot` 콜백이 새 스냅샷을 받아 `setExpenses`를 호출한다.
-7. `expenses` state가 바뀌면서 `App.tsx`가 재렌더되고, 그 값을 props로 받는 `ExpenseTab`, `CalendarTab`, `DashboardTab` 등이 자동으로 갱신된다.
+7. `expenses` state가 바뀌면서 `App.tsx`가 재렌더되고, 그 값을 props로 받는 `ExpenseTab`, `CalendarTab`, `HomeTab` 등이 자동으로 갱신된다.
 
-예시 2 — 주식 매도 기록(연쇄 쓰기):
-- `useData.ts`의 `addStockTrade`(118~130행)는 매도 데이터를 받아 `profit`을 계산한 뒤, 먼저 `addExpense(uid, {..., type: 'income', amount: profit})`로 수익을 하나의 소득 항목(expense 문서)으로 기록하고, 그 결과로 생성된 문서 id(`expenseRef.id`)를 `linkedExpenseId`로 넣어 `firebaseAddStockTrade`(즉 `firebase.ts`의 `addStockTrade`)를 호출해 `stock_trades` 문서를 별도로 생성한다. 즉 하나의 사용자 액션이 두 개의 Firestore 컬렉션(`expenses`, `stock_trades`)에 순차적으로 쓰기를 발생시킨다.
+예시 2 — 주식 매도 기록(원자적 배치 쓰기):
+- `useData.ts`의 `addStockTrade`는 매도 데이터를 받아 `utils.ts`의 `stockProfitOf`로 `profit`을 계산한 뒤, 수익 소득 항목(`expenses` 문서 초안)과 매매 데이터(`stock_trades` 문서 초안)를 함께 `firebase.ts`의 `addStockTradeWithExpense(uid, stockData, expenseData)`로 넘긴다.
+- `addStockTradeWithExpense`는 `writeBatch(db)`로 `expenses`와 `stock_trades` 두 문서를 미리 만든 `doc()` ref에 `batch.set`하고 `linkedExpenseId`로 서로를 연결한 뒤 `batch.commit()`한다. 즉 두 컬렉션에 대한 쓰기가 하나의 원자적 배치로 묶여, 중간 실패로 인해 한쪽 문서만 생성되는 상태(orphan)가 발생하지 않는다. 수정/삭제도 각각 `updateStockTradeWithExpense`/`deleteStockTradeWithExpense`가 동일하게 `writeBatch`로 `stock_trades`와 연결된 `expenses` 문서를 함께 갱신/삭제한다(이전에는 `addExpense` 후 별도로 `addStockTrade`를 호출하는 순차 쓰기였으나, 배치 쓰기로 교체됨).
 
 이처럼 전 구간에서 상태 관리 라이브러리(Redux 등)는 사용되지 않고, "Firestore `onSnapshot` 구독 → React `useState` → props 전달"이 유일한 갱신 경로다.
 
@@ -98,4 +104,5 @@ const spaceId = mode === 'shared' && householdCode ? householdCode : uid
 
 - `src/main.tsx`(10줄): `createRoot(document.getElementById('root')!).render(<StrictMode><App /></StrictMode>)`만 수행한다. 라우터, Context Provider, 전역 상태 라이브러리 Provider는 전혀 감싸져 있지 않다.
 - `src/App.tsx`의 `export default function App()`이 최상위 컴포넌트다. 렌더링은 세 단계로 분기한다: `loading`이 true면 로딩 문구, `user`가 없으면 Google 로그인 카드(`login-overlay`), 그 외에는 `Sidebar` + `Header` + `main.app-main`(현재 탭 컴포넌트) + `TabBar` + (열려 있다면) 모달을 렌더링한다.
-- 탭 선택은 `localStorage`의 `moneylog-tab` 키에 저장/복원되며(App.tsx 50~54행, 63~65행), 별도 라우팅 없이 클라이언트 state와 `localStorage`만으로 처리된다.
+- 탭 선택은 `localStorage`의 `moneylog-tab` 키에 저장/복원되며, 별도 라우팅 없이 클라이언트 state와 `localStorage`만으로 처리된다. `Tab` 타입(`src/components/TabBar.tsx`)은 `'home' | 'calendar' | 'expense' | 'fixed' | 'assets' | 'stocks' | 'more'`이고, 기본값은 `'home'`이다. 하단 `TabBar`는 `'more'`를 제외한 6개 탭(홈/캘린더/예산/지출/주식/자산)만 직접 탭 버튼으로 노출하며, `'more'` 탭은 오직 `Header`/`Sidebar`의 아바타 클릭(`onAvatarClick={() => changeTab('more')}`, `App.tsx`)으로만 진입한다 — 예전에 있던 별도의 "더보기 시트"는 없다.
+- 다크/라이트 테마는 `App.tsx`의 `theme` state로 관리되고 `setTheme`이 `document.documentElement`의 `data-theme` 속성과 `localStorage`의 `moneylog-theme` 키를 함께 갱신한다. `MoreTab`의 테마 토글에서 이 값을 바꾼다. `index.html`의 인라인 부트스트랩 스크립트는 React가 로드되기 전에(FOUC 방지) `localStorage.getItem('moneylog-theme')`를 먼저 확인해 저장된 값이 있으면 그것을 `data-theme`에 적용하고, 없을 때만 `prefers-color-scheme` 미디어쿼리 리스너로 폴백한다.

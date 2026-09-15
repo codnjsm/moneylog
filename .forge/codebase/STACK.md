@@ -1,6 +1,6 @@
 ---
-last_mapped_commit: d7cb05506bb3373788498af458bd8c8e4ef63412
-mapped: 2026-08-12
+last_mapped_commit: a28aa9e61a6b8610bdfe37adc648b11f2eb413de
+mapped: 2026-09-15
 ---
 
 # STACK
@@ -97,7 +97,7 @@ CI/CD 파이프라인 없음(`.github` 디렉터리 없음). 배포는 수동으
 
 ## 기타 정적 자산 / 엔트리포인트
 
-- `index.html` — Vite 엔트리 HTML. Google Fonts(`fonts.googleapis.com`)의 `Noto Sans KR`, `Source Code Pro` 웹폰트를 `<link rel="stylesheet">`로 로드. OG 메타태그(`og:image` 등)가 `https://moneylog-3c3d6.web.app`를 하드코딩.
+- `index.html` — Vite 엔트리 HTML. Google Fonts(`fonts.googleapis.com`)의 `Noto Sans KR`, `Source Code Pro` 웹폰트를 `<link rel="stylesheet">`로 로드. OG 메타태그(`og:image` 등)가 `https://moneylog-3c3d6.web.app`를 하드코딩. 인라인 `<script>`가 테마(라이트/다크)를 초기화하는데, `localStorage`의 `moneylog-theme` 값(`light`/`dark`)이 있으면 그걸 우선 적용하고 없을 때만 `prefers-color-scheme` 미디어쿼리로 폴백.
 - `src/main.tsx` — React 엔트리(`createRoot` + `StrictMode`).
 - `public/` — favicon, apple-touch-icon, og-image 등 정적 이미지 자산.
 

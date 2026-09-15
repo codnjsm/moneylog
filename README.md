@@ -1,4 +1,4 @@
-# moneylog (머니로그)
+# moneylog
 
 개인/가족 단위 가계부 웹앱. 지출, 고정지출·저축, 자산, 주식거래를 월 단위로 기록하고 관리합니다.
 
@@ -21,14 +21,17 @@ src/
   App.tsx                최상위 컴포넌트 — 탭 라우팅, 모든 모달 상태(ModalState) 관리
   types.ts               모든 도메인 타입 + 기본값 상수 (DEFAULT_*)
   firebase.ts             Firebase 초기화 + Firestore CRUD 함수 전부 (유일한 데이터 접근 계층)
+  export.ts               데이터 내보내기(.txt) 포맷팅 로직 — ExportModal이 사용
   hooks/
     useAuth.ts             로그인 상태
     useHousehold.ts        개인/공유 가계부 모드, spaceId 결정
     useData.ts             월별 데이터 전체를 구독하고 CRUD 함수를 리턴하는 핵심 훅
   components/
-    tabs/                  화면 단위 컴포넌트 (달력/대시보드/지출/고정지출/자산/주식)
+    tabs/                  화면 단위 컴포넌트 (홈/달력/지출/고정지출/자산/주식/더보기)
     modals/                추가·수정용 모달들 (지출, 자산계좌, 주식거래, 카테고리 관리 등)
     Header.tsx, Sidebar.tsx, TabBar.tsx, Modal.tsx, CustomSelect.tsx, DonutChart.tsx  공용 UI
+    HouseholdSection.tsx   개인/공유 모드 전환 UI — 더보기 탭(MoreTab)이 사용
+    ExportModal.tsx        데이터 내보내기 모달 (더보기 탭에서 연결)
 
 public/, index.html, vite.config.ts, tsconfig*.json, eslint.config.js
 firebase.json, .firebaserc  Firebase Hosting 배포 설정
