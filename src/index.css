@@ -158,12 +158,20 @@ header {
 
 /* ── Login ───────────────────────────────────────────────────── */
 .login-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; padding: 20px; }
-.login-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 44px 32px; max-width: 360px; width: 100%; text-align: center; box-shadow: var(--shadow); }
-.login-logo { font-family: "Source Code Pro", monospace; font-size: 28px; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 12px; color: var(--text); }
+.login-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 40px 32px; max-width: 380px; width: 100%; text-align: center; box-shadow: var(--shadow); }
+.login-icon { width: 56px; height: 56px; margin: 0 auto 12px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: flex; align-items: center; justify-content: center; }
 .login-card h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
-.login-card p { color: var(--text-dim); font-size: 15px; margin-bottom: 32px; }
-.google-btn { width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 10px; background: #fff; color: #3c4043; border: 1px solid #dadce0; padding: 12px 18px; border-radius: 10px; font-size: 15px; font-weight: 500; cursor: pointer; }
-.google-btn:hover { background: #f8f9fa; }
+.login-card p { color: var(--text-dim); font-size: 14px; line-height: 1.5; margin-bottom: 28px; }
+.google-btn { width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 10px; background: #fff; color: #3c4043; border: 1px solid #dadce0; padding: 12px 18px; border-radius: 10px; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+.google-btn:hover { background: #f8f9fa; box-shadow: 0 1px 3px rgba(60,64,67,0.15); }
+
+.login-loading { display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--text-dim); font-size: 14px; padding: 12px 0; }
+.login-spinner { width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: login-spin 0.7s linear infinite; }
+@keyframes login-spin { to { transform: rotate(360deg); } }
+
+.login-warning { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; font-size: 14px; color: var(--text); line-height: 1.6; }
+.login-warning p { color: var(--text); font-size: 14px; margin-bottom: 0; }
+.login-warning-url { margin-top: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; font-family: "Source Code Pro", monospace; font-size: 13px; color: var(--accent); word-break: break-all; }
 
 /* ── Modal ───────────────────────────────────────────────────── */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: flex-end; justify-content: center; z-index: 100; }

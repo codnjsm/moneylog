@@ -6,6 +6,7 @@ import { signIn, signOutUser, exportAllData } from './firebase'
 import Header from './components/Header'
 import TabBar, { type Tab } from './components/TabBar'
 import Sidebar from './components/Sidebar'
+import LoginOverlay from './components/LoginOverlay'
 import HomeTab from './components/tabs/HomeTab'
 import MoreTab from './components/tabs/MoreTab'
 import ExpenseTab from './components/tabs/ExpenseTab'
@@ -96,21 +97,7 @@ export default function App() {
 
   if (loading) return <div className="loading">불러오는 중…</div>
 
-  if (!user) {
-    return (
-      <div className="login-overlay">
-        <div className="login-card">
-          <div className="login-logo">Moneylog</div>
-          <h2>가계부</h2>
-          <p>Google 계정으로 로그인하여 가계부를 시작하세요</p>
-          <button className="google-btn" onClick={signIn}>
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width={18} alt="" />
-            Google로 로그인
-          </button>
-        </div>
-      </div>
-    )
-  }
+  if (!user) return <LoginOverlay onSignIn={signIn} />
 
   return (
     <div className="app">
