@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { useAuth } from './hooks/useAuth'
 import { useData } from './hooks/useData'
 import { useHousehold } from './hooks/useHousehold'
@@ -77,9 +77,11 @@ export default function App() {
   const household = useHousehold(user?.uid ?? '')
   const data = useData(household.spaceId, yearMonth)
 
+  const mainRef = useRef<HTMLElement>(null)
   const changeTab = useCallback((t: Tab) => {
     setTab(t)
     localStorage.setItem('moneylog-tab', t)
+    mainRef.current?.scrollTo(0, 0)
   }, [])
   const closeModal = useCallback(() => setModal(null), [])
 
@@ -120,7 +122,7 @@ export default function App() {
         onAvatarClick={() => changeTab('more')}
       />
       <Header user={user} mode={household.mode} onAvatarClick={() => changeTab('more')} />
-      <main className="app-main">
+      <main className="app-main" ref={mainRef}>
         <div className="main-container">
         {tab !== 'more' && (
           <div className="month-nav">
