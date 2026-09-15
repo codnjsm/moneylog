@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { AssetAccount, AssetSnapshot, AssetTypeDef } from '../../types'
 import CustomSelect from '../CustomSelect'
-import { fmtWon as fmt } from '../../utils'
+import { fmtWon as fmt, badgeStyle } from '../../utils'
 
 interface Props {
   accounts: AssetAccount[]
@@ -53,7 +53,7 @@ export default function AssetsTab({ accounts, snapshot, assetTypes, onAddAccount
     return (
       <div key={a.id} className="asset-card" onClick={() => onEditAccount(a)}>
         <div className="asset-card-left">
-          <span className="asset-type-badge" style={{ color: t.color, background: t.color + '26' }}>{t.label}</span>
+          <span className="asset-type-badge" style={badgeStyle(t.color)}>{t.label}</span>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <div className="asset-label">{a.label}</div>
             {(a.paymentDay || a.maturityDate) && (

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { Expense, PaymentMethodDef, CategoryDef } from '../../types'
 import CustomSelect from '../CustomSelect'
-import { fmtNum as fmt } from '../../utils'
+import { fmtNum as fmt, badgeStyle } from '../../utils'
 
 interface Props {
   expenses: Expense[]
@@ -98,9 +98,9 @@ export default function ExpenseTab({ expenses, methods, categories, totalIncome,
                     {e.category && (() => {
                       const cat = categories.find(c => c.id === e.category)
                       const color = cat?.color ?? '#94A3B8'
-                      return <span className="category-badge" style={{ color, background: color + '26' }}>{cat?.label ?? e.category}</span>
+                      return <span className="category-badge" style={badgeStyle(color)}>{cat?.label ?? e.category}</span>
                     })()}
-                    <span className="method-badge" style={{ color: m.color, background: m.color + '26' }}>{m.label}</span>
+                    <span className="method-badge" style={badgeStyle(m.color)}>{m.label}</span>
                   </div>
                   <div className="expense-date">{e.date.slice(5).replace('-', '/')}</div>
                 </div>
@@ -130,7 +130,7 @@ export default function ExpenseTab({ expenses, methods, categories, totalIncome,
                 <div key={e.id} className="expense-card" onClick={() => onEdit(e)}>
                   <div className="expense-card-row1">
                     <div className="expense-badges">
-                      <span className="method-badge" style={{ color: m.color, background: m.color + '26' }}>{m.label}</span>
+                      <span className="method-badge" style={badgeStyle(m.color)}>{m.label}</span>
                     </div>
                     <div className="expense-date">{e.date.slice(5).replace('-', '/')}</div>
                   </div>

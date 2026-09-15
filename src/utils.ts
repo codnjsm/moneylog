@@ -1,3 +1,5 @@
+import type { CSSProperties } from 'react'
+
 export const fmtWon = (n: number) => n.toLocaleString('ko-KR') + '원'
 export const fmtNum = (n: number) => n.toLocaleString('ko-KR')
 
@@ -21,6 +23,8 @@ export const fmtStockPercent = (p: number | null) => {
   const sign = p < 0 ? '−' : '+'
   return abs > MAX_PERCENT_MAGNITUDE ? `${sign}${MAX_PERCENT_MAGNITUDE}%+` : `${sign}${abs.toFixed(1)}%`
 }
+
+export const badgeStyle = (color: string) => ({ '--badge': color }) as CSSProperties
 
 export const signColor = (n: number) => n === 0 ? 'var(--text-dim)' : n < 0 ? 'var(--accent)' : 'var(--danger)'
 export const percentColor = (p: number | null) => p === null ? 'var(--text-dim)' : signColor(p)

@@ -128,18 +128,18 @@ export default function FixedTab({ incomeEntries, fixedItems, savingsItems, onAd
             {totalFixed > 0 && (
               <div className="dash-remaining-item">
                 <span style={{ fontSize: '13px', color: 'var(--text-dim)' }}>고정 지출</span>
-                <span style={{ fontSize: '13px', color: 'var(--error, #f87171)' }}>− {fmt(totalFixed)}</span>
+                <span style={{ fontSize: '13px', color: 'var(--expense)' }}>− {fmt(totalFixed)}</span>
               </div>
             )}
             {totalSavings > 0 && (
               <div className="dash-remaining-item">
                 <span style={{ fontSize: '13px', color: 'var(--text-dim)' }}>적금</span>
-                <span style={{ fontSize: '13px', color: 'var(--error, #f87171)' }}>− {fmt(totalSavings)}</span>
+                <span style={{ fontSize: '13px', color: 'var(--expense)' }}>− {fmt(totalSavings)}</span>
               </div>
             )}
             <div style={{ borderTop: '1px solid var(--border)', paddingTop: '10px', marginTop: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '13px', fontWeight: 600 }}>지출 가능액</span>
-              <span className="dash-remaining-value" style={{ color: availableAmount >= 0 ? 'var(--success)' : 'var(--error, #f87171)' }}>
+              <span className="dash-remaining-value" style={{ color: availableAmount >= 0 ? 'var(--income)' : 'var(--expense)' }}>
                 {fmt(availableAmount)}
               </span>
             </div>
