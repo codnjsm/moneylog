@@ -96,7 +96,7 @@ export default function HomeTab({ yearMonth, expenses, fixedItems, savingsItems,
           <div className="dash-section">
             <div className="home-hero-top">
               <div>
-                <div className="dash-section-title">남은 지출 가능액</div>
+                <h2 className="dash-section-title">남은 지출 가능액</h2>
                 <div className="home-hero-value">
                   {remaining < 0 ? '−' : ''}{fmtNum(Math.abs(remaining))}원
                 </div>
@@ -123,7 +123,7 @@ export default function HomeTab({ yearMonth, expenses, fixedItems, savingsItems,
           {totalIncome > 0 && (
             <div className="dash-section">
               <div className="home-prog-top">
-                <span className="dash-section-title">이번 달 예산 사용</span>
+                <h2 className="dash-section-title">이번 달 예산 사용</h2>
                 {budget > 0 && (
                   <span className="home-prog-pct" style={{ color: totalExpense > budget ? 'var(--expense)' : 'var(--text)' }}>
                     {Math.round((totalExpense / budget) * 100)}%
@@ -153,7 +153,7 @@ export default function HomeTab({ yearMonth, expenses, fixedItems, savingsItems,
             <div className="dash-section">
               <div className="home-highlight">
                 <div className="home-highlight-text">
-                  <div className="dash-section-title">이번 달 가장 많이 쓴 곳</div>
+                  <h2 className="dash-section-title">이번 달 가장 많이 쓴 곳</h2>
                   <div className="home-highlight-amount-row">
                     <span className="home-highlight-chip">
                       <span className="dash-legend-dot" style={{ background: topColor }} />
@@ -169,7 +169,7 @@ export default function HomeTab({ yearMonth, expenses, fixedItems, savingsItems,
 
           {categoryChart.length > 0 && (
             <div className="dash-section">
-              <div className="dash-section-title">카테고리별 지출</div>
+              <h2 className="dash-section-title">카테고리별 지출</h2>
               <div className="dash-chart-row">
                 <div className="dash-chart-donut">
                   <DonutChart segments={categoryChart} size={200} centerValue={fmtNum(totalExpense)} />
@@ -190,7 +190,7 @@ export default function HomeTab({ yearMonth, expenses, fixedItems, savingsItems,
           {incomeEntries.length > 0 && (
             <div className="fixed-section">
               <div className="fixed-section-header">
-                <span className="fixed-section-title" data-accent="income">수입</span>
+                <h2 className="fixed-section-title" data-accent="income">수입</h2>
                 <button className="add-btn" onClick={onAddIncome}>+ 추가</button>
               </div>
               {sortedIncome.map((item) => (
@@ -212,7 +212,7 @@ export default function HomeTab({ yearMonth, expenses, fixedItems, savingsItems,
           {assetTypeRows.length > 0 && (
             <div className="fixed-section">
               <div className="fixed-section-header">
-                <span className="fixed-section-title" data-accent="assets">총 자산</span>
+                <h2 className="fixed-section-title" data-accent="assets">총 자산</h2>
               </div>
               {assetTypeRows.map((row, i) => (
                 <div key={i} className="fixed-row">
@@ -229,7 +229,7 @@ export default function HomeTab({ yearMonth, expenses, fixedItems, savingsItems,
 
           {recent.length > 0 && (
             <div className="dash-section">
-              <div className="dash-section-title" style={{ marginBottom: 11 }}>최근 활동</div>
+              <h2 className="dash-section-title" style={{ marginBottom: 11 }}>최근 활동</h2>
               {recent.map((e) => {
                 const isIncome = e.type === 'income'
                 const dotColor = isIncome ? 'var(--income)' : (methods.find((m) => m.id === e.paymentMethod)?.color ?? 'var(--text-dim)')

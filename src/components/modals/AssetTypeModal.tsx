@@ -2,10 +2,11 @@ import { useState } from 'react'
 import Modal from '../Modal'
 import type { AssetTypeDef } from '../../types'
 import { DEFAULT_ASSET_TYPES, METHOD_COLORS } from '../../types'
+import { useSaveGuard } from '../../hooks/useSaveGuard'
 
 interface Props {
   assetTypes: AssetTypeDef[]
-  onSave: (types: AssetTypeDef[]) => void
+  onSave: (types: AssetTypeDef[]) => void | Promise<void>
   onClose: () => void
 }
 
@@ -28,10 +29,12 @@ export default function AssetTypeModal({ assetTypes, onSave, onClose }: Props) {
     update(id, { color: METHOD_COLORS[(idx + 1) % METHOD_COLORS.length] })
   }
 
+  const { saving, runSave } = useSaveGuard()
+
   const handleSave = () => {
     const valid = items.filter(t => t.label.trim())
     if (valid.length === 0) return
-    onSave(valid.map(t => ({ ...t, label: t.label.trim() })))
+    runSave(() => onSave(valid.map(t => ({ ...t, label: t.label.trim() }))))
   }
 
   return (
@@ -39,7 +42,7 @@ export default function AssetTypeModal({ assetTypes, onSave, onClose }: Props) {
       <div className="modal">
         <div className="modal-header">
           <h3>자산 종류 관리</h3>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <button className="modal-close" onClick={onClose} aria-label="닫기">✕</button>
         </div>
         <div className="modal-body">
           {items.map((t) => (
@@ -56,7 +59,7 @@ export default function AssetTypeModal({ assetTypes, onSave, onClose }: Props) {
                 onChange={e => update(t.id, { label: e.target.value })}
                 placeholder="종류 이름"
               />
-              <button type="button" className="pm-delete-btn" onClick={() => remove(t.id)}>✕</button>
+              <button type="button" className="pm-delete-btn" aria-label="삭제" onClick={() => remove(t.id)}>✕</button>
             </div>
           ))}
           <button type="button" className="pm-add-btn" onClick={addItem}>+ 종류 추가</button>
@@ -64,7 +67,7 @@ export default function AssetTypeModal({ assetTypes, onSave, onClose }: Props) {
         <div className="modal-actions">
           <button className="btn btn-ghost" onClick={() => setItems([...DEFAULT_ASSET_TYPES])} style={{ marginRight: 'auto', fontSize: 12 }}>초기화</button>
           <button className="btn btn-secondary" onClick={onClose}>취소</button>
-          <button className="btn btn-primary" onClick={handleSave} disabled={items.filter(t => t.label.trim()).length === 0}>저장</button>
+          <button className="btn btn-primary" onClick={handleSave} disabled={saving || items.filter(t => t.label.trim()).length === 0}>{saving ? '저장 중…' : '저장'}</button>
         </div>
       </div>
     </Modal>

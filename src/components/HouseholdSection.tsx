@@ -46,7 +46,7 @@ export default function HouseholdSection({ mode, householdCode, onSwitchMode, on
     <>
       <div className="form-group">
         <label>가계부 모드</label>
-        <div className="mode-toggle">
+        <div className="mode-toggle" role="group" aria-label="가계부 모드">
           <button className={`mode-btn${localMode === 'personal' ? ' active' : ''}`} onClick={() => handleModeClick('personal')}>
             개인
           </button>
@@ -75,6 +75,7 @@ export default function HouseholdSection({ mode, householdCode, onSwitchMode, on
           ) : view === 'join' ? (
             <div className="household-join">
               <input
+                aria-label="초대 코드"
                 value={joinCode}
                 onChange={e => { setJoinCode(e.target.value.toUpperCase()); setJoinError('') }}
                 placeholder="초대 코드 입력"

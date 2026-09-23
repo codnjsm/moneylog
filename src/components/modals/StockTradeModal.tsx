@@ -3,11 +3,12 @@ import Modal from '../Modal'
 import CustomSelect from '../CustomSelect'
 import type { StockCategory, StockCategoryDef, StockTrade } from '../../types'
 import { stockProfitOf, stockProfitPercentOf, fmtStockPercent, signColor, percentColor } from '../../utils'
+import { useSaveGuard } from '../../hooks/useSaveGuard'
 
 interface Props {
   trade?: StockTrade
   categories: StockCategoryDef[]
-  onSave: (data: Omit<StockTrade, 'id' | 'uid' | 'yearMonth' | 'linkedExpenseId'>) => void
+  onSave: (data: Omit<StockTrade, 'id' | 'uid' | 'yearMonth' | 'linkedExpenseId'>) => void | Promise<void>
   onDelete?: () => void
   onClose: () => void
 }
@@ -29,9 +30,11 @@ export default function StockTradeModal({ trade, categories, onSave, onDelete, o
   const profitPercentColor = percentColor(profitPercent)
   const valid = !!label.trim() && Number(buyPrice) > 0 && Number(sellPrice) > 0 && Number(quantity) > 0 && !!sellDate
 
+  const { saving, runSave } = useSaveGuard()
+
   const handleSave = () => {
     if (!valid) return
-    onSave({ label: label.trim(), category, buyPrice: Number(buyPrice), sellPrice: Number(sellPrice), quantity: Number(quantity), sellDate })
+    runSave(() => onSave({ label: label.trim(), category, buyPrice: Number(buyPrice), sellPrice: Number(sellPrice), quantity: Number(quantity), sellDate }))
   }
 
   return (
@@ -39,32 +42,32 @@ export default function StockTradeModal({ trade, categories, onSave, onDelete, o
       <div className="modal" onKeyDown={e => { if (e.key === 'Enter' && !e.nativeEvent.isComposing && (e.target as HTMLElement).tagName !== 'BUTTON') handleSave() }}>
         <div className="modal-header">
           <h3>{trade ? '주식 거래 수정' : '주식 거래 추가'}</h3>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <button className="modal-close" onClick={onClose} aria-label="닫기">✕</button>
         </div>
         <div className="modal-body">
           <div className="form-group">
             <label>구분</label>
-            <CustomSelect value={category} options={categoryOptions} onChange={(v) => setCategory(v as StockCategory)} />
+            <CustomSelect name="구분" value={category} options={categoryOptions} onChange={(v) => setCategory(v as StockCategory)} />
           </div>
           <div className="form-group">
-            <label>종목명 <span className="required">*</span></label>
-            <input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="예: 삼성전자, OO공모주" autoFocus />
+            <label htmlFor="stock-label">종목명 <span className="required">*</span></label>
+            <input id="stock-label" value={label} onChange={(e) => setLabel(e.target.value)} placeholder="예: 삼성전자, OO공모주" autoFocus />
           </div>
           <div className="form-group">
-            <label>매수 단가 <span className="required">*</span></label>
-            <input type="number" value={buyPrice} onChange={(e) => setBuyPrice(e.target.value)} placeholder="0" min={0} />
+            <label htmlFor="stock-buy">매수 단가 <span className="required">*</span></label>
+            <input id="stock-buy" type="number" value={buyPrice} onChange={(e) => setBuyPrice(e.target.value)} placeholder="0" min={0} />
           </div>
           <div className="form-group">
-            <label>매도 단가 <span className="required">*</span></label>
-            <input type="number" value={sellPrice} onChange={(e) => setSellPrice(e.target.value)} placeholder="0" min={0} />
+            <label htmlFor="stock-sell">매도 단가 <span className="required">*</span></label>
+            <input id="stock-sell" type="number" value={sellPrice} onChange={(e) => setSellPrice(e.target.value)} placeholder="0" min={0} />
           </div>
           <div className="form-group">
-            <label>수량 <span className="required">*</span></label>
-            <input type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)} placeholder="0" min={0} />
+            <label htmlFor="stock-qty">수량 <span className="required">*</span></label>
+            <input id="stock-qty" type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)} placeholder="0" min={0} />
           </div>
           <div className="form-group">
-            <label>매도일 <span className="required">*</span></label>
-            <input type="date" value={sellDate} onChange={(e) => setSellDate(e.target.value)} max={today} />
+            <label htmlFor="stock-date">매도일 <span className="required">*</span></label>
+            <input id="stock-date" type="date" value={sellDate} onChange={(e) => setSellDate(e.target.value)} max={today} />
           </div>
           {buyPrice && sellPrice && quantity && (
             <div className="form-group">
@@ -75,12 +78,12 @@ export default function StockTradeModal({ trade, categories, onSave, onDelete, o
             </div>
           )}
           {trade && onDelete && (
-            <button className="modal-delete-link" onClick={() => { if (confirm('삭제할까요?')) onDelete() }}>항목 삭제</button>
+            <button className="modal-delete-link" onClick={() => { if (confirm('삭제할까요?')) onDelete() }} disabled={saving}>항목 삭제</button>
           )}
         </div>
         <div className="modal-actions">
           <button className="btn btn-secondary" onClick={onClose}>취소</button>
-          <button className="btn btn-primary" onClick={handleSave} disabled={!valid}>저장</button>
+          <button className="btn btn-primary" onClick={handleSave} disabled={saving || !valid}>{saving ? '저장 중…' : '저장'}</button>
         </div>
       </div>
     </Modal>

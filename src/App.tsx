@@ -26,6 +26,16 @@ import StockCategoryModal from './components/modals/StockCategoryModal'
 import CalendarTab from './components/tabs/CalendarTab'
 import type { Expense, AssetAccount, StockTrade } from './types'
 
+const TAB_TITLES: Record<Tab, string> = {
+  home: '홈',
+  calendar: '캘린더',
+  fixed: '예산',
+  expense: '지출',
+  stocks: '주식',
+  assets: '자산',
+  more: '더보기',
+}
+
 type ModalState =
   | { type: 'expense'; item?: Expense; initialDate?: string }
   | { type: 'incomeEntry'; item?: Expense; initialDate?: string }
@@ -110,11 +120,12 @@ export default function App() {
       <Header user={user} mode={household.mode} onAvatarClick={() => changeTab('more')} />
       <main className="app-main">
         <div className="main-container">
+        <h1 className="sr-only">{TAB_TITLES[tab]}</h1>
         {tab !== 'more' && (
           <div className="month-nav">
-            <button className="month-btn" onClick={() => setMonthOffset((o) => o - 1)}>‹</button>
+            <button className="month-btn" onClick={() => setMonthOffset((o) => o - 1)} aria-label="이전 달">‹</button>
             <span className="month-label">{yearMonth.replace('-', '년 ').replace(/(\d+)$/, (m) => `${Number(m)}월`)}</span>
-            <button className="month-btn" onClick={() => setMonthOffset((o) => o + 1)} disabled={!data.nextMonthHasData}>›</button>
+            <button className="month-btn" onClick={() => setMonthOffset((o) => o + 1)} disabled={!data.nextMonthHasData} aria-label="다음 달">›</button>
           </div>
         )}
         {tab === 'calendar' && (

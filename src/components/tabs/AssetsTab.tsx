@@ -72,6 +72,7 @@ export default function AssetsTab({ accounts, snapshot, assetTypes, onAddAccount
           <div className="asset-amount">{amount > 0 ? fmt(amount) : '—'}</div>
           <button
             className="asset-delete-btn"
+            aria-label={`${a.label} 삭제`}
             onClick={(e) => { e.stopPropagation(); if (confirm('삭제할까요?')) onDeleteAccount(a.id) }}
           >✕</button>
         </div>
@@ -94,7 +95,7 @@ export default function AssetsTab({ accounts, snapshot, assetTypes, onAddAccount
     <div className="tab-content">
       <div className="assets-header">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-          <div className="assets-total-label">총 자산</div>
+          <h2 className="assets-total-label">총 자산</h2>
           <div style={{ display: 'flex', gap: 8 }}>
             {!editing && <button className="btn btn-secondary btn-sm" onClick={handleEdit}>잔고 업데이트</button>}
             <button className="btn btn-secondary btn-sm" onClick={onAddAccount}>+ 계좌 추가</button>

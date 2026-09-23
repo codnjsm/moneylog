@@ -75,8 +75,8 @@ export default function TabBar({ active, onChange }: Props) {
   return (
     <nav className="tab-bar">
       {TABS.map((t) => (
-        <button key={t.id} className={`tab-item${active === t.id ? ' active' : ''}`} onClick={() => onChange(t.id)}>
-          <span className="tab-icon">{ICONS[t.id]}</span>
+        <button key={t.id} className={`tab-item${active === t.id ? ' active' : ''}`} onClick={() => onChange(t.id)} aria-current={active === t.id ? 'page' : undefined}>
+          <span className="tab-icon" aria-hidden="true">{ICONS[t.id]}</span>
           <span className="tab-label">{t.label}</span>
         </button>
       ))}

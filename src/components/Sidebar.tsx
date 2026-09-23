@@ -82,15 +82,16 @@ export default function Sidebar({ active, onChange, user, mode, onAvatarClick }:
             key={t.id}
             className={`sidebar-item${active === t.id ? ' active' : ''}`}
             onClick={() => onChange(t.id)}
+            aria-current={active === t.id ? 'page' : undefined}
           >
-            <span className="sidebar-item-icon">{ICONS[t.id]}</span>
+            <span className="sidebar-item-icon" aria-hidden="true">{ICONS[t.id]}</span>
             <span>{t.label}</span>
           </button>
         ))}
       </nav>
 
       <div className="sidebar-bottom">
-        <div className="sidebar-user" onClick={onAvatarClick}>
+        <button className="sidebar-user" onClick={onAvatarClick} aria-label="더보기">
           {user.photoURL
             ? <img className="user-avatar" src={user.photoURL} referrerPolicy="no-referrer" alt="" />
             : <div className="user-avatar user-avatar-initial">{(user.displayName || user.email || '?')[0].toUpperCase()}</div>
@@ -99,7 +100,7 @@ export default function Sidebar({ active, onChange, user, mode, onAvatarClick }:
             <div className="sidebar-user-name">{user.displayName || '사용자'}</div>
             <div className="sidebar-user-email">{user.email}</div>
           </div>
-        </div>
+        </button>
       </div>
     </aside>
   )

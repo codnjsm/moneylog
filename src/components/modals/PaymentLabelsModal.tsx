@@ -2,10 +2,11 @@ import { useState } from 'react'
 import Modal from '../Modal'
 import type { PaymentMethodDef } from '../../types'
 import { METHOD_COLORS, DEFAULT_PAYMENT_METHODS } from '../../types'
+import { useSaveGuard } from '../../hooks/useSaveGuard'
 
 interface Props {
   methods: PaymentMethodDef[]
-  onSave: (methods: PaymentMethodDef[]) => void
+  onSave: (methods: PaymentMethodDef[]) => void | Promise<void>
   onClose: () => void
 }
 
@@ -28,10 +29,12 @@ export default function PaymentLabelsModal({ methods, onSave, onClose }: Props) 
     update(id, { color: METHOD_COLORS[(idx + 1) % METHOD_COLORS.length] })
   }
 
+  const { saving, runSave } = useSaveGuard()
+
   const handleSave = () => {
     const valid = items.filter(m => m.label.trim())
     if (valid.length === 0) return
-    onSave(valid.map(m => ({ ...m, label: m.label.trim() })))
+    runSave(() => onSave(valid.map(m => ({ ...m, label: m.label.trim() }))))
   }
 
   const handleReset = () => setItems([...DEFAULT_PAYMENT_METHODS])
@@ -41,7 +44,7 @@ export default function PaymentLabelsModal({ methods, onSave, onClose }: Props) 
       <div className="modal">
         <div className="modal-header">
           <h3>결제 수단 관리</h3>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <button className="modal-close" onClick={onClose} aria-label="닫기">✕</button>
         </div>
         <div className="modal-body">
           {items.map((m) => (
@@ -58,7 +61,7 @@ export default function PaymentLabelsModal({ methods, onSave, onClose }: Props) 
                 onChange={e => update(m.id, { label: e.target.value })}
                 placeholder="수단 이름"
               />
-              <button type="button" className="pm-delete-btn" onClick={() => remove(m.id)}>✕</button>
+              <button type="button" className="pm-delete-btn" aria-label="삭제" onClick={() => remove(m.id)}>✕</button>
             </div>
           ))}
           <button type="button" className="pm-add-btn" onClick={addItem}>+ 수단 추가</button>
@@ -66,7 +69,7 @@ export default function PaymentLabelsModal({ methods, onSave, onClose }: Props) 
         <div className="modal-actions">
           <button className="btn btn-ghost" onClick={handleReset} style={{ marginRight: 'auto', fontSize: 12 }}>초기화</button>
           <button className="btn btn-secondary" onClick={onClose}>취소</button>
-          <button className="btn btn-primary" onClick={handleSave} disabled={items.filter(m => m.label.trim()).length === 0}>저장</button>
+          <button className="btn btn-primary" onClick={handleSave} disabled={saving || items.filter(m => m.label.trim()).length === 0}>{saving ? '저장 중…' : '저장'}</button>
         </div>
       </div>
     </Modal>

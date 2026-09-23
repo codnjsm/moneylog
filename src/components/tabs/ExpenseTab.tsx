@@ -120,7 +120,7 @@ export default function ExpenseTab({ expenses, methods, categories, totalIncome,
           <div className="section-divider" />
           <div className="dash-section dash-remaining-section">
             <div className="dash-remaining-item">
-              <span className="dash-section-title">특별 지출</span>
+              <h2 className="dash-section-title">특별 지출</h2>
               <span className="dash-remaining-value expense">{fmt(totalSpecial)}원</span>
             </div>
           </div>
@@ -146,7 +146,7 @@ export default function ExpenseTab({ expenses, methods, categories, totalIncome,
         </>
       )}
 
-      <button className="fab" onClick={onAdd}>+</button>
+      <button className="fab" onClick={onAdd} aria-label="지출 추가">+</button>
     </div>
   )
 }

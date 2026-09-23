@@ -2,10 +2,11 @@ import { useState } from 'react'
 import Modal from '../Modal'
 import type { StockCategoryDef } from '../../types'
 import { DEFAULT_STOCK_CATEGORIES, METHOD_COLORS } from '../../types'
+import { useSaveGuard } from '../../hooks/useSaveGuard'
 
 interface Props {
   categories: StockCategoryDef[]
-  onSave: (categories: StockCategoryDef[]) => void
+  onSave: (categories: StockCategoryDef[]) => void | Promise<void>
   onClose: () => void
 }
 
@@ -28,10 +29,12 @@ export default function StockCategoryModal({ categories, onSave, onClose }: Prop
     update(id, { color: METHOD_COLORS[(idx + 1) % METHOD_COLORS.length] })
   }
 
+  const { saving, runSave } = useSaveGuard()
+
   const handleSave = () => {
     const valid = items.filter(c => c.label.trim())
     if (valid.length === 0) return
-    onSave(valid.map(c => ({ ...c, label: c.label.trim() })))
+    runSave(() => onSave(valid.map(c => ({ ...c, label: c.label.trim() }))))
   }
 
   return (
@@ -39,7 +42,7 @@ export default function StockCategoryModal({ categories, onSave, onClose }: Prop
       <div className="modal">
         <div className="modal-header">
           <h3>구분 관리</h3>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <button className="modal-close" onClick={onClose} aria-label="닫기">✕</button>
         </div>
         <div className="modal-body">
           {items.map((c) => (
@@ -56,7 +59,7 @@ export default function StockCategoryModal({ categories, onSave, onClose }: Prop
                 onChange={e => update(c.id, { label: e.target.value })}
                 placeholder="구분 이름"
               />
-              <button type="button" className="pm-delete-btn" onClick={() => remove(c.id)}>✕</button>
+              <button type="button" className="pm-delete-btn" aria-label="삭제" onClick={() => remove(c.id)}>✕</button>
             </div>
           ))}
           <button type="button" className="pm-add-btn" onClick={addItem}>+ 구분 추가</button>
@@ -64,7 +67,7 @@ export default function StockCategoryModal({ categories, onSave, onClose }: Prop
         <div className="modal-actions">
           <button className="btn btn-ghost" onClick={() => setItems([...DEFAULT_STOCK_CATEGORIES])} style={{ marginRight: 'auto', fontSize: 12 }}>초기화</button>
           <button className="btn btn-secondary" onClick={onClose}>취소</button>
-          <button className="btn btn-primary" onClick={handleSave} disabled={items.filter(c => c.label.trim()).length === 0}>저장</button>
+          <button className="btn btn-primary" onClick={handleSave} disabled={saving || items.filter(c => c.label.trim()).length === 0}>{saving ? '저장 중…' : '저장'}</button>
         </div>
       </div>
     </Modal>

@@ -44,13 +44,13 @@ export default function MoreTab({ user, mode, householdCode, theme, onSetTheme, 
       <div className="more-card">
         <div className="more-row">
           <span className="more-row-left">
-            <svg width="20" height="20" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="20" height="20" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <circle cx="11" cy="11" r="4"/>
               <path d="M11 2v2M11 18v2M4 11H2M20 11h-2M5.5 5.5l1.4 1.4M15.1 15.1l1.4 1.4M5.5 16.5l1.4-1.4M15.1 6.9l1.4-1.4"/>
             </svg>
             테마
           </span>
-          <div className="mode-toggle more-theme-toggle">
+          <div className="mode-toggle more-theme-toggle" role="group" aria-label="테마">
             <button className={`mode-btn${theme === 'light' ? ' active' : ''}`} onClick={() => onSetTheme('light')}>라이트</button>
             <button className={`mode-btn${theme === 'dark' ? ' active' : ''}`} onClick={() => onSetTheme('dark')}>다크</button>
           </div>
@@ -61,9 +61,9 @@ export default function MoreTab({ user, mode, householdCode, theme, onSetTheme, 
         <HouseholdSection mode={mode} householdCode={householdCode} onSwitchMode={onSwitchMode} onCreate={onCreate} onJoin={onJoin} onLeave={onLeave} />
       </div>
 
-      <div className="more-card more-row" onClick={() => setExportOpen(true)}>
+      <button type="button" className="more-card more-row" onClick={() => setExportOpen(true)}>
         <span className="more-row-left">
-          <svg width="20" height="20" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="20" height="20" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M11 3v12"/>
             <path d="M6 10l5 5 5-5"/>
             <path d="M4 19h14"/>
@@ -71,18 +71,18 @@ export default function MoreTab({ user, mode, householdCode, theme, onSetTheme, 
           기록 내보내기
         </span>
         <span className="more-row-hint">.txt</span>
-      </div>
+      </button>
 
-      <div className="more-card more-row" onClick={handleSignOut}>
+      <button type="button" className="more-card more-row" onClick={handleSignOut}>
         <span className="more-row-left" style={{ color: 'var(--danger)' }}>
-          <svg width="20" height="20" viewBox="0 0 22 22" fill="none" stroke="var(--danger)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="20" height="20" viewBox="0 0 22 22" fill="none" stroke="var(--danger)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M9 4H5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h4"/>
             <path d="M15 15l4-4-4-4"/>
             <path d="M19 11H9"/>
           </svg>
           로그아웃
         </span>
-      </div>
+      </button>
 
       <div className="more-footer">
         <div className="more-footer-brand">Moneylog</div>

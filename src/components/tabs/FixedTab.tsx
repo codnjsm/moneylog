@@ -32,7 +32,7 @@ export default function FixedTab({ incomeEntries, fixedItems, savingsItems, onAd
       {/* 수입 */}
       <div className="fixed-section">
         <div className="fixed-section-header">
-          <span className="fixed-section-title" data-accent="income">수입</span>
+          <h2 className="fixed-section-title" data-accent="income">수입</h2>
           <button className="add-btn" onClick={onAddIncome}>+ 추가</button>
         </div>
         {sortedIncome.length === 0 ? (
@@ -62,7 +62,7 @@ export default function FixedTab({ incomeEntries, fixedItems, savingsItems, onAd
       {/* 고정 지출 */}
       <div className="fixed-section">
         <div className="fixed-section-header">
-          <span className="fixed-section-title" data-accent="expense">고정 지출</span>
+          <h2 className="fixed-section-title" data-accent="expense">고정 지출</h2>
           <button className="add-btn" onClick={onManageFixed}>{fixedItems.length === 0 ? '+ 추가' : '수정'}</button>
         </div>
         {fixedItems.length === 0 ? (
@@ -92,12 +92,12 @@ export default function FixedTab({ incomeEntries, fixedItems, savingsItems, onAd
       {/* 적금 */}
       <div className="fixed-section">
         <div className="fixed-section-header">
-          <span className="fixed-section-title" data-accent="savings">
+          <h2 className="fixed-section-title" data-accent="savings">
             적금
             {totalIncome > 0 && (
               <span className="fixed-section-sub" style={{ color: 'var(--accent)' }}>(저축률 {Math.round((totalSavings / totalIncome) * 100)}%)</span>
             )}
-          </span>
+          </h2>
           <button className="add-btn" onClick={onManageSavings}>{savingsItems.length === 0 ? '+ 추가' : '수정'}</button>
         </div>
         {savingsItems.length === 0 ? (

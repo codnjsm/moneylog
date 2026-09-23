@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import Modal from '../Modal'
 import type { SavingsItem } from '../../types'
+import { useSaveGuard } from '../../hooks/useSaveGuard'
 
 interface Props {
   items: SavingsItem[]
-  onSave: (items: Array<{ id: string; label: string; amount: number; paymentDay?: number; maturityDate?: string }>) => void
+  onSave: (items: Array<{ id: string; label: string; amount: number; paymentDay?: number; maturityDate?: string }>) => void | Promise<void>
   onClose: () => void
 }
 
@@ -30,15 +31,17 @@ export default function SavingsListModal({ items, onSave, onClose }: Props) {
 
   const add = () => setRows(prev => [...prev, { id: `new-${Date.now()}`, label: '', amount: '', paymentDay: '', maturityDate: '' }])
 
+  const { saving, runSave } = useSaveGuard()
+
   const handleSave = () => {
     const valid = rows.filter(r => r.label.trim() && Number(r.amount) > 0)
-    onSave(valid.map(r => ({
+    runSave(() => onSave(valid.map(r => ({
       id: r.id,
       label: r.label.trim(),
       amount: Number(r.amount),
       ...(r.paymentDay ? { paymentDay: Number(r.paymentDay) } : {}),
       ...(r.maturityDate ? { maturityDate: r.maturityDate } : {}),
-    })))
+    }))))
   }
 
   const canSave = rows.some(r => r.label.trim() && Number(r.amount) > 0)
@@ -48,30 +51,30 @@ export default function SavingsListModal({ items, onSave, onClose }: Props) {
       <div className="modal">
         <div className="modal-header">
           <h3>적금 관리</h3>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <button className="modal-close" onClick={onClose} aria-label="닫기">✕</button>
         </div>
         <div className="modal-body">
           {rows.map((r) => (
             <div key={r.id} className="savings-card">
-              <button className="savings-card-delete" onClick={() => remove(r.id)}>✕</button>
+              <button className="savings-card-delete" aria-label="삭제" onClick={() => remove(r.id)}>✕</button>
               <div className="form-row" style={{ marginBottom: 8 }}>
                 <div className="form-group" style={{ flex: 2 }}>
-                  <label>항목</label>
-                  <input value={r.label} onChange={e => update(r.id, 'label', e.target.value)} placeholder="청년도약계좌, ISA 등" />
+                  <label htmlFor={`sv-${r.id}-label`}>항목</label>
+                  <input id={`sv-${r.id}-label`} value={r.label} onChange={e => update(r.id, 'label', e.target.value)} placeholder="청년도약계좌, ISA 등" />
                 </div>
                 <div className="form-group" style={{ flex: 2 }}>
-                  <label>월 납입액</label>
-                  <input type="number" value={r.amount} onChange={e => update(r.id, 'amount', e.target.value)} placeholder="0" min={0} />
+                  <label htmlFor={`sv-${r.id}-amount`}>월 납입액</label>
+                  <input id={`sv-${r.id}-amount`} type="number" value={r.amount} onChange={e => update(r.id, 'amount', e.target.value)} placeholder="0" min={0} />
                 </div>
               </div>
               <div className="form-row" style={{ marginTop: 8 }}>
                 <div className="form-group">
-                  <label>납입일</label>
-                  <input type="number" value={r.paymentDay} onChange={e => update(r.id, 'paymentDay', e.target.value)} placeholder="매월 N일" min={1} max={31} />
+                  <label htmlFor={`sv-${r.id}-day`}>납입일</label>
+                  <input id={`sv-${r.id}-day`} type="number" value={r.paymentDay} onChange={e => update(r.id, 'paymentDay', e.target.value)} placeholder="매월 N일" min={1} max={31} />
                 </div>
                 <div className="form-group">
-                  <label>만기일</label>
-                  <input type="date" value={r.maturityDate} onChange={e => update(r.id, 'maturityDate', e.target.value)} />
+                  <label htmlFor={`sv-${r.id}-maturity`}>만기일</label>
+                  <input id={`sv-${r.id}-maturity`} type="date" value={r.maturityDate} onChange={e => update(r.id, 'maturityDate', e.target.value)} />
                 </div>
               </div>
             </div>
@@ -80,7 +83,7 @@ export default function SavingsListModal({ items, onSave, onClose }: Props) {
         </div>
         <div className="modal-actions">
           <button className="btn btn-secondary" onClick={onClose}>취소</button>
-          <button className="btn btn-primary" onClick={handleSave} disabled={!canSave}>저장</button>
+          <button className="btn btn-primary" onClick={handleSave} disabled={saving || !canSave}>{saving ? '저장 중…' : '저장'}</button>
         </div>
       </div>
     </Modal>

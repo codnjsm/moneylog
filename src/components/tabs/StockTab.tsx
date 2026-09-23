@@ -75,7 +75,7 @@ export default function StockTab({ trades, categories, onAdd, onEdit, onEditCate
         </div>
       )}
 
-      <button className="fab" onClick={onAdd}>+</button>
+      <button className="fab" onClick={onAdd} aria-label="주식 거래 추가">+</button>
     </div>
   )
 }

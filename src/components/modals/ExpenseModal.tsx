@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Modal from '../Modal'
 import CustomSelect from '../CustomSelect'
 import type { Expense, PaymentMethodDef, CategoryDef } from '../../types'
+import { useSaveGuard } from '../../hooks/useSaveGuard'
 
 interface Props {
   expense?: Expense
@@ -9,7 +10,7 @@ interface Props {
   initialDate?: string
   methods: PaymentMethodDef[]
   categories: CategoryDef[]
-  onSave: (items: Omit<Expense, 'id' | 'uid'>[]) => void
+  onSave: (items: Omit<Expense, 'id' | 'uid'>[]) => void | Promise<void>
   onDelete?: () => void
   onDeleteGroup?: () => void
   onClose: () => void
@@ -41,6 +42,8 @@ export default function ExpenseModal({ expense, yearMonth, initialDate, methods,
   const totalAmount = Number(amount) || 0
   const monthlyAmount = installments > 1 ? Math.floor(totalAmount / installments) : totalAmount
 
+  const { saving, runSave } = useSaveGuard()
+
   const handleSave = () => {
     if (!label.trim() || Number(amount) <= 0 || !method) return
 
@@ -54,7 +57,7 @@ export default function ExpenseModal({ expense, yearMonth, initialDate, methods,
         type: 'expense',
       }
       if (category) data.category = category
-      onSave([data])
+      runSave(() => onSave([data]))
       return
     }
 
@@ -76,7 +79,7 @@ export default function ExpenseModal({ expense, yearMonth, initialDate, methods,
       if (category) item.category = category
       items.push(item)
     }
-    onSave(items)
+    runSave(() => onSave(items))
   }
 
   const installmentOptions = [
@@ -89,12 +92,13 @@ export default function ExpenseModal({ expense, yearMonth, initialDate, methods,
       <div className="modal" onKeyDown={e => { if (e.key === 'Enter' && !e.nativeEvent.isComposing && (e.target as HTMLElement).tagName !== 'TEXTAREA' && (e.target as HTMLElement).tagName !== 'BUTTON') handleSave() }}>
         <div className="modal-header">
           <h3>{expense ? '지출 수정' : '지출 추가'}</h3>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <button className="modal-close" onClick={onClose} aria-label="닫기">✕</button>
         </div>
         <div className="modal-body">
           <div className="form-group">
             <label>카테고리</label>
             <CustomSelect
+              name="카테고리"
               value={category}
               options={[{ value: '', label: '없음' }, ...categories.map(c => ({ value: c.id, label: c.label }))]}
               onChange={setCategory}
@@ -102,8 +106,9 @@ export default function ExpenseModal({ expense, yearMonth, initialDate, methods,
           </div>
 
           <div className="form-group">
-            <label>금액 <span className="required">*</span></label>
+            <label htmlFor="expense-amount">금액 <span className="required">*</span></label>
             <input
+              id="expense-amount"
               type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
@@ -118,6 +123,7 @@ export default function ExpenseModal({ expense, yearMonth, initialDate, methods,
               <label>할부</label>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <CustomSelect
+                  name="할부"
                   value={String(installments)}
                   options={installmentOptions}
                   onChange={(v) => setInstallments(Number(v))}
@@ -132,13 +138,14 @@ export default function ExpenseModal({ expense, yearMonth, initialDate, methods,
           )}
 
           <div className="form-group">
-            <label>날짜 <span className="required">*</span></label>
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} max={today} />
+            <label htmlFor="expense-date">날짜 <span className="required">*</span></label>
+            <input id="expense-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} max={today} />
           </div>
 
           <div className="form-group">
             <label>결제 수단</label>
             <CustomSelect
+              name="결제 수단"
               value={method}
               options={methods.map(m => ({ value: m.id, label: m.label }))}
               onChange={setMethod}
@@ -146,20 +153,20 @@ export default function ExpenseModal({ expense, yearMonth, initialDate, methods,
           </div>
 
           <div className="form-group">
-            <label>내용 <span className="required">*</span></label>
-            <input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="내용 입력" />
+            <label htmlFor="expense-label">내용 <span className="required">*</span></label>
+            <input id="expense-label" value={label} onChange={(e) => setLabel(e.target.value)} placeholder="내용 입력" />
           </div>
 
           {expense && onDelete && (
-            <button className="modal-delete-link" onClick={() => { if (confirm('이 항목만 삭제할까요?')) onDelete() }}>이 항목만 삭제</button>
+            <button className="modal-delete-link" onClick={() => { if (confirm('이 항목만 삭제할까요?')) onDelete() }} disabled={saving}>이 항목만 삭제</button>
           )}
           {expense && onDeleteGroup && (
-            <button className="modal-delete-link" onClick={() => { if (confirm('할부 전체를 삭제할까요?')) onDeleteGroup() }}>할부 전체 삭제</button>
+            <button className="modal-delete-link" onClick={() => { if (confirm('할부 전체를 삭제할까요?')) onDeleteGroup() }} disabled={saving}>할부 전체 삭제</button>
           )}
         </div>
         <div className="modal-actions">
           <button className="btn btn-secondary" onClick={onClose}>취소</button>
-          <button className="btn btn-primary" onClick={handleSave} disabled={!label.trim() || Number(amount) <= 0 || !method || !date}>저장</button>
+          <button className="btn btn-primary" onClick={handleSave} disabled={saving || !label.trim() || Number(amount) <= 0 || !method || !date}>{saving ? '저장 중…' : '저장'}</button>
         </div>
       </div>
     </Modal>

@@ -10,9 +10,11 @@ interface Props {
   options: Option[]
   onChange: (value: string) => void
   action?: { label: string; onClick: () => void }
+  /** 옆의 <label> 을 htmlFor 로 연결할 수 없어서, 대신 읽어줄 이름을 받는다 */
+  name?: string
 }
 
-export default function CustomSelect({ value, options, onChange, action }: Props) {
+export default function CustomSelect({ value, options, onChange, action, name }: Props) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -29,9 +31,15 @@ export default function CustomSelect({ value, options, onChange, action }: Props
 
   return (
     <div className="custom-select-wrap" ref={ref}>
-      <button className="custom-select-btn" type="button" onClick={() => setOpen(o => !o)}>
+      <button
+        className="custom-select-btn"
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        aria-label={name ? `${name}: ${selectedLabel}` : undefined}
+        aria-expanded={open}
+      >
         <span>{selectedLabel}</span>
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="custom-select-chevron">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="custom-select-chevron" aria-hidden="true">
           <path d="M3 5l4 4 4-4"/>
         </svg>
       </button>

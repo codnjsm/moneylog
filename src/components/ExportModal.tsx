@@ -38,17 +38,17 @@ export default function ExportModal({ onExport, onClose }: Props) {
       <div className="modal">
         <div className="modal-header">
           <h3>데이터 내보내기</h3>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <button className="modal-close" onClick={onClose} aria-label="닫기">✕</button>
         </div>
         <div className="modal-body">
           <div className="form-group">
-            <label>시작 월</label>
-            <input type="month" value={fromMonth} onChange={e => setFromMonth(e.target.value)}
+            <label htmlFor="export-from">시작 월</label>
+            <input id="export-from" type="month" value={fromMonth} onChange={e => setFromMonth(e.target.value)}
               style={{ width: '100%', fontSize: '14px', padding: '9px 12px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)' }} />
           </div>
           <div className="form-group">
-            <label>종료 월</label>
-            <input type="month" value={toMonth} onChange={e => setToMonth(e.target.value)}
+            <label htmlFor="export-to">종료 월</label>
+            <input id="export-to" type="month" value={toMonth} onChange={e => setToMonth(e.target.value)}
               style={{ width: '100%', fontSize: '14px', padding: '9px 12px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)' }} />
           </div>
           <p style={{ fontSize: '12px', color: 'var(--text-dim)' }}>비워두면 전체 기간을 내보내요</p>

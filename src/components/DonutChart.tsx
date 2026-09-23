@@ -49,7 +49,7 @@ export default function DonutChart({ segments, size = 200, centerLabel, centerVa
   const subFontSize = size * 0.055
 
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true">
       {total === 0 ? (
         <path d={arc(cx, cy, R, r, 0, 359.99)} fill="var(--surface-2)" />
       ) : (
