@@ -46,10 +46,11 @@
 /* ── Base ────────────────────────────────────────────────────── */
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Noto Sans KR", sans-serif;
-  font-size: 15px;
+  /* 모바일 14px / 데스크톱 16px, 줄간격 1.6 — 북로그와 맞춘 값 */
+  font-size: 16px;
   background: var(--bg);
   color: var(--text);
-  line-height: 1.5;
+  line-height: 1.6;
   min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
   font-variant-numeric: tabular-nums;
