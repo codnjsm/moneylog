@@ -814,15 +814,9 @@ button.more-card { width: 100%; text-align: left; font: inherit; color: inherit;
   transform: translate(-50%, -50%);
 }
 
-/* 행 안에 있어 덧대면 옆 입력칸을 가린다 — 요소 자체를 키운다 */
-.pm-delete-btn, .asset-delete-btn {
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
+/* 행 안의 삭제 버튼은 원래 크기로 둔다. 44px 로 키웠더니 금액과 ✕ 사이가 벌어지고
+   결제수단 모달의 입력칸이 좁아져 정렬이 어색해졌다(자산 카드·pm-row 양쪽).
+   세로로만 넓히는 드래그 핸들은 옆을 침범하지 않아 그대로 둔다. */
 .pm-drag-handle { height: 44px; display: inline-flex; align-items: center; justify-content: center; }
 
 /* 카드 모서리에 겹쳐 있어 44px 로 키우면 아래 입력칸을 덮는다 — 24px 기준까지만 */
