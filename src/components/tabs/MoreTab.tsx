@@ -247,8 +247,8 @@ export default function MoreTab({ user, displayName, photoURL, onChangeName, onC
       </button>
 
       <button type="button" className="more-card more-row" onClick={handleSignOut}>
-        <span className="more-row-left" style={{ color: 'var(--danger)' }}>
-          <svg width="20" height="20" viewBox="0 0 22 22" fill="none" stroke="var(--danger)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <span className="more-row-left">
+          <svg width="20" height="20" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M9 4H5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h4"/>
             <path d="M15 15l4-4-4-4"/>
             <path d="M19 11H9"/>
