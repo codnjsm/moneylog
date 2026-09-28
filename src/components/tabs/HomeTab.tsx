@@ -97,7 +97,7 @@ export default function HomeTab({ yearMonth, expenses, fixedItems, savingsItems,
             <div className="home-hero-top">
               <div>
                 <h2 className="dash-section-title">남은 지출 가능액</h2>
-                <div className="home-hero-value">
+                <div className={`home-hero-value${remaining < 0 ? ' expense' : ''}`}>
                   {remaining < 0 ? '−' : ''}{fmtNum(Math.abs(remaining))}원
                 </div>
               </div>
