@@ -3,6 +3,8 @@ import type { User } from 'firebase/auth'
 import HouseholdSection from '../HouseholdSection'
 import ExportModal from '../ExportModal'
 import AvatarCropModal from '../modals/AvatarCropModal'
+import { sendVerificationEmail } from '../../firebase'
+import DeleteAccountModal from '../modals/DeleteAccountModal'
 
 interface Props {
   user: User
@@ -20,15 +22,51 @@ interface Props {
   onLeave: () => Promise<void>
   onSignOut: () => void
   onExport: () => Promise<unknown>
+  /** 이메일 인증 여부를 서버에서 다시 읽어온다. 인증됐으면 true. */
+  onRefreshUser: () => Promise<boolean>
+  onDeleteAccount: () => Promise<void>
 }
 
-export default function MoreTab({ user, displayName, photoURL, onChangeName, onChangePhoto, mode, householdCode, theme, onSetTheme, onSwitchMode, onCreate, onJoin, onLeave, onSignOut, onExport }: Props) {
+export default function MoreTab({ user, displayName, photoURL, onChangeName, onChangePhoto, mode, householdCode, theme, onSetTheme, onSwitchMode, onCreate, onJoin, onLeave, onSignOut, onExport, onRefreshUser, onDeleteAccount }: Props) {
   const [exportOpen, setExportOpen] = useState(false)
   const [nameEditing, setNameEditing] = useState(false)
   const [nameDraft, setNameDraft] = useState(displayName)
   const [saving, setSaving] = useState(false)
   const [cropFile, setCropFile] = useState<File | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [verifyBusy, setVerifyBusy] = useState(false)
+  const [verifyMsg, setVerifyMsg] = useState('')
+
+  // 구글 로그인은 항상 인증된 상태로 들어오므로, 이메일 가입자에게만 뜬다.
+  const needsVerify = !user.emailVerified
+
+  const resendVerification = async () => {
+    setVerifyBusy(true)
+    setVerifyMsg('')
+    try {
+      await sendVerificationEmail()
+      setVerifyMsg('인증 메일을 다시 보냈어요')
+    } catch {
+      setVerifyMsg('메일을 보내지 못했어요. 잠시 후 다시 시도해주세요')
+    } finally {
+      setVerifyBusy(false)
+    }
+  }
+
+  const checkVerified = async () => {
+    setVerifyBusy(true)
+    setVerifyMsg('')
+    try {
+      const ok = await onRefreshUser()
+      // 인증됐으면 배너 자체가 사라지므로 따로 알릴 필요가 없다.
+      if (!ok) setVerifyMsg('아직 인증 전이에요. 메일의 링크를 눌러주세요')
+    } catch {
+      setVerifyMsg('확인하지 못했어요. 잠시 후 다시 시도해주세요')
+    } finally {
+      setVerifyBusy(false)
+    }
+  }
   const photoInputRef = useRef<HTMLInputElement>(null)
 
   const startEditName = () => {
@@ -156,6 +194,26 @@ export default function MoreTab({ user, displayName, photoURL, onChangeName, onC
 
       </div>
 
+      {needsVerify && (
+        <div className="verify-card">
+          <div className="verify-title">이메일 인증이 아직 안 됐어요</div>
+          <p className="verify-body">
+            <b>{user.email}</b>으로 보낸 메일의 링크를 눌러주세요.
+            비밀번호를 잊었을 때 이 주소로만 재설정 메일을 보낼 수 있어서,
+            주소가 잘못돼 있으면 계정을 되찾지 못해요.
+          </p>
+          {verifyMsg && <p className="verify-msg">{verifyMsg}</p>}
+          <div className="verify-actions">
+            <button className="btn btn-secondary btn-sm" onClick={resendVerification} disabled={verifyBusy}>
+              {verifyBusy ? '처리 중…' : '메일 다시 보내기'}
+            </button>
+            <button className="btn btn-primary btn-sm" onClick={checkVerified} disabled={verifyBusy}>
+              인증했어요
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="more-card">
         <div className="more-row">
           <span className="more-row-left">
@@ -199,11 +257,23 @@ export default function MoreTab({ user, displayName, photoURL, onChangeName, onC
         </span>
       </button>
 
+      <button type="button" className="more-card more-row" onClick={() => setDeleteOpen(true)}>
+        <span className="more-row-left more-row-quiet">회원 탈퇴</span>
+      </button>
+
       <div className="more-footer">
         <div className="more-footer-brand">Moneylog</div>
         로그아웃해도 이 계정의 데이터는 남아 있어요.
       </div>
 
+      {deleteOpen && (
+        <DeleteAccountModal
+          email={user.email ?? ''}
+          householdCode={householdCode}
+          onConfirm={onDeleteAccount}
+          onClose={() => setDeleteOpen(false)}
+        />
+      )}
       {cropFile && (
         <AvatarCropModal
           file={cropFile}

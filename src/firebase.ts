@@ -2,7 +2,7 @@ import { initializeApp } from 'firebase/app'
 import {
   getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged,
   createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail,
-  sendEmailVerification, updateProfile, type User,
+  sendEmailVerification, updateProfile, deleteUser, type User,
 } from 'firebase/auth'
 import {
   initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
@@ -23,6 +23,9 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig)
 export const auth = getAuth(app)
+// 인증 메일(가입 확인·비밀번호 재설정)을 한국어로 보낸다.
+// 지정하지 않으면 Firebase 콘솔 템플릿의 기본 언어(영어)로 나간다.
+auth.languageCode = 'ko'
 // 로컬 캐시를 켜서 오프라인에서도 열리고, 월을 옮길 때 캐시부터 그린다.
 // 탭 여러 개를 띄워도 캐시가 깨지지 않도록 multi-tab 매니저를 쓴다.
 export const db = initializeFirestore(app, {
@@ -62,6 +65,15 @@ export const signUpWithEmail = async (
     verificationSent = false
   }
   return { user: cred.user, verificationSent }
+}
+
+/**
+ * 인증 메일을 다시 보낸다. 가입 때 signUpWithEmail 이 한 번 자동으로 보내므로,
+ * 이건 "메일이 안 왔어요"로 다시 요청하는 경우에 쓴다.
+ */
+export const sendVerificationEmail = (): Promise<void> => {
+  if (!auth.currentUser) return Promise.reject(new Error('로그인이 필요합니다'))
+  return sendEmailVerification(auth.currentUser)
 }
 
 export const signInWithEmail = (email: string, password: string): Promise<User> =>
@@ -339,6 +351,51 @@ export const exportAllData = async (spaceId: string) => {
     stockTrades: stockTradesSnap.docs.map(d => ({ id: d.id, ...d.data() } as StockTrade)),
     stockCategories: stockCategoriesSnap.exists() ? (stockCategoriesSnap.data() as { categories: StockCategoryDef[] }) : null,
   }
+}
+
+/** uid 필드로 본인 문서를 찾는 컬렉션들. 월별 문서도 안에 uid 를 갖고 있어 같은 방식으로 지운다. */
+const OWNED_COLLECTIONS = [
+  'expenses', 'stock_trades', 'asset_accounts', 'fixed_items', 'savings_items',
+  'fixed_monthly', 'savings_monthly', 'monthly_income', 'asset_accounts_monthly', 'asset_snapshots',
+]
+
+/** 문서 id 가 곧 spaceId 인 컬렉션들. */
+const KEYED_COLLECTIONS = ['payment_labels', 'expense_categories', 'asset_types', 'stock_categories']
+
+/**
+ * 회원 탈퇴. 개인 데이터를 지우고 Auth 계정을 없앤다.
+ *
+ * 공유 가계부 데이터는 건드리지 않는다 — 공유 모드의 문서는 uid 필드에 household 초대 코드가
+ * 들어 있어서 같이 쓰는 사람 것이기도 하다. 여기서는 본인 uid 로 저장된 개인 데이터만 지우고,
+ * household 에서는 멤버로서 빠지기만 한다.
+ *
+ * Auth 계정을 맨 마지막에 지운다 — 중간에 실패해도 로그인 상태가 남아 있어야 다시 시도할 수 있다.
+ * 반대로 하면 로그인이 끊겨 남은 데이터를 지울 방법이 사라진다.
+ */
+export const deleteAccount = async (householdCode: string | null): Promise<void> => {
+  const current = auth.currentUser
+  if (!current) throw new Error('로그인이 필요합니다')
+  const uid = current.uid
+
+  for (const name of OWNED_COLLECTIONS) {
+    const snap = await getDocs(query(collection(db, name), where('uid', '==', uid)))
+    // writeBatch 는 한 번에 500건까지라 나눠 보낸다
+    for (let i = 0; i < snap.docs.length; i += 400) {
+      const batch = writeBatch(db)
+      for (const d of snap.docs.slice(i, i + 400)) batch.delete(d.ref)
+      await batch.commit()
+    }
+  }
+
+  for (const name of KEYED_COLLECTIONS) {
+    await deleteDoc(doc(db, name, uid))
+  }
+
+  // 공유 가계부에서는 데이터를 지우지 않고 멤버에서만 빠진다
+  if (householdCode) await updateDoc(doc(db, 'households', householdCode), { members: arrayRemove(uid) })
+
+  await deleteDoc(doc(db, 'user_profiles', uid))
+  await deleteUser(current)
 }
 
 // ── User Profiles ─────────────────────────────────────────────

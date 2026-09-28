@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react'
 import { useAuth } from './hooks/useAuth'
 import { useData } from './hooks/useData'
 import { useHousehold } from './hooks/useHousehold'
-import { signIn, signOutUser, exportAllData, signInWithEmail, signUpWithEmail, sendPasswordReset } from './firebase'
+import { signIn, signOutUser, exportAllData, signInWithEmail, signUpWithEmail, sendPasswordReset, deleteAccount } from './firebase'
 import Header from './components/Header'
 import TabBar, { type Tab } from './components/TabBar'
 import Sidebar from './components/Sidebar'
@@ -71,7 +71,7 @@ function withErrorAlert<A extends unknown[]>(action: string, fn: (...args: A) =>
 }
 
 export default function App() {
-  const { user, loading } = useAuth()
+  const { user, loading, refreshUser } = useAuth()
   const [tab, setTab] = useState<Tab>(() => {
     const saved = localStorage.getItem('moneylog-tab') as Tab | null
     const valid: Tab[] = ['home', 'calendar', 'expense', 'fixed', 'assets', 'stocks', 'more']
@@ -230,6 +230,8 @@ export default function App() {
             photoURL={photoURL}
             onChangeName={household.setName}
             onChangePhoto={household.setPhoto}
+            onRefreshUser={refreshUser}
+            onDeleteAccount={() => deleteAccount(household.householdCode)}
             mode={household.mode}
             householdCode={household.householdCode}
             theme={theme}

@@ -85,30 +85,37 @@ service cloud.firestore {
     }
 
     // Documents keyed by `{spaceId}_{yearMonth}`, with a `uid` (space id) field inside.
+    // delete is allowed so a member can wipe their own space on account deletion —
+    // without it the monthly docs would outlive the account with nobody able to read them.
     match /fixed_monthly/{id} {
       allow read: if ownsMonthlyDoc(id);
       allow create: if ownsSpace(request.resource.data.uid);
       allow update: if ownsSpace(resource.data.uid) && request.resource.data.uid == resource.data.uid;
+      allow delete: if ownsSpace(resource.data.uid);
     }
     match /savings_monthly/{id} {
       allow read: if ownsMonthlyDoc(id);
       allow create: if ownsSpace(request.resource.data.uid);
       allow update: if ownsSpace(resource.data.uid) && request.resource.data.uid == resource.data.uid;
+      allow delete: if ownsSpace(resource.data.uid);
     }
     match /monthly_income/{id} {
       allow read: if ownsMonthlyDoc(id);
       allow create: if ownsSpace(request.resource.data.uid);
       allow update: if ownsSpace(resource.data.uid) && request.resource.data.uid == resource.data.uid;
+      allow delete: if ownsSpace(resource.data.uid);
     }
     match /asset_accounts_monthly/{id} {
       allow read: if ownsMonthlyDoc(id);
       allow create: if ownsSpace(request.resource.data.uid);
       allow update: if ownsSpace(resource.data.uid) && request.resource.data.uid == resource.data.uid;
+      allow delete: if ownsSpace(resource.data.uid);
     }
     match /asset_snapshots/{id} {
       allow read: if ownsMonthlyDoc(id);
       allow create: if ownsSpace(request.resource.data.uid);
       allow update: if ownsSpace(resource.data.uid) && request.resource.data.uid == resource.data.uid;
+      allow delete: if ownsSpace(resource.data.uid);
     }
 
     // Documents keyed directly by the space id (no `uid` field inside).

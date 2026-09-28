@@ -512,6 +512,28 @@ button.more-card { width: 100%; text-align: left; font: inherit; color: inherit;
 .more-theme-toggle { margin-top: 0; width: auto; }
 .more-theme-toggle .mode-btn { flex: none; padding: 6px 14px; font-size: 13px; }
 .more-footer { text-align: center; font-size: 12px; color: var(--text-dim); padding: 8px 0 20px; }
+/* ── 회원 탈퇴 ───────────────────────────────────────────────── */
+/* 로그아웃보다 한 단계 낮은 위계로 둔다 — 파괴적 동작이지만 평소엔 눈에 안 띄어야 한다 */
+.more-row-quiet { color: var(--text-dim); font-weight: 500; }
+.delete-lead { font-size: 14px; line-height: 1.6; }
+.delete-lead b { word-break: break-all; }
+.delete-list { background: var(--surface-2); border-radius: 12px; padding: 14px 16px; }
+.delete-list-title { font-size: 13px; font-weight: 700; color: var(--danger); margin-bottom: 8px; }
+.delete-list ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+.delete-list li { font-size: 13px; color: var(--text-dim); line-height: 1.5; }
+.delete-note { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+.delete-note b { color: var(--text); font-family: "Source Code Pro", monospace; letter-spacing: 0.1em; }
+.delete-error { font-size: 13px; color: var(--danger); line-height: 1.5; }
+
+/* ── 이메일 인증 안내 ────────────────────────────────────────── */
+/* 테두리 대신 옅은 배경으로 알린다 — 막는 게 아니라 권하는 자리다 */
+.verify-card { background: var(--surface); border: 1px solid rgba(255,59,48,0.28); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.verify-title { font-size: 15px; font-weight: 700; color: var(--text); }
+.verify-body { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+.verify-body b { color: var(--text); font-weight: 600; word-break: break-all; }
+.verify-msg { font-size: 13px; color: var(--accent); line-height: 1.5; }
+.verify-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
 .more-footer-brand { font-weight: 700; color: var(--text); font-family: "Source Code Pro", monospace; margin-bottom: 4px; }
 
 /* ── Transaction Type Toggle ─────────────────────────────────── */
