@@ -1,5 +1,5 @@
 import type { exportAllData } from './firebase'
-import { fmtWon as won } from './utils'
+import { fmtWon as won, stockProfitOf } from './utils'
 
 export type ExportData = Awaited<ReturnType<typeof exportAllData>>
 export type ExpenseRecord = ExportData['expenses'][number]
@@ -13,6 +13,7 @@ export function filterByRange(data: ExportData, from: string, to: string): Expor
     savingsMonthly: data.savingsMonthly?.filter((e) => inRange(e.yearMonth)) ?? [],
     monthlyIncome: data.monthlyIncome?.filter((e) => inRange(e.yearMonth)) ?? [],
     assetSnapshots: data.assetSnapshots?.filter((e) => inRange(e.yearMonth)) ?? [],
+    stockTrades: data.stockTrades?.filter((e) => inRange(e.yearMonth)) ?? [],
   }
 }
 
@@ -24,6 +25,8 @@ export function formatAsText(data: ExportData): string {
   for (const m of data.paymentMethods?.methods ?? []) methodMap[m.id] = m.label
   const accountMap: Record<string, string> = {}
   for (const a of data.assetAccounts ?? []) accountMap[a.id] = a.label
+  const stockCatMap: Record<string, string> = {}
+  for (const c of data.stockCategories?.categories ?? []) stockCatMap[c.id] = c.label
 
   lines.push('Moneylog 데이터 백업')
   lines.push(`내보낸 날짜: ${data.exportedAt?.slice(0, 10) ?? ''}`)
@@ -41,8 +44,9 @@ export function formatAsText(data: ExportData): string {
     const expenses = sorted.filter((e) => e.type !== 'income')
     if (incomes.length) {
       lines.push('  ▸ 수입')
+      // 주식 손실이 연동 수입으로 들어오면 금액이 음수다 — 부호를 앞에 한 번만 붙인다
       for (const e of incomes)
-        lines.push(`    ${e.date}  ${e.label}  +${won(e.amount)}`)
+        lines.push(`    ${e.date}  ${e.label}  ${e.amount < 0 ? '-' : '+'}${won(Math.abs(e.amount))}`)
     }
     if (expenses.length) {
       lines.push('  ▸ 지출')
@@ -85,6 +89,24 @@ export function formatAsText(data: ExportData): string {
       lines.push(`\n[${snap.yearMonth}] 기준일: ${snap.asOf}  /  합계: ${won(total)}`)
       for (const [id, amt] of Object.entries(snap.amounts as Record<string, number>))
         lines.push(`  ${accountMap[id] ?? id}: ${won(amt)}`)
+    }
+  }
+
+  // 주식 거래
+  if (data.stockTrades?.length) {
+    lines.push('\n\n━━━ 주식 거래 내역 ━━━')
+    const byTradeMonth: Record<string, ExportData['stockTrades']> = {}
+    for (const t of data.stockTrades) (byTradeMonth[t.yearMonth] ??= []).push(t)
+    for (const ym of Object.keys(byTradeMonth).sort()) {
+      const trades = [...byTradeMonth[ym]].sort((a, b) => a.sellDate.localeCompare(b.sellDate))
+      const monthProfit = trades.reduce((sum, t) => sum + stockProfitOf(t), 0)
+      lines.push(`\n[${ym}] 손익 합계: ${monthProfit < 0 ? '-' : '+'}${won(Math.abs(monthProfit))}`)
+      for (const t of trades) {
+        const profit = stockProfitOf(t)
+        const cat = t.category ? ` [${stockCatMap[t.category] ?? t.category}]` : ''
+        lines.push(`  ${t.sellDate}  ${t.label}${cat}`)
+        lines.push(`    매수 ${won(t.buyPrice)} → 매도 ${won(t.sellPrice)} × ${t.quantity}주  =  ${profit < 0 ? '-' : '+'}${won(Math.abs(profit))}`)
+      }
     }
   }
 

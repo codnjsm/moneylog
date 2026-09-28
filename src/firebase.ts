@@ -221,7 +221,11 @@ export const setStockCategories = (uid: string, categories: StockCategoryDef[]) 
   setDoc(doc(db, 'stock_categories', uid), { categories })
 
 // ── Data Export ──────────────────────────────────────────────
-export const exportAllData = async (uid: string) => {
+/**
+ * spaceId 기준으로 전부 읽어온다 — 개인 모드면 본인 uid, 공유 모드면 household 초대 코드다.
+ * 여기에 auth uid 를 넘기면 공유 모드에서 화면과 다른(사실상 빈) 데이터가 나온다.
+ */
+export const exportAllData = async (spaceId: string) => {
   const [
     expensesSnap,
     fixedMonthlySnap,
@@ -234,23 +238,25 @@ export const exportAllData = async (uid: string) => {
     categoriesSnap,
     assetTypesSnap,
     stockTradesSnap,
+    stockCategoriesSnap,
   ] = await Promise.all([
-    getDocs(query(collection(db, 'expenses'), where('uid', '==', uid))),
-    getDocs(query(collection(db, 'fixed_monthly'), where('uid', '==', uid))),
-    getDocs(query(collection(db, 'savings_monthly'), where('uid', '==', uid))),
-    getDocs(query(collection(db, 'monthly_income'), where('uid', '==', uid))),
-    getDocs(query(collection(db, 'asset_accounts'), where('uid', '==', uid))),
-    getDocs(query(collection(db, 'asset_accounts_monthly'), where('uid', '==', uid))),
-    getDocs(query(collection(db, 'asset_snapshots'), where('uid', '==', uid))),
-    getDoc(doc(db, 'payment_labels', uid)),
-    getDoc(doc(db, 'expense_categories', uid)),
-    getDoc(doc(db, 'asset_types', uid)),
-    getDocs(query(collection(db, 'stock_trades'), where('uid', '==', uid))),
+    getDocs(query(collection(db, 'expenses'), where('uid', '==', spaceId))),
+    getDocs(query(collection(db, 'fixed_monthly'), where('uid', '==', spaceId))),
+    getDocs(query(collection(db, 'savings_monthly'), where('uid', '==', spaceId))),
+    getDocs(query(collection(db, 'monthly_income'), where('uid', '==', spaceId))),
+    getDocs(query(collection(db, 'asset_accounts'), where('uid', '==', spaceId))),
+    getDocs(query(collection(db, 'asset_accounts_monthly'), where('uid', '==', spaceId))),
+    getDocs(query(collection(db, 'asset_snapshots'), where('uid', '==', spaceId))),
+    getDoc(doc(db, 'payment_labels', spaceId)),
+    getDoc(doc(db, 'expense_categories', spaceId)),
+    getDoc(doc(db, 'asset_types', spaceId)),
+    getDocs(query(collection(db, 'stock_trades'), where('uid', '==', spaceId))),
+    getDoc(doc(db, 'stock_categories', spaceId)),
   ])
 
   return {
     exportedAt: new Date().toISOString(),
-    uid,
+    uid: spaceId,
     expenses: expensesSnap.docs.map(d => ({ id: d.id, ...d.data() } as Expense)),
     fixedMonthly: fixedMonthlySnap.docs.map(d => ({ id: d.id, ...d.data() } as { id: string; uid: string; yearMonth: string; items: FixedItem[] })),
     savingsMonthly: savingsMonthlySnap.docs.map(d => ({ id: d.id, ...d.data() } as { id: string; uid: string; yearMonth: string; items: SavingsItem[] })),
@@ -262,6 +268,7 @@ export const exportAllData = async (uid: string) => {
     categories: categoriesSnap.exists() ? (categoriesSnap.data() as { categories: CategoryDef[] }) : null,
     assetTypes: assetTypesSnap.exists() ? (assetTypesSnap.data() as { types: AssetTypeDef[] }) : null,
     stockTrades: stockTradesSnap.docs.map(d => ({ id: d.id, ...d.data() } as StockTrade)),
+    stockCategories: stockCategoriesSnap.exists() ? (stockCategoriesSnap.data() as { categories: StockCategoryDef[] }) : null,
   }
 }
 

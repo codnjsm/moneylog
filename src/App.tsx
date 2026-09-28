@@ -220,7 +220,7 @@ export default function App() {
             onJoin={household.join}
             onLeave={household.leave}
             onSignOut={signOutUser}
-            onExport={() => exportAllData(user.uid)}
+            onExport={() => exportAllData(household.spaceId)}
           />
         )}
         </div>
