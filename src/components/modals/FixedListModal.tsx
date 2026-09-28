@@ -37,7 +37,9 @@ export default function FixedListModal({ items, onSave, onClose }: Props) {
     }))))
   }
 
-  const canSave = rows.some(r => r.label.trim() && Number(r.amount) > 0)
+  // 마지막 항목까지 지운 뒤 저장할 수 있어야 한다 — rows.some() 은 빈 배열에서 false 라
+  // 길이 0 을 따로 통과시키지 않으면 삭제 자체가 막힌다.
+  const canSave = rows.length === 0 || rows.some(r => r.label.trim() && Number(r.amount) > 0)
 
   return (
     <Modal onClose={onClose}>
