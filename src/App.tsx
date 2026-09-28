@@ -231,7 +231,7 @@ export default function App() {
             onChangeName={household.setName}
             onChangePhoto={household.setPhoto}
             onRefreshUser={refreshUser}
-            onDeleteAccount={() => deleteAccount(household.householdCode)}
+            onDeleteAccount={(password) => deleteAccount(household.householdCode, password)}
             mode={household.mode}
             householdCode={household.householdCode}
             theme={theme}

@@ -2,7 +2,8 @@ import { initializeApp } from 'firebase/app'
 import {
   getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged,
   createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail,
-  sendEmailVerification, updateProfile, deleteUser, type User,
+  sendEmailVerification, updateProfile, deleteUser,
+  reauthenticateWithCredential, reauthenticateWithPopup, EmailAuthProvider, type User,
 } from 'firebase/auth'
 import {
   initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
@@ -362,6 +363,10 @@ const OWNED_COLLECTIONS = [
 /** 문서 id 가 곧 spaceId 인 컬렉션들. */
 const KEYED_COLLECTIONS = ['payment_labels', 'expense_categories', 'asset_types', 'stock_categories']
 
+/** 이 계정이 이메일/비밀번호로 가입한 것인지. 아니면 구글이다. */
+export const isPasswordAccount = (): boolean =>
+  auth.currentUser?.providerData.some((p) => p.providerId === 'password') ?? false
+
 /**
  * 회원 탈퇴. 개인 데이터를 지우고 Auth 계정을 없앤다.
  *
@@ -372,10 +377,18 @@ const KEYED_COLLECTIONS = ['payment_labels', 'expense_categories', 'asset_types'
  * Auth 계정을 맨 마지막에 지운다 — 중간에 실패해도 로그인 상태가 남아 있어야 다시 시도할 수 있다.
  * 반대로 하면 로그인이 끊겨 남은 데이터를 지울 방법이 사라진다.
  */
-export const deleteAccount = async (householdCode: string | null): Promise<void> => {
+export const deleteAccount = async (householdCode: string | null, password?: string): Promise<void> => {
   const current = auth.currentUser
   if (!current) throw new Error('로그인이 필요합니다')
   const uid = current.uid
+
+  // 무엇보다 먼저 재인증한다. Firebase 는 로그인한 지 오래되면 계정 삭제를 거부하는데(requires-recent-login),
+  // 이걸 맨 마지막에 부딪히면 데이터는 이미 지워지고 계정만 남는다. 지울 수 있음을 먼저 확인한다.
+  if (password) {
+    await reauthenticateWithCredential(current, EmailAuthProvider.credential(current.email ?? '', password))
+  } else {
+    await reauthenticateWithPopup(current, provider)
+  }
 
   for (const name of OWNED_COLLECTIONS) {
     const snap = await getDocs(query(collection(db, name), where('uid', '==', uid)))

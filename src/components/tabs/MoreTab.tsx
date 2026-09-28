@@ -24,7 +24,7 @@ interface Props {
   onExport: () => Promise<unknown>
   /** 이메일 인증 여부를 서버에서 다시 읽어온다. 인증됐으면 true. */
   onRefreshUser: () => Promise<boolean>
-  onDeleteAccount: () => Promise<void>
+  onDeleteAccount: (password?: string) => Promise<void>
 }
 
 export default function MoreTab({ user, displayName, photoURL, onChangeName, onChangePhoto, mode, householdCode, theme, onSetTheme, onSwitchMode, onCreate, onJoin, onLeave, onSignOut, onExport, onRefreshUser, onDeleteAccount }: Props) {
