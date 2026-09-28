@@ -205,6 +205,30 @@ header {
 .login-password-wrap input { flex: 1; padding-right: 40px; }
 .login-eye { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-dim); cursor: pointer; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0; }
 
+/* ── Toast ───────────────────────────────────────────────────── */
+/* 탈퇴처럼 화면이 통째로 바뀐 뒤에도 보여야 해서 App 이 들고 있다 */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  max-width: calc(100% - 32px);
+  background: var(--text);
+  color: var(--bg);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 12px 20px;
+  border-radius: 999px;
+  box-shadow: var(--shadow);
+  z-index: 200;
+  white-space: nowrap;
+  animation: toast-in 0.2s ease-out;
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translate(-50%, 8px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
 /* ── Modal ───────────────────────────────────────────────────── */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: flex-end; justify-content: center; z-index: 100; }
 .modal { background: var(--surface); border-radius: 24px 24px 0 0; width: 100%; max-width: 600px; max-height: 92dvh; display: flex; flex-direction: column; overflow: hidden; }

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useAuth } from './hooks/useAuth'
 import { useData } from './hooks/useData'
 import { useHousehold } from './hooks/useHousehold'
@@ -81,7 +81,15 @@ export default function App() {
     (document.documentElement.getAttribute('data-theme') as 'light' | 'dark' | null) ?? 'light'
   )
   const [monthOffset, setMonthOffset] = useState(0)
+  // 탈퇴하면 더보기 탭이 사라지고 로그인 화면으로 바뀌므로, 알림은 App 이 들고 있어야 살아남는다.
+  const [toast, setToast] = useState('')
   const [modal, setModal] = useState<ModalState>(null)
+
+  useEffect(() => {
+    if (!toast) return
+    const timer = setTimeout(() => setToast(''), 4000)
+    return () => clearTimeout(timer)
+  }, [toast])
 
   const setTheme = useCallback((t: 'light' | 'dark') => {
     setThemeState(t)
@@ -120,12 +128,15 @@ export default function App() {
   const photoURL = household.profilePhoto ?? user?.photoURL ?? ''
 
   if (!user) return (
-    <LoginOverlay
-      onSignIn={signIn}
-      onEmailSignIn={signInWithEmail}
-      onEmailSignUp={signUpWithEmail}
-      onPasswordReset={sendPasswordReset}
-    />
+    <>
+      <LoginOverlay
+        onSignIn={signIn}
+        onEmailSignIn={signInWithEmail}
+        onEmailSignUp={signUpWithEmail}
+        onPasswordReset={sendPasswordReset}
+      />
+      {toast && <div className="toast" role="status">{toast}</div>}
+    </>
   )
 
   return (
@@ -231,7 +242,10 @@ export default function App() {
             onChangeName={household.setName}
             onChangePhoto={household.setPhoto}
             onRefreshUser={refreshUser}
-            onDeleteAccount={(password) => deleteAccount(household.householdCode, password)}
+            onDeleteAccount={async (password) => {
+              await deleteAccount(household.householdCode, password)
+              setToast('탈퇴가 완료되었어요')
+            }}
             mode={household.mode}
             householdCode={household.householdCode}
             theme={theme}
