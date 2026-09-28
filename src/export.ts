@@ -1,5 +1,6 @@
 import type { exportAllData } from './firebase'
 import { fmtWon as won, stockProfitOf } from './utils'
+import { DEFAULT_PAYMENT_METHODS, DEFAULT_CATEGORIES, DEFAULT_STOCK_CATEGORIES } from './types'
 
 export type ExportData = Awaited<ReturnType<typeof exportAllData>>
 export type ExpenseRecord = ExportData['expenses'][number]
@@ -19,14 +20,20 @@ export function filterByRange(data: ExportData, from: string, to: string): Expor
 
 export function formatAsText(data: ExportData): string {
   const lines: string[] = []
+  // 커스터마이즈한 적이 없으면 Firestore 에 문서가 없다 — 앱과 같이 기본값으로 채운다.
+  // (안 그러면 라벨 대신 'food', 'samsung' 같은 id 가 그대로 찍힌다)
+  const methods = data.paymentMethods?.methods ?? DEFAULT_PAYMENT_METHODS
+  const cats = data.categories?.categories ?? DEFAULT_CATEGORIES
+  const stockCats = data.stockCategories?.categories ?? DEFAULT_STOCK_CATEGORIES
+
   const catMap: Record<string, string> = {}
-  for (const c of data.categories?.categories ?? []) catMap[c.id] = c.label
+  for (const c of cats) catMap[c.id] = c.label
   const methodMap: Record<string, string> = {}
-  for (const m of data.paymentMethods?.methods ?? []) methodMap[m.id] = m.label
+  for (const m of methods) methodMap[m.id] = m.label
   const accountMap: Record<string, string> = {}
   for (const a of data.assetAccounts ?? []) accountMap[a.id] = a.label
   const stockCatMap: Record<string, string> = {}
-  for (const c of data.stockCategories?.categories ?? []) stockCatMap[c.id] = c.label
+  for (const c of stockCats) stockCatMap[c.id] = c.label
 
   lines.push('Moneylog 데이터 백업')
   lines.push(`내보낸 날짜: ${data.exportedAt?.slice(0, 10) ?? ''}`)
@@ -112,11 +119,11 @@ export function formatAsText(data: ExportData): string {
 
   // 결제수단 / 카테고리
   lines.push('\n\n━━━ 결제 수단 ━━━')
-  for (const m of data.paymentMethods?.methods ?? [])
+  for (const m of methods)
     lines.push(`  ${m.label}`)
 
   lines.push('\n━━━ 카테고리 ━━━')
-  for (const c of data.categories?.categories ?? [])
+  for (const c of cats)
     lines.push(`  ${c.label}`)
 
   return lines.join('\n')
