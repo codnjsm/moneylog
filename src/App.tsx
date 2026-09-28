@@ -132,7 +132,12 @@ export default function App() {
       <LoginOverlay
         onSignIn={signIn}
         onEmailSignIn={signInWithEmail}
-        onEmailSignUp={signUpWithEmail}
+        onEmailSignUp={async (name, email, password) => {
+          const result = await signUpWithEmail(name, email, password)
+          // 인증 메일 발송 실패는 LoginOverlay 가 알릴 틈이 없다 — 가입과 동시에 언마운트되기 때문
+          setToast(result.verificationSent ? '가입이 완료되었어요. 인증 메일을 확인해주세요' : '가입했어요. 인증 메일은 보내지 못했어요')
+          return result
+        }}
         onPasswordReset={sendPasswordReset}
       />
       {toast && <div className="toast" role="status">{toast}</div>}
@@ -372,6 +377,7 @@ export default function App() {
           onClose={closeModal}
         />
       )}
+      {toast && <div className="toast" role="status">{toast}</div>}
     </div>
   )
 }

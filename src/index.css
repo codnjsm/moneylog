@@ -218,10 +218,12 @@ header {
   font-size: 14px;
   font-weight: 500;
   padding: 12px 20px;
-  border-radius: 999px;
   box-shadow: var(--shadow);
   z-index: 200;
-  white-space: nowrap;
+  /* 문구가 길면 한 줄에 안 들어간다 — 좁은 화면에서 잘리지 않게 줄바꿈을 허용한다 */
+  text-align: center;
+  line-height: 1.45;
+  border-radius: 18px;
   animation: toast-in 0.2s ease-out;
 }
 @keyframes toast-in {

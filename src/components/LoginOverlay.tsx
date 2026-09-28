@@ -38,14 +38,12 @@ export default function LoginOverlay({ onSignIn, onEmailSignIn, onEmailSignUp, o
   const [googleBusy, setGoogleBusy] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
-  const [notice, setNotice] = useState('')
   const [resetSent, setResetSent] = useState(false)
   const inApp = isInAppBrowser()
 
   const switchMode = (m: Mode) => {
     setMode(m)
     setError('')
-    setNotice('')
   }
 
   const handleGoogle = async () => {
@@ -71,10 +69,9 @@ export default function LoginOverlay({ onSignIn, onEmailSignIn, onEmailSignUp, o
     setError('')
     try {
       if (mode === 'signup') {
-        const { verificationSent } = await onEmailSignUp(name.trim(), email.trim(), password)
         // 가입에 성공하면 곧바로 로그인 상태가 되어 이 화면이 사라진다.
-        // 메일 발송이 실패했을 때만 알릴 기회가 있다.
-        if (!verificationSent) setNotice('인증 메일을 보내지 못했어요. 나중에 다시 보낼 수 있어요')
+        // 결과 안내(인증 메일 발송 여부 포함)는 App 이 토스트로 띄운다.
+        await onEmailSignUp(name.trim(), email.trim(), password)
       } else {
         await onEmailSignIn(email.trim(), password)
       }
@@ -217,7 +214,6 @@ export default function LoginOverlay({ onSignIn, onEmailSignIn, onEmailSignUp, o
                 <button type="button" className="login-link" onClick={() => switchMode('reset')}>비밀번호를 잊으셨나요?</button>
               )}
               {error && <p className="login-error">{error}</p>}
-              {notice && <p className="login-hint">{notice}</p>}
               <button type="submit" className="btn btn-primary login-block-btn" disabled={submitting}>
                 {submitting ? '처리 중…' : mode === 'signup' ? '가입하기' : '로그인'}
               </button>
