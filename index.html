@@ -6,6 +6,8 @@
     <title>Moneylog</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#F2F2F7" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -28,6 +30,9 @@
           localStorage.setItem('moneylog-theme', saved);
         }
         document.documentElement.setAttribute('data-theme', saved);
+        // 안드로이드 상태바 색도 앱이 고정한 테마를 따라간다.
+        var tc = document.querySelector('meta[name="theme-color"]');
+        if (tc) tc.setAttribute('content', saved === 'dark' ? '#000000' : '#F2F2F7');
       })();
     </script>
     <div id="root"></div>

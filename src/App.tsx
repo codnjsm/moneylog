@@ -82,6 +82,8 @@ export default function App() {
     setThemeState(t)
     localStorage.setItem('moneylog-theme', t)
     document.documentElement.setAttribute('data-theme', t)
+    document.querySelector('meta[name="theme-color"]')
+      ?.setAttribute('content', t === 'dark' ? '#000000' : '#F2F2F7')
   }, [])
 
   const yearMonth = getYearMonth(monthOffset)

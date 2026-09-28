@@ -1,7 +1,8 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, type User } from 'firebase/auth'
 import {
-  getFirestore, collection, doc, setDoc, addDoc, updateDoc, deleteDoc, writeBatch,
+  initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
+  collection, doc, setDoc, addDoc, updateDoc, deleteDoc, writeBatch,
   query, where, onSnapshot, getDoc, getDocs, arrayUnion, arrayRemove, limit, type Unsubscribe,
 } from 'firebase/firestore'
 import type { FixedItem, SavingsItem, Expense, MonthlyIncome, AssetAccount, AssetSnapshot, IncomeItem, UserProfile, PaymentMethodDef, CategoryDef, AssetTypeDef, StockTrade, StockCategoryDef } from './types'
@@ -18,7 +19,11 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig)
 export const auth = getAuth(app)
-export const db = getFirestore(app)
+// 로컬 캐시를 켜서 오프라인에서도 열리고, 월을 옮길 때 캐시부터 그린다.
+// 탭 여러 개를 띄워도 캐시가 깨지지 않도록 multi-tab 매니저를 쓴다.
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+})
 
 const provider = new GoogleAuthProvider()
 provider.setCustomParameters({ prompt: 'select_account' })
