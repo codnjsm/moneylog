@@ -143,7 +143,9 @@ export function useData(uid: string, yearMonth: string) {
       const account: AssetAccount = { ...rest, id: Date.now().toString(), uid, order: assetAccounts.length }
       if (paymentDay != null) account.paymentDay = paymentDay
       if (maturityDate != null) account.maturityDate = maturityDate
-      return firebaseSetAssetAccountsMonthly(uid, yearMonth, [...assetAccounts, account]).then(() => account)
+      // id 는 기기에서 만들므로 바로 돌려주고, 쓰기는 따로 기다리게 한다.
+      // (쓰기 Promise 는 서버 응답까지 안 풀려서 오프라인에서 후속 작업이 막힌다)
+      return { id: account.id, write: firebaseSetAssetAccountsMonthly(uid, yearMonth, [...assetAccounts, account]) }
     },
     updateAssetAccount: (id: string, data: Omit<AssetAccount, 'id' | 'uid' | 'paymentDay' | 'maturityDate'> & { paymentDay?: number | null; maturityDate?: string | null }) => {
       const { paymentDay, maturityDate, ...rest } = data

@@ -55,6 +55,11 @@ function getYearMonth(offset = 0) {
   return d.toISOString().slice(0, 7)
 }
 
+/**
+ * 쓰기 실패를 알린다. 각 핸들러는 쓰기를 기다리지 않고 화면을 먼저 닫는다 —
+ * Firestore 쓰기 Promise 는 "서버가 받았을 때" 풀리므로, 기다리면 오프라인에서
+ * 모달이 영영 닫히지 않는다. 로컬 캐시에는 즉시 반영되고 온라인이 되면 자동 동기화된다.
+ */
 function withErrorAlert<A extends unknown[]>(action: string, fn: (...args: A) => Promise<void>) {
   return async (...args: A) => {
     try {
@@ -230,15 +235,16 @@ export default function App() {
           methods={data.paymentMethods}
           categories={data.categories}
           onSave={withErrorAlert('저장', async (items) => {
-            if (modal.item && items.length === 1) {
-              await data.updateExpense(modal.item.id, items[0])
+            const item = modal.item
+            closeModal()
+            if (item && items.length === 1) {
+              await data.updateExpense(item.id, items[0])
             } else {
               await Promise.all(items.map(d => data.addExpense(d)))
             }
-            closeModal()
           })}
-          onDelete={modal.item ? withErrorAlert('삭제', async () => { await data.deleteExpense(modal.item!.id); closeModal() }) : undefined}
-          onDeleteGroup={modal.item?.installmentGroupId ? withErrorAlert('삭제', async () => { await data.deleteExpenseGroup(modal.item!.installmentGroupId!); closeModal() }) : undefined}
+          onDelete={modal.item ? withErrorAlert('삭제', async () => { closeModal(); await data.deleteExpense(modal.item!.id) }) : undefined}
+          onDeleteGroup={modal.item?.installmentGroupId ? withErrorAlert('삭제', async () => { closeModal(); await data.deleteExpenseGroup(modal.item!.installmentGroupId!) }) : undefined}
           onClose={closeModal}
         />
       )}
@@ -247,8 +253,8 @@ export default function App() {
           expense={modal.item}
           yearMonth={yearMonth}
           initialDate={modal.initialDate}
-          onSave={withErrorAlert('저장', async (d) => { await (modal.item ? data.updateExpense(modal.item.id, d) : data.addExpense(d)); closeModal() })}
-          onDelete={modal.item ? withErrorAlert('삭제', async () => { await data.deleteExpense(modal.item!.id); closeModal() }) : undefined}
+          onSave={withErrorAlert('저장', async (d) => { const item = modal.item; closeModal(); await (item ? data.updateExpense(item.id, d) : data.addExpense(d)) })}
+          onDelete={modal.item ? withErrorAlert('삭제', async () => { closeModal(); await data.deleteExpense(modal.item!.id) }) : undefined}
           onClose={closeModal}
         />
       )}
@@ -257,26 +263,27 @@ export default function App() {
           trade={modal.item}
           categories={data.stockCategories}
           onSave={withErrorAlert('저장', async (d) => {
-            await (modal.item
-              ? data.updateStockTrade(modal.item.id, modal.item.linkedExpenseId, d)
-              : data.addStockTrade(d))
+            const item = modal.item
             closeModal()
+            await (item
+              ? data.updateStockTrade(item.id, item.linkedExpenseId, d)
+              : data.addStockTrade(d))
           })}
-          onDelete={modal.item ? withErrorAlert('삭제', async () => { await data.deleteStockTrade(modal.item!.id, modal.item!.linkedExpenseId); closeModal() }) : undefined}
+          onDelete={modal.item ? withErrorAlert('삭제', async () => { closeModal(); await data.deleteStockTrade(modal.item!.id, modal.item!.linkedExpenseId) }) : undefined}
           onClose={closeModal}
         />
       )}
       {modal?.type === 'fixed' && (
         <FixedListModal
           items={data.fixedItems}
-          onSave={withErrorAlert('저장', async (items) => { await data.bulkSaveFixedItems(items); closeModal() })}
+          onSave={withErrorAlert('저장', async (items) => { closeModal(); await data.bulkSaveFixedItems(items) })}
           onClose={closeModal}
         />
       )}
       {modal?.type === 'savings' && (
         <SavingsListModal
           items={data.savingsItems}
-          onSave={withErrorAlert('저장', async (items) => { await data.bulkSaveSavingsItems(items); closeModal() })}
+          onSave={withErrorAlert('저장', async (items) => { closeModal(); await data.bulkSaveSavingsItems(items) })}
           onClose={closeModal}
         />
       )}
@@ -288,14 +295,16 @@ export default function App() {
           onSave={withErrorAlert('저장', async (d, amount) => {
             const today = new Date().toISOString().slice(0, 10)
             const existing = data.assetSnapshot?.amounts ?? {}
-            if (modal.item) {
-              await data.updateAssetAccount(modal.item.id, d)
-              if (amount !== undefined) await data.setAssetSnapshot({ ...existing, [modal.item.id]: amount }, today)
-            } else {
-              const created = await data.addAssetAccount(d)
-              if (amount !== undefined) await data.setAssetSnapshot({ ...existing, [created.id]: amount }, today)
-            }
+            const item = modal.item
             closeModal()
+            // 새 계좌는 id 를 기기에서 먼저 만들어 두므로, 금액 기록도 쓰기 완료를 기다릴 필요가 없다
+            const { id, write } = item
+              ? { id: item.id, write: data.updateAssetAccount(item.id, d) }
+              : data.addAssetAccount(d)
+            await Promise.all([
+              write,
+              amount === undefined ? null : data.setAssetSnapshot({ ...existing, [id]: amount }, today),
+            ])
           })}
           onClose={closeModal}
         />
@@ -303,28 +312,28 @@ export default function App() {
       {modal?.type === 'paymentLabels' && (
         <PaymentLabelsModal
           methods={data.paymentMethods}
-          onSave={withErrorAlert('저장', async (m) => { await data.setPaymentMethods(m); closeModal() })}
+          onSave={withErrorAlert('저장', async (m) => { closeModal(); await data.setPaymentMethods(m) })}
           onClose={closeModal}
         />
       )}
       {modal?.type === 'categories' && (
         <CategoryModal
           categories={data.categories}
-          onSave={withErrorAlert('저장', async (cats) => { await data.setCategories(cats); closeModal() })}
+          onSave={withErrorAlert('저장', async (cats) => { closeModal(); await data.setCategories(cats) })}
           onClose={closeModal}
         />
       )}
       {modal?.type === 'assetTypes' && (
         <AssetTypeModal
           assetTypes={data.assetTypes}
-          onSave={withErrorAlert('저장', async (types) => { await data.setAssetTypes(types); closeModal() })}
+          onSave={withErrorAlert('저장', async (types) => { closeModal(); await data.setAssetTypes(types) })}
           onClose={closeModal}
         />
       )}
       {modal?.type === 'stockCategories' && (
         <StockCategoryModal
           categories={data.stockCategories}
-          onSave={withErrorAlert('저장', async (cats) => { await data.setStockCategories(cats); closeModal() })}
+          onSave={withErrorAlert('저장', async (cats) => { closeModal(); await data.setStockCategories(cats) })}
           onClose={closeModal}
         />
       )}
