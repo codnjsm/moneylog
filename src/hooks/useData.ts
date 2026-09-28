@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import type { FixedItem, SavingsItem, Expense, MonthlyIncome, AssetAccount, AssetSnapshot, IncomeItem, PaymentMethodDef, CategoryDef, AssetTypeDef, StockTrade, StockCategoryDef } from '../types'
-import { DEFAULT_PAYMENT_METHODS, DEFAULT_CATEGORIES, DEFAULT_ASSET_TYPES, DEFAULT_STOCK_CATEGORIES } from '../types'
+import { DEFAULT_PAYMENT_METHODS, LEGACY_PAYMENT_METHODS, DEFAULT_CATEGORIES, DEFAULT_ASSET_TYPES, DEFAULT_STOCK_CATEGORIES } from '../types'
 import { stockProfitOf } from '../utils'
 import {
   subscribeFixedItemsMonthly, setFixedItemsMonthly, getFixedItemsFallback,
@@ -81,7 +81,13 @@ export function useData(uid: string, yearMonth: string) {
   const fixedItems: FixedItem[] = fixedMonthly ?? fixedFallback
   const savingsItems: SavingsItem[] = savingsMonthly ?? savingsFallback
   const assetAccounts: AssetAccount[] = assetAccountsMonthly ?? assetAccountsFallback
-  const paymentMethods: PaymentMethodDef[] = customMethods ?? DEFAULT_PAYMENT_METHODS
+  // 결제수단을 따로 설정하지 않은 공간에서는 기본값을 쓰되, 예전 기본값 id 로 저장된
+  // 지출이 남아 있으면 그 결제수단도 목록에 넣는다. 안 그러면 라벨이 id 로 깨지고
+  // 결제수단별 합계에서도 빠진다. 해당 기록이 없어지면 선택지에서도 사라진다.
+  const paymentMethods: PaymentMethodDef[] = customMethods ?? [
+    ...DEFAULT_PAYMENT_METHODS,
+    ...LEGACY_PAYMENT_METHODS.filter((l) => expenses.some((e) => e.paymentMethod === l.id)),
+  ]
   const categories: CategoryDef[] = customCategories ?? DEFAULT_CATEGORIES
   const assetTypes: AssetTypeDef[] = customAssetTypes ?? DEFAULT_ASSET_TYPES
   const stockCategories: StockCategoryDef[] = customStockCategories ?? DEFAULT_STOCK_CATEGORIES

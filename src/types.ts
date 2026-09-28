@@ -23,9 +23,18 @@ export const METHOD_COLORS = [
 ]
 
 export const DEFAULT_PAYMENT_METHODS: PaymentMethodDef[] = [
+  { id: 'card', label: '카드', color: '#4FA3E0' },
+  { id: 'cash', label: '현금', color: '#FBBF24' },
+]
+
+/**
+ * 예전 기본값. 이 id 로 저장된 지출이 아직 남아 있을 수 있어서 라벨 조회용으로 남긴다.
+ * 결제수단을 따로 설정하지 않은 공간에서, 실제로 쓰인 것만 목록에 덧붙는다 —
+ * 쓰이지 않으면 선택지에도 안 나온다.
+ */
+export const LEGACY_PAYMENT_METHODS: PaymentMethodDef[] = [
   { id: 'samsung', label: '삼성 카드', color: '#4FA3E0' },
   { id: 'woori', label: '우리 카드', color: '#34D399' },
-  { id: 'cash', label: '현금', color: '#FBBF24' },
   { id: 'special', label: '특별 지출', color: '#A78BFA' },
   { id: 'safebox', label: '세이프박스', color: '#F472B6' },
 ]

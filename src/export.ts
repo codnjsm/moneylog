@@ -1,6 +1,6 @@
 import type { exportAllData } from './firebase'
 import { fmtWon as won, stockProfitOf } from './utils'
-import { DEFAULT_PAYMENT_METHODS, DEFAULT_CATEGORIES, DEFAULT_STOCK_CATEGORIES } from './types'
+import { DEFAULT_PAYMENT_METHODS, LEGACY_PAYMENT_METHODS, DEFAULT_CATEGORIES, DEFAULT_STOCK_CATEGORIES } from './types'
 
 export type ExportData = Awaited<ReturnType<typeof exportAllData>>
 export type ExpenseRecord = ExportData['expenses'][number]
@@ -22,7 +22,10 @@ export function formatAsText(data: ExportData): string {
   const lines: string[] = []
   // 커스터마이즈한 적이 없으면 Firestore 에 문서가 없다 — 앱과 같이 기본값으로 채운다.
   // (안 그러면 라벨 대신 'food', 'samsung' 같은 id 가 그대로 찍힌다)
-  const methods = data.paymentMethods?.methods ?? DEFAULT_PAYMENT_METHODS
+  const methods = data.paymentMethods?.methods ?? [
+    ...DEFAULT_PAYMENT_METHODS,
+    ...LEGACY_PAYMENT_METHODS.filter((l) => data.expenses?.some((e) => e.paymentMethod === l.id)),
+  ]
   const cats = data.categories?.categories ?? DEFAULT_CATEGORIES
   const stockCats = data.stockCategories?.categories ?? DEFAULT_STOCK_CATEGORIES
 
