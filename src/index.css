@@ -13,6 +13,7 @@
   --accent-hover: #0066CC;
   --accent-soft: rgba(0,122,255,0.12);
   --danger: #FF3B30;
+  --ok: #16a34a;
   --income: #229058;
   --income-soft: rgba(48,191,120,0.12);
   --expense: #FF3B30;
@@ -34,6 +35,7 @@
   --accent-hover: #409CFF;
   --accent-soft: rgba(10,132,255,0.15);
   --danger: #FF453A;
+  --ok: #4ade80;
   --income: #34C759;
   --income-soft: rgba(52,199,89,0.12);
   --expense: #FF453A;
@@ -206,29 +208,43 @@ header {
 .login-eye { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-dim); cursor: pointer; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0; }
 
 /* ── Toast ───────────────────────────────────────────────────── */
-/* 탈퇴처럼 화면이 통째로 바뀐 뒤에도 보여야 해서 App 이 들고 있다 */
+/* 탈퇴처럼 화면이 통째로 바뀐 뒤에도 보여야 해서 App 이 들고 있다.
+   모바일은 탭바 위 하단 중앙, 데스크톱은 상단 중앙 — 등장 방향도 그에 맞춘다. */
 .toast {
   position: fixed;
   left: 50%;
-  bottom: calc(24px + env(safe-area-inset-bottom));
-  transform: translateX(-50%);
-  max-width: calc(100% - 32px);
-  background: var(--text);
-  color: var(--bg);
-  font-size: 14px;
-  font-weight: 500;
-  padding: 12px 20px;
+  bottom: calc(var(--tab-height) + env(safe-area-inset-bottom) + 16px);
+  transform: translate(-50%, 8px);
+  opacity: 0;
+  max-width: min(92vw, 420px);
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 12px;
+  padding: 12px 20px 12px 16px;
   box-shadow: var(--shadow);
   z-index: 200;
-  /* 문구가 길면 한 줄에 안 들어간다 — 좁은 화면에서 잘리지 않게 줄바꿈을 허용한다 */
-  text-align: center;
-  line-height: 1.45;
-  border-radius: 18px;
-  animation: toast-in 0.2s ease-out;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  line-height: 1.5;
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
 }
-@keyframes toast-in {
-  from { opacity: 0; transform: translate(-50%, 8px); }
-  to { opacity: 1; transform: translate(-50%, 0); }
+.toast.visible { transform: translate(-50%, 0); opacity: 1; }
+.toast.error { border-color: var(--danger); }
+/* 상태 아이콘. info 는 아이콘 없이 문구만 둔다. */
+.toast-icon { width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.toast-icon.success { background: var(--ok); }
+.toast-icon.error { background: var(--danger); }
+
+@media (min-width: 768px) {
+  .toast { bottom: auto; top: 24px; transform: translate(-50%, -8px); font-size: 13px; }
+  .toast.visible { transform: translate(-50%, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast { transition: none; }
 }
 
 /* ── Modal ───────────────────────────────────────────────────── */

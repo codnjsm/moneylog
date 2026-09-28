@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 import { useAuth } from './hooks/useAuth'
 import { useData } from './hooks/useData'
 import { useHousehold } from './hooks/useHousehold'
@@ -7,6 +7,7 @@ import Header from './components/Header'
 import TabBar, { type Tab } from './components/TabBar'
 import Sidebar from './components/Sidebar'
 import LoginOverlay from './components/LoginOverlay'
+import Toast, { type ToastState, type ToastType } from './components/Toast'
 import HomeTab from './components/tabs/HomeTab'
 import MoreTab from './components/tabs/MoreTab'
 import ExpenseTab from './components/tabs/ExpenseTab'
@@ -82,14 +83,15 @@ export default function App() {
   )
   const [monthOffset, setMonthOffset] = useState(0)
   // 탈퇴하면 더보기 탭이 사라지고 로그인 화면으로 바뀌므로, 알림은 App 이 들고 있어야 살아남는다.
-  const [toast, setToast] = useState('')
+  // key 는 같은 문구를 연달아 띄워도 전환이 다시 재생되게 한다.
+  const [toast, setToastState] = useState<ToastState | null>(null)
+  const showToast = useCallback((msg: string, type: ToastType = 'success') => {
+    const entry = { msg, type, key: Date.now() }
+    setToastState(entry)
+    // 0.3s 사라짐 전환이 끝난 뒤 걷어낸다
+    setTimeout(() => setToastState((cur) => (cur?.key === entry.key ? null : cur)), 2600)
+  }, [])
   const [modal, setModal] = useState<ModalState>(null)
-
-  useEffect(() => {
-    if (!toast) return
-    const timer = setTimeout(() => setToast(''), 4000)
-    return () => clearTimeout(timer)
-  }, [toast])
 
   const setTheme = useCallback((t: 'light' | 'dark') => {
     setThemeState(t)
@@ -135,12 +137,13 @@ export default function App() {
         onEmailSignUp={async (name, email, password) => {
           const result = await signUpWithEmail(name, email, password)
           // 인증 메일 발송 실패는 LoginOverlay 가 알릴 틈이 없다 — 가입과 동시에 언마운트되기 때문
-          setToast(result.verificationSent ? '가입이 완료되었어요. 인증 메일을 확인해주세요' : '가입했어요. 인증 메일은 보내지 못했어요')
+          if (result.verificationSent) showToast('가입이 완료되었어요. 인증 메일을 확인해주세요')
+          else showToast('가입했어요. 인증 메일은 보내지 못했어요', 'error')
           return result
         }}
         onPasswordReset={sendPasswordReset}
       />
-      {toast && <div className="toast" role="status">{toast}</div>}
+      <Toast toast={toast} />
     </>
   )
 
@@ -249,7 +252,7 @@ export default function App() {
             onRefreshUser={refreshUser}
             onDeleteAccount={async (password) => {
               await deleteAccount(household.householdCode, password)
-              setToast('탈퇴가 완료되었어요')
+              showToast('탈퇴가 완료되었어요')
             }}
             mode={household.mode}
             householdCode={household.householdCode}
@@ -377,7 +380,7 @@ export default function App() {
           onClose={closeModal}
         />
       )}
-      {toast && <div className="toast" role="status">{toast}</div>}
+      <Toast toast={toast} />
     </div>
   )
 }
