@@ -108,7 +108,7 @@ export default function HomeTab({ yearMonth, expenses, fixedItems, savingsItems,
             </div>
             {upcoming.length > 0 && (
               <div className="home-upcoming">
-                <div className="home-upcoming-title">다가오는 결제</div>
+                <div className="home-upcoming-title">다가오는 지출</div>
                 {upcoming.map((u, i) => (
                   <div key={i} className="home-upcoming-row">
                     <span className="home-upcoming-day">{u.diff === 0 ? '오늘' : u.diff === 1 ? '내일' : `${u.diff}일 후`}</span>
