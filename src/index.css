@@ -513,8 +513,6 @@ button.more-card { width: 100%; text-align: left; font: inherit; color: inherit;
 .more-theme-toggle .mode-btn { flex: none; padding: 6px 14px; font-size: 13px; }
 .more-footer { text-align: center; font-size: 12px; color: var(--text-dim); padding: 8px 0 20px; }
 /* ── 회원 탈퇴 ───────────────────────────────────────────────── */
-/* 로그아웃보다 한 단계 낮은 위계로 둔다 — 파괴적 동작이지만 평소엔 눈에 안 띄어야 한다 */
-.more-row-quiet { color: var(--text-dim); font-weight: 500; }
 .delete-lead { font-size: 14px; line-height: 1.6; }
 .delete-lead b { word-break: break-all; }
 .delete-list { background: var(--surface-2); border-radius: 12px; padding: 14px 16px; }

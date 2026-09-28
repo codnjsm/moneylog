@@ -258,7 +258,16 @@ export default function MoreTab({ user, displayName, photoURL, onChangeName, onC
       </button>
 
       <button type="button" className="more-card more-row" onClick={() => setDeleteOpen(true)}>
-        <span className="more-row-left more-row-quiet">회원 탈퇴</span>
+        <span className="more-row-left" style={{ color: 'var(--danger)' }}>
+          <svg width="20" height="20" viewBox="0 0 22 22" fill="none" stroke="var(--danger)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M4 6h14"/>
+            <path d="M9 6V4h4v2"/>
+            <path d="M6 6v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V6"/>
+            <path d="M9.5 10v5"/>
+            <path d="M12.5 10v5"/>
+          </svg>
+          회원 탈퇴
+        </span>
       </button>
 
       <div className="more-footer">
