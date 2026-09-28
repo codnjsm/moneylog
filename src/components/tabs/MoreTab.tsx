@@ -1,10 +1,15 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { User } from 'firebase/auth'
 import HouseholdSection from '../HouseholdSection'
 import ExportModal from '../ExportModal'
+import AvatarCropModal from '../modals/AvatarCropModal'
 
 interface Props {
   user: User
+  displayName: string
+  photoURL: string
+  onChangeName: (name: string) => Promise<void>
+  onChangePhoto: (photoURL: string) => Promise<void>
   mode: 'personal' | 'shared'
   householdCode: string | null
   theme: 'light' | 'dark'
@@ -17,8 +22,62 @@ interface Props {
   onExport: () => Promise<unknown>
 }
 
-export default function MoreTab({ user, mode, householdCode, theme, onSetTheme, onSwitchMode, onCreate, onJoin, onLeave, onSignOut, onExport }: Props) {
+export default function MoreTab({ user, displayName, photoURL, onChangeName, onChangePhoto, mode, householdCode, theme, onSetTheme, onSwitchMode, onCreate, onJoin, onLeave, onSignOut, onExport }: Props) {
   const [exportOpen, setExportOpen] = useState(false)
+  const [nameEditing, setNameEditing] = useState(false)
+  const [nameDraft, setNameDraft] = useState(displayName)
+  const [saving, setSaving] = useState(false)
+  const [cropFile, setCropFile] = useState<File | null>(null)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const photoInputRef = useRef<HTMLInputElement>(null)
+
+  const startEditName = () => {
+    setNameDraft(displayName)
+    setNameEditing(true)
+  }
+
+  const saveName = async () => {
+    const next = nameDraft.trim()
+    if (!next || next === displayName) {
+      setNameEditing(false)
+      return
+    }
+    setSaving(true)
+    try {
+      await onChangeName(next)
+      setNameEditing(false)
+    } catch {
+      alert('이름을 저장하지 못했어요')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // 사진이 없으면 고를 것밖에 없으니 바로 파일 선택기를 연다.
+  // 이미 있을 때만 "변경 / 삭제"를 고르는 메뉴를 띄운다.
+  const handlePhotoClick = () => {
+    if (!photoURL) photoInputRef.current?.click()
+    else setMenuOpen(true)
+  }
+
+  const savePhoto = async (next: string) => {
+    setMenuOpen(false)
+    setSaving(true)
+    try {
+      await onChangePhoto(next)
+    } catch {
+      alert('사진을 저장하지 못했어요')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handlePhotoSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    // 같은 파일을 다시 골라도 change 가 뜨도록 비워둔다
+    e.target.value = ''
+    if (file) setCropFile(file)
+  }
 
   const handleSignOut = () => {
     if (!confirm('로그아웃할까요?')) return
@@ -29,16 +88,72 @@ export default function MoreTab({ user, mode, householdCode, theme, onSetTheme, 
     <div className="tab-content more-page">
       <div className="more-card">
         <div className="account-user more-account-row" style={{ padding: 0 }}>
-          {user.photoURL
-            ? <img src={user.photoURL} referrerPolicy="no-referrer" className="account-avatar" alt="" />
-            : <div className="account-avatar-placeholder">{(user.displayName || user.email || '?')[0].toUpperCase()}</div>
-          }
+          <div className="account-avatar-wrap">
+          {menuOpen && (
+            <>
+              {/* 바깥을 눌러 닫는다 */}
+              <div className="account-menu-scrim" onClick={() => setMenuOpen(false)} />
+              <div className="account-menu" role="menu">
+                <button type="button" role="menuitem" onClick={() => { setMenuOpen(false); photoInputRef.current?.click() }}>
+                  사진 변경
+                </button>
+                <button type="button" role="menuitem" className="danger" onClick={() => savePhoto('')}>
+                  사진 삭제
+                </button>
+              </div>
+            </>
+          )}
+          <button
+            type="button"
+            className="account-avatar-btn"
+            onClick={handlePhotoClick}
+            disabled={saving}
+            aria-haspopup={photoURL ? 'menu' : undefined}
+            aria-expanded={photoURL ? menuOpen : undefined}
+            aria-label={photoURL ? '프로필 사진 바꾸기' : '프로필 사진 추가'}
+          >
+            {photoURL
+              ? <img src={photoURL} referrerPolicy="no-referrer" className="account-avatar" alt="" />
+              : <div className="account-avatar-placeholder">{(displayName || user.email || '?')[0].toUpperCase()}</div>
+            }
+            <span className="account-avatar-edit" aria-hidden="true">
+              <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M8 1.5 10.5 4 4 10.5H1.5V8z" />
+              </svg>
+            </span>
+          </button>
+          </div>
+          <input
+            ref={photoInputRef}
+            type="file"
+            accept="image/*"
+            className="sr-only"
+            onChange={handlePhotoSelected}
+          />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div className="account-name">{user.displayName || '사용자'}</div>
+            {nameEditing ? (
+              <div className="account-name-edit">
+                <input
+                  value={nameDraft}
+                  onChange={(e) => setNameDraft(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) saveName() }}
+                  aria-label="이름"
+                  autoFocus
+                />
+                <button className="btn btn-primary btn-sm" onClick={saveName} disabled={saving}>저장</button>
+                <button className="btn btn-secondary btn-sm" onClick={() => setNameEditing(false)} disabled={saving}>취소</button>
+              </div>
+            ) : (
+              <button type="button" className="account-name-btn" onClick={startEditName}>
+                <span className="account-name">{displayName || '사용자'}</span>
+                <span className="account-name-hint">수정</span>
+              </button>
+            )}
             <div className="account-email">{user.email}</div>
           </div>
-          <span className="more-status-badge"><span className="dot" />동기화됨</span>
+          {!nameEditing && <span className="more-status-badge"><span className="dot" />동기화됨</span>}
         </div>
+
       </div>
 
       <div className="more-card">
@@ -89,6 +204,13 @@ export default function MoreTab({ user, mode, householdCode, theme, onSetTheme, 
         로그아웃해도 이 계정의 데이터는 남아 있어요.
       </div>
 
+      {cropFile && (
+        <AvatarCropModal
+          file={cropFile}
+          onCancel={() => setCropFile(null)}
+          onApply={(dataUrl) => { setCropFile(null); savePhoto(dataUrl) }}
+        />
+      )}
       {exportOpen && <ExportModal onExport={onExport} onClose={() => setExportOpen(false)} />}
     </div>
   )

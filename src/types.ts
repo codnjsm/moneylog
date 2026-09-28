@@ -3,6 +3,15 @@ export type PaymentMethod = string
 export interface UserProfile {
   householdCode: string | null
   mode: 'personal' | 'shared'
+  /**
+   * 표시 이름과 프로필 사진. Auth 값이 아니라 이 문서가 기준이다 —
+   * 구글 계정은 로그인할 때마다 Auth 프로필이 구글 값으로 덮일 수 있어서,
+   * 직접 정한 값이 앱을 다시 열 때마다 되돌아가면 안 된다.
+   * 비어 있으면 Auth 값을 초기값으로 쓴다.
+   */
+  displayName?: string
+  /** 128px JPEG 데이터 URI. Storage 없이 문서에 직접 담는다(문서 한도 1MB). */
+  photoURL?: string
 }
 
 export interface Household {

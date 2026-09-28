@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react'
 import { useAuth } from './hooks/useAuth'
 import { useData } from './hooks/useData'
 import { useHousehold } from './hooks/useHousehold'
-import { signIn, signOutUser, exportAllData } from './firebase'
+import { signIn, signOutUser, exportAllData, signInWithEmail, signUpWithEmail, sendPasswordReset } from './firebase'
 import Header from './components/Header'
 import TabBar, { type Tab } from './components/TabBar'
 import Sidebar from './components/Sidebar'
@@ -113,7 +113,20 @@ export default function App() {
 
   if (loading) return <div className="loading">불러오는 중…</div>
 
-  if (!user) return <LoginOverlay onSignIn={signIn} />
+  // 이름·사진은 user_profiles 문서가 기준이고, 비어 있을 때만 Auth 값을 쓴다.
+  // 사진을 지우면 profilePhoto 가 빈 문자열이 되는데, ?? 는 빈 문자열을 통과시키므로
+  // "지웠다"가 Auth 사진으로 되돌아가지 않는다.
+  const displayName = household.profileName || user?.displayName || ''
+  const photoURL = household.profilePhoto ?? user?.photoURL ?? ''
+
+  if (!user) return (
+    <LoginOverlay
+      onSignIn={signIn}
+      onEmailSignIn={signInWithEmail}
+      onEmailSignUp={signUpWithEmail}
+      onPasswordReset={sendPasswordReset}
+    />
+  )
 
   return (
     <div className="app">
@@ -121,10 +134,12 @@ export default function App() {
         active={tab}
         onChange={changeTab}
         user={user}
+        displayName={displayName}
+        photoURL={photoURL}
         mode={household.mode}
         onAvatarClick={() => changeTab('more')}
       />
-      <Header user={user} mode={household.mode} onAvatarClick={() => changeTab('more')} />
+      <Header user={user} displayName={displayName} photoURL={photoURL} mode={household.mode} onAvatarClick={() => changeTab('more')} />
       <main className="app-main">
         <div className="main-container">
         <h1 className="sr-only">{TAB_TITLES[tab]}</h1>
@@ -211,6 +226,10 @@ export default function App() {
         {tab === 'more' && (
           <MoreTab
             user={user}
+            displayName={displayName}
+            photoURL={photoURL}
+            onChangeName={household.setName}
+            onChangePhoto={household.setPhoto}
             mode={household.mode}
             householdCode={household.householdCode}
             theme={theme}

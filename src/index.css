@@ -188,6 +188,22 @@ header {
 .login-warning p { color: var(--text); font-size: 14px; margin-bottom: 0; }
 .login-warning-url { margin-top: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; font-family: "Source Code Pro", monospace; font-size: 13px; color: var(--accent); word-break: break-all; }
 
+.login-divider { display: flex; align-items: center; gap: 12px; margin: 18px 0 14px; }
+.login-divider::before, .login-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.login-divider span { font-size: 12px; color: var(--text-dim); }
+.login-card .mode-toggle { margin-bottom: 16px; }
+.login-form { display: flex; flex-direction: column; gap: 14px; text-align: left; }
+/* .login-card p (0,1,1) 가 클래스 하나짜리 규칙을 이기므로 .login-card 를 붙여 특이도를 맞춘다.
+   안 그러면 색도 여백도 안내문 기본값에 먹힌다. */
+.login-card .login-hint { font-size: 12px; color: var(--text-dim); line-height: 1.55; margin-bottom: 0; }
+.login-card .login-error { font-size: 13px; color: var(--danger); line-height: 1.5; margin-bottom: 0; }
+.login-card .login-reset-done { font-size: 14px; color: var(--text); line-height: 1.6; text-align: left; margin-bottom: 16px; }
+.login-link { align-self: flex-start; background: none; border: none; padding: 0; font-size: 13px; color: var(--accent); cursor: pointer; text-decoration: underline; }
+.login-block-btn { width: 100%; }
+.login-password-wrap { position: relative; display: flex; }
+.login-password-wrap input { flex: 1; padding-right: 40px; }
+.login-eye { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-dim); cursor: pointer; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0; }
+
 /* ── Modal ───────────────────────────────────────────────────── */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: flex-end; justify-content: center; z-index: 100; }
 .modal { background: var(--surface); border-radius: 24px 24px 0 0; width: 100%; max-width: 600px; max-height: 92dvh; display: flex; flex-direction: column; overflow: hidden; }
@@ -434,6 +450,40 @@ textarea { resize: vertical; min-height: 80px; }
 .account-avatar-placeholder { width: 52px; height: 52px; border-radius: 50%; background: var(--surface-2); color: var(--text); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; flex-shrink: 0; }
 .account-name { font-weight: 700; font-size: 17px; }
 .account-email { font-size: 13px; color: var(--text-dim); margin-top: 1px; }
+
+/* ── 프로필 편집 ─────────────────────────────────────────────── */
+.account-avatar-btn { position: relative; background: none; border: none; padding: 0; cursor: pointer; flex-shrink: 0; line-height: 0; border-radius: 50%; }
+.account-avatar-btn:disabled { opacity: 0.5; cursor: default; }
+.account-avatar-edit { position: absolute; right: -1px; bottom: -1px; width: 19px; height: 19px; border-radius: 50%; background: var(--accent); color: #fff; border: 2px solid var(--surface); display: flex; align-items: center; justify-content: center; }
+.account-name-btn { display: flex; align-items: baseline; gap: 6px; background: none; border: none; padding: 0; cursor: pointer; color: inherit; font: inherit; text-align: left; max-width: 100%; }
+.account-name-hint { font-size: 11px; color: var(--text-dim); text-decoration: underline; flex-shrink: 0; }
+.account-name-edit { display: flex; align-items: center; gap: 6px; }
+.account-name-edit input { flex: 1; min-width: 0; }
+.account-avatar-wrap { position: relative; flex-shrink: 0; }
+.account-menu-scrim { position: fixed; inset: 0; z-index: 40; }
+.account-menu { position: absolute; left: 0; top: 100%; margin-top: 6px; z-index: 50; min-width: 124px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); overflow: hidden; }
+.account-menu button { display: block; width: 100%; padding: 11px 16px; text-align: left; font: inherit; font-size: 14px; color: var(--text); background: none; border: none; cursor: pointer; white-space: nowrap; }
+/* border: none 과 border-top 을 같이 주면 style 이 none 이라 선이 안 그려진다 — 폭만 0으로 둔다 */
+.account-menu button + button { border-width: 1px 0 0; border-style: solid; border-color: var(--border); }
+.account-menu button.danger { color: var(--danger); }
+.account-menu button:active { background: var(--surface-2); }
+
+/* ── 사진 크롭 ───────────────────────────────────────────────── */
+.crop-view { position: relative; margin: 0 auto; max-width: 100%; overflow: hidden; border-radius: 12px; background: var(--surface-2); touch-action: none; user-select: none; cursor: grab; }
+.crop-view:active { cursor: grabbing; }
+.crop-img { position: absolute; left: 0; top: 0; max-width: none; }
+.crop-ring { pointer-events: none; position: absolute; inset: 0; border-radius: 50%; border: 2px solid rgba(255,255,255,0.7); box-shadow: 0 0 0 9999px rgba(0,0,0,0.45); }
+.crop-zoom { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
+.crop-zoom span { font-size: 13px; color: var(--text-dim); flex-shrink: 0; }
+/* 전역 input 규칙이 -webkit-appearance:none + min-height:46px 을 걸어 range 트랙을 지운다.
+   슬라이더는 트랙과 썸을 직접 그린다. */
+.crop-zoom input[type="range"] { flex: 1; width: auto; min-height: 0; height: 22px; padding: 0; background: none; border: none; border-radius: 0; cursor: pointer; -webkit-appearance: none; appearance: none; }
+.crop-zoom input[type="range"]::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: var(--surface-2); }
+.crop-zoom input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; margin-top: -7px; border-radius: 50%; background: var(--accent); }
+.crop-zoom input[type="range"]::-moz-range-track { height: 4px; border-radius: 2px; background: var(--surface-2); }
+.crop-zoom input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; border: none; border-radius: 50%; background: var(--accent); }
+.crop-hint { font-size: 13px; color: var(--text-dim); text-align: center; margin-top: 10px; line-height: 1.5; }
+.crop-error { font-size: 14px; color: var(--danger); text-align: center; padding: 24px 0; }
 
 .mode-toggle { display: flex; gap: 6px; margin-top: 4px; }
 .mode-btn { flex: 1; padding: 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text-dim); font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.15s; }

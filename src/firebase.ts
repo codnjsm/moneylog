@@ -1,5 +1,9 @@
 import { initializeApp } from 'firebase/app'
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, type User } from 'firebase/auth'
+import {
+  getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged,
+  createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail,
+  sendEmailVerification, updateProfile, type User,
+} from 'firebase/auth'
 import {
   initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
   collection, doc, setDoc, addDoc, updateDoc, deleteDoc, writeBatch,
@@ -27,6 +31,71 @@ export const db = initializeFirestore(app, {
 
 const provider = new GoogleAuthProvider()
 provider.setCustomParameters({ prompt: 'select_account' })
+
+/**
+ * 이메일/비밀번호로 새 계정을 만든다. 가입 폼에서 받은 이름을 프로필에 직접 넣어줘야
+ * 헤더 아바타와 더보기 화면에 이름이 뜬다 (구글 로그인과 달리 자동으로 안 채워진다).
+ *
+ * 가입 직후 인증 메일을 보낸다 — 주소를 잘못 적었으면 메일이 안 오는 걸로 바로 알 수 있고,
+ * 나중에 비밀번호를 잊었을 때 재설정 메일을 받을 주소가 맞는지도 이때 확인된다.
+ * 발송이 실패해도 가입 자체는 성공으로 두되, 화면에서 "보냈다"고 잘못 알리지 않도록
+ * 성공 여부를 같이 돌려준다.
+ *
+ * 인증을 안 해도 앱은 그대로 쓸 수 있다 — firestore.rules 가 email_verified 를 보지 않는다.
+ */
+export const signUpWithEmail = async (
+  name: string,
+  email: string,
+  password: string,
+): Promise<{ user: User; verificationSent: boolean }> => {
+  const cred = await createUserWithEmailAndPassword(auth, email, password)
+  await updateProfile(cred.user, { displayName: name })
+  // user_profiles 에도 같이 넣는다. createUserWithEmailAndPassword 가 끝나는 순간 이미 로그인
+  // 상태가 되어 onAuthStateChanged 가 displayName 이 빈 User 로 한 번 발화하는데,
+  // 뒤이은 updateProfile 은 같은 User 객체를 제자리에서 고칠 뿐이라 리렌더를 일으키지 않는다.
+  // 그래서 이 문서가 없으면 새로고침 전까지 이름이 '사용자'로 보인다.
+  await updateUserName(cred.user.uid, name)
+  let verificationSent = true
+  try {
+    await sendEmailVerification(cred.user)
+  } catch {
+    verificationSent = false
+  }
+  return { user: cred.user, verificationSent }
+}
+
+export const signInWithEmail = (email: string, password: string): Promise<User> =>
+  signInWithEmailAndPassword(auth, email, password).then((r) => r.user)
+
+export const sendPasswordReset = (email: string): Promise<void> => sendPasswordResetEmail(auth, email)
+
+/**
+ * 알릴 필요가 없는 코드. 사용자가 구글 팝업을 직접 닫은 것이라 본인이 이미 안다.
+ * 게다가 Firebase 는 팝업이 닫혔는지 폴링으로 확인해 몇 초 늦게 알려주는데,
+ * 그 사이 이메일 폼으로 넘어가 있으면 방금 입력하던 게 취소된 것처럼 읽힌다.
+ */
+const SILENT_AUTH_ERRORS = new Set(['auth/popup-closed-by-user', 'auth/cancelled-popup-request'])
+
+const AUTH_ERROR_MESSAGES: Record<string, string> = {
+  'auth/email-already-in-use': '이미 가입된 이메일이에요',
+  'auth/invalid-email': '이메일 형식이 올바르지 않아요',
+  'auth/weak-password': '비밀번호는 6자 이상이어야 해요',
+  'auth/wrong-password': '비밀번호가 맞지 않아요',
+  'auth/invalid-credential': '이메일 또는 비밀번호가 맞지 않아요',
+  'auth/user-not-found': '가입되지 않은 이메일이에요',
+  'auth/too-many-requests': '너무 많이 시도했어요. 잠시 후 다시 시도해주세요',
+  'auth/account-exists-with-different-credential': '이미 다른 방식으로 가입된 이메일이에요',
+  'auth/network-request-failed': '네트워크 연결을 확인해주세요',
+  'auth/operation-not-allowed': '이메일 로그인이 아직 켜져 있지 않아요',
+}
+
+/** 보여줄 메시지. null 이면 알릴 필요가 없는 에러다. */
+export function authErrorMessage(err: unknown): string | null {
+  const code = (err as { code?: string } | null | undefined)?.code
+  if (code && SILENT_AUTH_ERRORS.has(code)) return null
+  if (code && AUTH_ERROR_MESSAGES[code]) return AUTH_ERROR_MESSAGES[code]
+  return '오류가 발생했어요. 다시 시도해주세요'
+}
 
 export const signIn = () => signInWithPopup(auth, provider).then((r) => r.user)
 export const signOutUser = () => signOut(auth)
@@ -279,6 +348,14 @@ export const subscribeUserProfile = (uid: string, cb: (profile: UserProfile | nu
 
 export const setUserProfile = (uid: string, data: Partial<UserProfile>) =>
   setDoc(doc(db, 'user_profiles', uid), data, { merge: true })
+
+/** 표시 이름을 바꾼다. Auth 가 아니라 user_profiles 문서가 기준이다(UserProfile 주석 참고). */
+export const updateUserName = (uid: string, displayName: string) =>
+  setDoc(doc(db, 'user_profiles', uid), { displayName }, { merge: true })
+
+/** 프로필 사진을 바꾼다. 빈 문자열이면 지운 것으로 보고 이름 첫 글자 아바타로 돌아간다. */
+export const updateUserPhoto = (uid: string, photoURL: string) =>
+  setDoc(doc(db, 'user_profiles', uid), { photoURL }, { merge: true })
 
 // ── Households ────────────────────────────────────────────────
 export const createHousehold = async (uid: string): Promise<string> => {

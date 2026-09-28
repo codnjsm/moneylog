@@ -2,11 +2,14 @@ import type { User } from 'firebase/auth'
 
 interface Props {
   user: User
+  /** user_profiles 문서 기준의 이름·사진. 비어 있으면 Auth 값을 쓴다. */
+  displayName: string
+  photoURL: string
   mode: 'personal' | 'shared'
   onAvatarClick: () => void
 }
 
-export default function Header({ user, mode, onAvatarClick }: Props) {
+export default function Header({ user, displayName, photoURL, mode, onAvatarClick }: Props) {
   return (
     <header>
       <div className="header-left">
@@ -17,14 +20,14 @@ export default function Header({ user, mode, onAvatarClick }: Props) {
       </div>
       <div className="header-right">
         <button
-          className={`user-avatar${user.photoURL ? '' : ' user-avatar-initial'}`}
+          className={`user-avatar${photoURL ? '' : ' user-avatar-initial'}`}
           onClick={onAvatarClick}
           title="더보기"
           aria-label="더보기"
         >
-          {user.photoURL
-            ? <img className="user-avatar-img" src={user.photoURL} referrerPolicy="no-referrer" alt="" />
-            : (user.displayName || user.email || '?')[0].toUpperCase()}
+          {photoURL
+            ? <img className="user-avatar-img" src={photoURL} referrerPolicy="no-referrer" alt="" />
+            : (displayName || user.email || '?')[0].toUpperCase()}
         </button>
       </div>
     </header>
