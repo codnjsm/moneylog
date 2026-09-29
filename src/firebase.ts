@@ -53,18 +53,23 @@ export const signUpWithEmail = async (
   password: string,
 ): Promise<{ user: User; verificationSent: boolean }> => {
   const cred = await createUserWithEmailAndPassword(auth, email, password)
+  // 이건 먼저 끝나야 한다. 인증 메일 템플릿이 %DISPLAY_NAME% 을 쓰기 때문에,
+  // 이름이 저장되기 전에 메일이 나가면 '님, 안녕하세요.' 로 도착한다.
   await updateProfile(cred.user, { displayName: name })
-  // user_profiles 에도 같이 넣는다. createUserWithEmailAndPassword 가 끝나는 순간 이미 로그인
-  // 상태가 되어 onAuthStateChanged 가 displayName 이 빈 User 로 한 번 발화하는데,
-  // 뒤이은 updateProfile 은 같은 User 객체를 제자리에서 고칠 뿐이라 리렌더를 일으키지 않는다.
-  // 그래서 이 문서가 없으면 새로고침 전까지 이름이 '사용자'로 보인다.
-  await updateUserName(cred.user.uid, name)
   let verificationSent = true
-  try {
-    await sendEmailVerification(cred.user)
-  } catch {
-    verificationSent = false
-  }
+  // 나머지 둘은 서로 독립이라 같이 보낸다. 순차로 기다리면 왕복이 그대로 쌓이는데,
+  // 화면은 이미 위의 createUserWithEmailAndPassword 에서 앱으로 넘어간 뒤라
+  // 가입 알림만 그만큼 뒤늦게 뜬다.
+  await Promise.all([
+    // user_profiles 에도 같이 넣는다. createUserWithEmailAndPassword 가 끝나는 순간 이미 로그인
+    // 상태가 되어 onAuthStateChanged 가 displayName 이 빈 User 로 한 번 발화하는데,
+    // 뒤이은 updateProfile 은 같은 User 객체를 제자리에서 고칠 뿐이라 리렌더를 일으키지 않는다.
+    // 그래서 이 문서가 없으면 새로고침 전까지 이름이 '사용자'로 보인다.
+    updateUserName(cred.user.uid, name),
+    // 메일 발송만 실패해도 가입 자체는 끝난 것이므로 여기서 삼킨다.
+    // Promise.all 은 하나라도 reject 하면 즉시 reject 하기 때문에 밖으로 흘리면 안 된다.
+    sendEmailVerification(cred.user).catch(() => { verificationSent = false }),
+  ])
   return { user: cred.user, verificationSent }
 }
 
