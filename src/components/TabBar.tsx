@@ -63,10 +63,10 @@ const ICONS: Record<Tab, React.ReactElement> = {
 const TABS: { id: Tab; label: string }[] = [
   { id: 'home', label: '홈' },
   { id: 'calendar', label: '캘린더' },
-  { id: 'fixed', label: '예산' },
   { id: 'expense', label: '지출' },
-  { id: 'stocks', label: '주식' },
+  { id: 'fixed', label: '예산' },
   { id: 'assets', label: '자산' },
+  { id: 'stocks', label: '주식' },
 ]
 
 interface Props { active: Tab; onChange: (tab: Tab) => void }
