@@ -282,6 +282,12 @@ input, select, textarea {
   min-height: 46px;
   -webkit-appearance: none;
 }
+/* 숫자 입력의 증감 화살표를 없앤다. 스크롤·드래그로 값이 바뀌어 금액을 잘못 넣기 쉽다.
+   type 은 number 로 두어 모바일 숫자 키보드와 min/max 검증은 그대로 쓴다. */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+
 input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 textarea { resize: vertical; min-height: 80px; }
 
