@@ -498,10 +498,13 @@ textarea { resize: vertical; min-height: 80px; }
 .asset-amount { font-size: 15px; font-weight: 600; color: var(--text); white-space: nowrap; }
 
 /* ── Empty State ─────────────────────────────────────────────── */
-.empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 60px 20px; color: var(--text-dim); text-align: center; }
+.empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 60px 20px; color: var(--text-dim); text-align: center; }
 /* 첫 줄이 제목, 다음 줄(.empty-sub)이 설명이다. 네 탭의 빈 화면이 모두 같은 구조다. */
-.empty-state > p:first-of-type { font-weight: 600; }
+.empty-state > p { line-height: 1.4; }
+.empty-state > p:first-of-type { font-weight: 500; }
 .empty-sub { font-size: 13px; opacity: 0.7; }
+/* 제목과 설명은 붙여 읽고 버튼은 떼어 놓는다. 버튼이 항상 마지막 요소다. */
+.empty-state > :last-child { margin-top: 13px; }
 
 /* ── Account Modal ───────────────────────────────────────────── */
 .account-user { display: flex; align-items: center; gap: 12px; padding: 4px 0 8px; }
