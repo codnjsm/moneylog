@@ -115,8 +115,8 @@ export default function CalendarTab({ expenses, yearMonth, methods, onAddIncome,
             </div>
           </div>
           <div className="cal-day-add-row">
-            <button className="cal-add-btn cal-add-income" onClick={() => onAddIncome(selectedDate)}>+ 수입</button>
-            <button className="cal-add-btn cal-add-expense" onClick={() => onAddExpense(selectedDate)}>+ 지출</button>
+            <button className="cal-add-btn btn-income" onClick={() => onAddIncome(selectedDate)}>+ 수입</button>
+            <button className="cal-add-btn btn-expense" onClick={() => onAddExpense(selectedDate)}>+ 지출</button>
           </div>
           {selectedItems.length > 0 && (
             [...selectedItems]

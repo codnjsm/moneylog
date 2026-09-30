@@ -87,8 +87,8 @@ export default function HomeTab({ yearMonth, expenses, fixedItems, savingsItems,
           <p>이번 달 기록이 아직 없어요</p>
           <p className="empty-sub">수입이나 지출을 추가해보세요</p>
           <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-            <button className="btn btn-secondary btn-sm" onClick={onAddIncome}>+ 수입 추가</button>
-            <button className="btn btn-primary btn-sm" onClick={onAddExpense}>+ 지출 추가</button>
+            <button className="btn btn-sm btn-income" onClick={onAddIncome}>+ 수입 추가</button>
+            <button className="btn btn-sm btn-expense" onClick={onAddExpense}>+ 지출 추가</button>
           </div>
         </div>
       ) : (
