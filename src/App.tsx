@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useAuth } from './hooks/useAuth'
 import { useData } from './hooks/useData'
 import { useHousehold } from './hooks/useHousehold'
@@ -93,6 +93,18 @@ export default function App() {
     setTimeout(() => setToastState((cur) => (cur?.key === entry.key ? null : cur)), 2600)
   }, [])
   const [modal, setModal] = useState<ModalState>(null)
+
+  // 숫자 칸에 포커스가 있으면 휠을 굴릴 때 브라우저가 값을 올리고 내린다.
+  // 화면을 내리려던 것뿐인데 금액이 조용히 바뀌므로 포커스를 풀어 끊는다.
+  // 입력 칸이 16개라 개별로 달면 새로 만들 때 빠뜨리게 되어 여기서 한 번에 막는다.
+  useEffect(() => {
+    const onWheel = () => {
+      const el = document.activeElement
+      if (el instanceof HTMLInputElement && el.type === 'number') el.blur()
+    }
+    window.addEventListener('wheel', onWheel, { passive: true })
+    return () => window.removeEventListener('wheel', onWheel)
+  }, [])
 
   const setTheme = useCallback((t: 'light' | 'dark') => {
     setThemeState(t)
