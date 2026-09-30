@@ -415,7 +415,7 @@ textarea { resize: vertical; min-height: 80px; }
 
 /* ── Expense Tab ─────────────────────────────────────────────── */
 .expense-list { display: flex; flex-direction: column; gap: 8px; }
-.expense-card { background: var(--surface); border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; cursor: pointer; }
+.expense-card { background: var(--surface); border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; cursor: pointer; transition: background 0.1s; }
 .expense-card:active { background: var(--surface-2); }
 .expense-card-row1 { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
 .expense-card-row2 { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
@@ -449,7 +449,7 @@ textarea { resize: vertical; min-height: 80px; }
 .fixed-section-sub { font-size: 11px; font-weight: 400; color: var(--text-dim); letter-spacing: 0; text-transform: none; }
 .fixed-row { display: flex; align-items: center; justify-content: space-between; padding: 5px 5px; gap: 12px; }
 .fixed-row.total { border-top: 1px solid var(--border); border-bottom: none; font-weight: 700; margin-top: 12px; padding-top: 10px; }
-.fixed-row.clickable { cursor: pointer; }
+.fixed-row.clickable { cursor: pointer; transition: background 0.1s; }
 .fixed-row.clickable:active { background: var(--surface-2); margin: 0 -4px; padding-left: 4px; padding-right: 4px; border-radius: 6px; }
 .fixed-row-label { font-size: 15px; color: var(--text); flex: 1; min-width: 0; display: flex; flex-direction: row; align-items: center; gap: 10px; }
 .fixed-row-sub { font-size: 11px; color: var(--text-dim); }
@@ -481,7 +481,7 @@ textarea { resize: vertical; min-height: 80px; }
 
 .asset-group-header { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 700; color: var(--text-dim); padding: 4px 2px; margin-top: 4px; }
 .asset-list { display: flex; flex-direction: column; gap: 8px; }
-.asset-card { background: var(--surface); border-radius: 14px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; gap: 12px; }
+.asset-card { background: var(--surface); border-radius: 14px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; gap: 12px; transition: background 0.1s; }
 .asset-card:active { background: var(--surface-2); }
 .asset-card-left { display: flex; flex-direction: row; gap: 6px; flex: 1; min-width: 0; align-items: center; }
 .asset-card-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
@@ -774,6 +774,19 @@ button.more-card { width: 100%; text-align: left; font: inherit; color: inherit;
   .modal-actions {
     padding-bottom: 16px;
   }
+}
+
+/* ── Hover Feedback ──────────────────────────────────────────── */
+/* 마우스로는 커서 모양 말고 눌린다는 표시가 없어 열리는 줄인지 알기 어렵다.
+   색은 :active 와 같은 것을 쓴다 — 마우스 쓰는 사람은 hover 로, 터치 쓰는 사람은
+   :active 로만 보게 되어 한 사람에게 두 신호가 겹치지 않는다.
+   hover 가 없는 기기까지 주면 탭한 줄의 배경이 그대로 남는다. */
+@media (hover: hover) {
+  .expense-card:hover,
+  .asset-card:hover,
+  .cal-item:hover { background: var(--surface-2); }
+  /* 이 행은 카드 안쪽이라 배경만 깔면 글자에 붙는다. :active 와 같은 여백을 준다. */
+  .fixed-row.clickable:hover { background: var(--surface-2); margin: 0 -4px; padding-left: 4px; padding-right: 4px; border-radius: 6px; }
 }
 
 /* ── Press Feedback ──────────────────────────────────────────── */
