@@ -48,7 +48,7 @@ export default function AssetAccountModal({ account, currentAmount, assetTypes, 
         <div className="modal-body">
           <div className="form-group">
             <label htmlFor="asset-label">계좌명 <span className="required">*</span></label>
-            <input id="asset-label" value={label} onChange={(e) => setLabel(e.target.value)} placeholder="세이프박스, 청년도약계좌 등" autoFocus />
+            <input id="asset-label" value={label} onChange={(e) => setLabel(e.target.value)} placeholder="세이프박스, 퇴직 연금 등" autoFocus />
           </div>
           <div className="form-group">
             <label>종류</label>
@@ -76,7 +76,7 @@ export default function AssetAccountModal({ account, currentAmount, assetTypes, 
                 <label htmlFor="asset-day">납입일</label>
                 {paymentDay && <button type="button" className="clear-btn" aria-label="납입일 지우기" onClick={() => setPaymentDay('')}>지우기</button>}
               </div>
-              <input id="asset-day" type="number" value={paymentDay} onChange={(e) => setPaymentDay(e.target.value)} placeholder="매월 N일 (선택)" min={1} max={31} />
+              <input id="asset-day" type="number" value={paymentDay} onChange={(e) => setPaymentDay(e.target.value)} placeholder="매월 N일" min={1} max={31} />
             </div>
             <div className="form-group">
               <div className="optional-label-row">

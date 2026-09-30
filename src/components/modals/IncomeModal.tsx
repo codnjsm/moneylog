@@ -40,11 +40,11 @@ export default function IncomeModal({ items, onSave, onClose }: Props) {
           {entries.map((e, i) => (
             <div key={e.id} className="form-row">
               <div className="form-group" style={{ flex: 2 }}>
-                {i === 0 && <label>항목</label>}
+                {i === 0 && <label>항목 <span className="required">*</span></label>}
                 <input aria-label={`${i + 1}번째 항목`} value={e.label} onChange={(ev) => update(i, 'label', ev.target.value)} placeholder="급여, 부수입 등" />
               </div>
               <div className="form-group" style={{ flex: 2 }}>
-                {i === 0 && <label>금액</label>}
+                {i === 0 && <label>금액 <span className="required">*</span></label>}
                 <input aria-label={`${i + 1}번째 금액`} type="number" value={e.amount || ''} onChange={(ev) => update(i, 'amount', ev.target.value)} placeholder="0" min={0} />
               </div>
               <div className="form-group" style={{ flex: 'none' }}>

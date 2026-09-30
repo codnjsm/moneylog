@@ -54,11 +54,11 @@ export default function FixedListModal({ items, onSave, onClose }: Props) {
               <button className="savings-card-delete" aria-label="삭제" onClick={() => remove(r.id)}>✕</button>
               <div className="form-row" style={{ marginBottom: 8 }}>
                 <div className="form-group" style={{ flex: 2 }}>
-                  <label htmlFor={`fixed-${r.id}-label`}>항목</label>
+                  <label htmlFor={`fixed-${r.id}-label`}>항목 <span className="required">*</span></label>
                   <input id={`fixed-${r.id}-label`} value={r.label} onChange={e => update(r.id, 'label', e.target.value)} placeholder="보험, 통신비 등" />
                 </div>
                 <div className="form-group" style={{ flex: 2 }}>
-                  <label htmlFor={`fixed-${r.id}-amount`}>금액</label>
+                  <label htmlFor={`fixed-${r.id}-amount`}>금액 <span className="required">*</span></label>
                   <input id={`fixed-${r.id}-amount`} type="number" value={r.amount} onChange={e => update(r.id, 'amount', e.target.value)} placeholder="0" min={0} />
                 </div>
               </div>

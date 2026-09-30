@@ -51,7 +51,7 @@ export default function StockTradeModal({ trade, categories, onSave, onDelete, o
           </div>
           <div className="form-group">
             <label htmlFor="stock-label">종목명 <span className="required">*</span></label>
-            <input id="stock-label" value={label} onChange={(e) => setLabel(e.target.value)} placeholder="예: 삼성전자, OO공모주" autoFocus />
+            <input id="stock-label" value={label} onChange={(e) => setLabel(e.target.value)} placeholder="삼성전자, OO공모주 등" autoFocus />
           </div>
           <div className="form-group">
             <label htmlFor="stock-buy">매수 단가 <span className="required">*</span></label>

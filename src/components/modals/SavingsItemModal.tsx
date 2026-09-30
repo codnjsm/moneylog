@@ -38,7 +38,7 @@ export default function SavingsItemModal({ item, onSave, onDelete, onClose }: Pr
         <div className="modal-body">
           <div className="form-group">
             <label htmlFor="savings-item-label">항목 <span className="required">*</span></label>
-            <input id="savings-item-label" value={label} onChange={(e) => setLabel(e.target.value)} placeholder="청년도약계좌, ISA 등" autoFocus />
+            <input id="savings-item-label" value={label} onChange={(e) => setLabel(e.target.value)} placeholder="주택 청약, 급여 적금 등" autoFocus />
           </div>
           <div className="form-group">
             <label htmlFor="savings-item-amount">월 납입액 <span className="required">*</span></label>

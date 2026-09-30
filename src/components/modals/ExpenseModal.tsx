@@ -143,7 +143,7 @@ export default function ExpenseModal({ expense, yearMonth, initialDate, methods,
           </div>
 
           <div className="form-group">
-            <label>결제 수단</label>
+            <label>결제 수단 <span className="required">*</span></label>
             <CustomSelect
               name="결제 수단"
               value={method}

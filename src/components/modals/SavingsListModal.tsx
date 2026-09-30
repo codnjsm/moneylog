@@ -61,11 +61,11 @@ export default function SavingsListModal({ items, onSave, onClose }: Props) {
               <button className="savings-card-delete" aria-label="삭제" onClick={() => remove(r.id)}>✕</button>
               <div className="form-row" style={{ marginBottom: 8 }}>
                 <div className="form-group" style={{ flex: 2 }}>
-                  <label htmlFor={`sv-${r.id}-label`}>항목</label>
-                  <input id={`sv-${r.id}-label`} value={r.label} onChange={e => update(r.id, 'label', e.target.value)} placeholder="청년도약계좌, ISA 등" />
+                  <label htmlFor={`sv-${r.id}-label`}>항목 <span className="required">*</span></label>
+                  <input id={`sv-${r.id}-label`} value={r.label} onChange={e => update(r.id, 'label', e.target.value)} placeholder="주택 청약, 급여 적금 등" />
                 </div>
                 <div className="form-group" style={{ flex: 2 }}>
-                  <label htmlFor={`sv-${r.id}-amount`}>월 납입액</label>
+                  <label htmlFor={`sv-${r.id}-amount`}>월 납입액 <span className="required">*</span></label>
                   <input id={`sv-${r.id}-amount`} type="number" value={r.amount} onChange={e => update(r.id, 'amount', e.target.value)} placeholder="0" min={0} />
                 </div>
               </div>
