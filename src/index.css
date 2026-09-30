@@ -175,8 +175,10 @@ header {
 .fab { position: fixed; bottom: calc(var(--tab-height) + env(safe-area-inset-bottom) + 16px); right: max(16px, calc(50% - 284px)); width: 54px; height: 54px; border-radius: 50%; background: var(--accent); color: #fff; border: none; font-size: 28px; line-height: 1; cursor: pointer; box-shadow: var(--shadow); display: flex; align-items: center; justify-content: center; z-index: 70; }
 
 /* ── Login ───────────────────────────────────────────────────── */
-.login-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; padding: 20px; }
-.login-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 40px 32px; max-width: 380px; width: 100%; text-align: center; box-shadow: var(--shadow); }
+/* 세로가 짧으면 회원가입 카드가 화면보다 높아진다. align-items: center 로 가운데 두면
+   넘친 윗부분이 스크롤로도 닿지 않으므로, 정렬을 카드의 margin: auto 에 맡긴다. */
+.login-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; overflow-y: auto; padding: 20px; }
+.login-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 40px 32px; max-width: 380px; width: 100%; margin: auto; text-align: center; box-shadow: var(--shadow); }
 .login-icon { width: 56px; height: 56px; margin: 0 auto 12px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: flex; align-items: center; justify-content: center; }
 .login-card h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
 .login-card p { color: var(--text-dim); font-size: 14px; line-height: 1.5; margin-bottom: 28px; }
