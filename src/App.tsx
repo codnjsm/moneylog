@@ -250,7 +250,13 @@ export default function App() {
             photoURL={photoURL}
             onChangeName={household.setName}
             onChangePhoto={household.setPhoto}
-            onRefreshUser={refreshUser}
+            onRefreshUser={async () => {
+              const ok = await refreshUser()
+              // 인증되면 안내 배너가 사라지는데, 그것만으로는 눌러서 확인된 건지
+              // 원래 없던 건지 알기 어려워 알림으로 결과를 남긴다.
+              if (ok) showToast('인증이 완료되었어요')
+              return ok
+            }}
             onDeleteAccount={async (password) => {
               await deleteAccount(household.householdCode, password)
               showToast('탈퇴가 완료되었어요')

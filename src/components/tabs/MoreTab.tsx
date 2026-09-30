@@ -59,7 +59,7 @@ export default function MoreTab({ user, displayName, photoURL, onChangeName, onC
     setVerifyMsg('')
     try {
       const ok = await onRefreshUser()
-      // 인증됐으면 배너 자체가 사라지므로 따로 알릴 필요가 없다.
+      // 인증됐으면 배너가 사라지고, 완료 알림은 App 이 띄운다.
       if (!ok) setVerifyMsg('아직 인증 전이에요. 메일의 링크를 눌러주세요')
     } catch {
       setVerifyMsg('확인하지 못했어요. 잠시 후 다시 시도해주세요')
