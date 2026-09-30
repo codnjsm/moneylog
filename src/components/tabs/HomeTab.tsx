@@ -23,7 +23,8 @@ export default function HomeTab({ yearMonth, expenses, fixedItems, savingsItems,
   const todayDate = today.getDate()
   const [y, m] = yearMonth.split('-').map(Number)
   const daysInMonth = new Date(y, m, 0).getDate()
-  const daysLeft = isCurrentMonth ? daysInMonth - todayDate : null
+  // 오늘도 아직 쓸 수 있는 날이라 함께 센다. 빼면 말일에 '0일 남음'이 되어 이미 끝난 것처럼 보인다.
+  const daysLeft = isCurrentMonth ? daysInMonth - todayDate + 1 : null
 
   const specialCategory = categories.find((c) => c.label === '특별 지출')
   const incomeEntries = expenses.filter((e) => e.type === 'income')
