@@ -6,6 +6,8 @@
   --bg: #F2F2F7;
   --surface: #FFFFFF;
   --surface-2: #EBEBF0;
+  /* 올려둔 표시. surface 와 surface-2 사이라 누른 것(surface-2)보다 연하다. */
+  --surface-hover: #F7F7FA;
   --border: rgba(60,60,67,0.12);
   --text: #1C1C1E;
   --text-dim: #6A6A6F;
@@ -28,6 +30,7 @@
   --bg: #000000;
   --surface: #1C1C1E;
   --surface-2: #2C2C2E;
+  --surface-hover: #232325;
   --border: rgba(255,255,255,0.1);
   --text: #FFFFFF;
   --text-dim: #8E8E93;
@@ -778,15 +781,15 @@ button.more-card { width: 100%; text-align: left; font: inherit; color: inherit;
 
 /* ── Hover Feedback ──────────────────────────────────────────── */
 /* 마우스로는 커서 모양 말고 눌린다는 표시가 없어 열리는 줄인지 알기 어렵다.
-   색은 :active 와 같은 것을 쓴다 — 마우스 쓰는 사람은 hover 로, 터치 쓰는 사람은
-   :active 로만 보게 되어 한 사람에게 두 신호가 겹치지 않는다.
+   누른 표시(:active)보다 연한 색을 써서 올려둔 것과 누른 것이 구분되게 한다.
    hover 가 없는 기기까지 주면 탭한 줄의 배경이 그대로 남는다. */
 @media (hover: hover) {
   .expense-card:hover,
   .asset-card:hover,
-  .cal-item:hover { background: var(--surface-2); }
-  /* 이 행은 카드 안쪽이라 배경만 깔면 글자에 붙는다. :active 와 같은 여백을 준다. */
-  .fixed-row.clickable:hover { background: var(--surface-2); margin: 0 -4px; padding-left: 4px; padding-right: 4px; border-radius: 6px; }
+  .cal-item:hover { background: var(--surface-hover); }
+  /* 여백은 건드리지 않는다. 마우스를 올려둔 내내 유지되는 표시라,
+     폭을 바꾸면 이름과 금액이 좌우로 밀려 글자가 커진 것처럼 보인다. */
+  .fixed-row.clickable:hover { background: var(--surface-hover); border-radius: 6px; }
 }
 
 /* ── Press Feedback ──────────────────────────────────────────── */
