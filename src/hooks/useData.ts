@@ -9,7 +9,7 @@ import {
   subscribeMonthlyIncome, setMonthlyIncome,
   subscribeStockTrades, addStockTradeWithExpense, updateStockTradeWithExpense, deleteStockTradeWithExpense,
   subscribeAssetAccountsMonthly, setAssetAccountsMonthly as firebaseSetAssetAccountsMonthly, getAssetAccountsFallback,
-  subscribeAssetSnapshot, setAssetSnapshot as firebaseSetAssetSnapshot,
+  subscribeAssetSnapshot, setAssetSnapshot as firebaseSetAssetSnapshot, getAssetSnapshotFallback,
   subscribePaymentMethods, setPaymentMethods as firebaseSetPaymentMethods,
   subscribeCategories, setCategories as firebaseSetCategories,
   subscribeAssetTypes, setAssetTypes as firebaseSetAssetTypes,
@@ -28,6 +28,7 @@ export function useData(uid: string, yearMonth: string) {
   const [assetAccountsMonthly, setAssetAccountsMonthly] = useState<AssetAccount[] | null>(null)
   const [assetAccountsFallback, setAssetAccountsFallback] = useState<AssetAccount[]>([])
   const [assetSnapshot, setAssetSnapshot] = useState<AssetSnapshot | null>(null)
+  const [assetSnapshotFallback, setAssetSnapshotFallback] = useState<AssetSnapshot | null>(null)
   const [customMethods, setCustomMethods] = useState<PaymentMethodDef[] | null>(null)
   const [customCategories, setCustomCategories] = useState<CategoryDef[] | null>(null)
   const [customAssetTypes, setCustomAssetTypes] = useState<AssetTypeDef[] | null>(null)
@@ -78,6 +79,12 @@ export function useData(uid: string, yearMonth: string) {
     getAssetAccountsFallback(uid, yearMonth).then(setAssetAccountsFallback)
   }, [uid, yearMonth, assetAccountsMonthly])
 
+  // 표시용이 아니라 입력칸 기본값용이다. 그 달 기록이 없을 때만 가져온다.
+  useEffect(() => {
+    if (!uid || assetSnapshot !== null) return
+    getAssetSnapshotFallback(uid, yearMonth).then(setAssetSnapshotFallback)
+  }, [uid, yearMonth, assetSnapshot])
+
   const fixedItems: FixedItem[] = fixedMonthly ?? fixedFallback
   const savingsItems: SavingsItem[] = savingsMonthly ?? savingsFallback
   const assetAccounts: AssetAccount[] = assetAccountsMonthly ?? assetAccountsFallback
@@ -93,7 +100,7 @@ export function useData(uid: string, yearMonth: string) {
   const stockCategories: StockCategoryDef[] = customStockCategories ?? DEFAULT_STOCK_CATEGORIES
 
   return {
-    fixedItems, savingsItems, expenses, income, stockTrades, assetAccounts, assetSnapshot, paymentMethods, categories, assetTypes, stockCategories, nextMonthHasData,
+    fixedItems, savingsItems, expenses, income, stockTrades, assetAccounts, assetSnapshot, assetSnapshotFallback, paymentMethods, categories, assetTypes, stockCategories, nextMonthHasData,
     bulkSaveFixedItems: async (newItems: Array<{ id: string; label: string; amount: number; paymentDay?: number }>) => {
       const items: FixedItem[] = newItems.map((n, i) => ({
         id: n.id.startsWith('new-') ? Date.now().toString() + i : n.id,

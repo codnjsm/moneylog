@@ -6,6 +6,8 @@ import { fmtWon as fmt, badgeStyle } from '../../utils'
 interface Props {
   accounts: AssetAccount[]
   snapshot: AssetSnapshot | null
+  /** 가장 가까운 과거 달 잔고. 입력칸 기본값으로만 쓰고 총 자산 계산에는 넣지 않는다. */
+  previousSnapshot: AssetSnapshot | null
   assetTypes: AssetTypeDef[]
   onAddAccount: () => void
   onEditAccount: (account: AssetAccount) => void
@@ -15,17 +17,21 @@ interface Props {
 }
 
 
-export default function AssetsTab({ accounts, snapshot, assetTypes, onAddAccount, onEditAccount, onDeleteAccount, onSaveSnapshot, onEditTypes }: Props) {
+export default function AssetsTab({ accounts, snapshot, previousSnapshot, assetTypes, onAddAccount, onEditAccount, onDeleteAccount, onSaveSnapshot, onEditTypes }: Props) {
   const today = new Date().toISOString().slice(0, 10)
   const [editing, setEditing] = useState(false)
   const [filterType, setFilterType] = useState('all')
-  const [amounts, setAmounts] = useState<Record<string, string>>(() =>
-    Object.fromEntries(accounts.map((a) => [a.id, String(snapshot?.amounts?.[a.id] ?? '')]))
-  )
+  // 그 달 기록이 있으면 그걸, 없으면 지난 기록을 미리 채운다.
+  // 빈칸으로 열면 몇 개만 채워 저장했을 때 나머지가 0원으로 덮어써진다.
+  const draftAmounts = () => {
+    const base = snapshot?.amounts ?? previousSnapshot?.amounts ?? {}
+    return Object.fromEntries(accounts.map((a) => [a.id, String(base[a.id] ?? '')]))
+  }
+  const [amounts, setAmounts] = useState<Record<string, string>>(draftAmounts)
   const [asOf, setAsOf] = useState(snapshot?.asOf ?? today)
 
   const handleEdit = () => {
-    setAmounts(Object.fromEntries(accounts.map((a) => [a.id, String(snapshot?.amounts?.[a.id] ?? '')])))
+    setAmounts(draftAmounts())
     setAsOf(snapshot?.asOf ?? today)
     setEditing(true)
   }

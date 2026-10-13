@@ -247,6 +247,7 @@ export default function App() {
           <AssetsTab
             accounts={data.assetAccounts}
             snapshot={data.assetSnapshot}
+            previousSnapshot={data.assetSnapshotFallback}
             assetTypes={data.assetTypes}
             onAddAccount={() => setModal({ type: 'asset' })}
             onEditAccount={(item) => setModal({ type: 'asset', item })}

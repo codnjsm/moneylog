@@ -262,6 +262,24 @@ export const subscribeAssetSnapshot = (uid: string, yearMonth: string, cb: (snap
 export const setAssetSnapshot = (uid: string, yearMonth: string, amounts: Record<string, number>, asOf: string) =>
   setDoc(doc(db, 'asset_snapshots', `${uid}_${yearMonth}`), { uid, yearMonth, amounts, asOf })
 
+/**
+ * 가장 가까운 과거 달의 잔고. 화면에 보여주는 값이 아니라 "잔고 업데이트"를 열었을 때
+ * 입력칸을 미리 채우는 용도다. 총 자산은 그 달에 실제로 기록한 값만으로 계산한다.
+ *
+ * 이게 없으면 달이 바뀐 뒤 입력칸이 전부 빈칸으로 열리고, 몇 개만 채워 저장하는 순간
+ * 나머지 계좌가 0원으로 기록된다.
+ */
+export const getAssetSnapshotFallback = async (uid: string, yearMonth: string): Promise<AssetSnapshot | null> => {
+  for (let i = 1; i <= 12; i++) {
+    const d = new Date(yearMonth + '-01')
+    d.setMonth(d.getMonth() - i)
+    const ym = d.toISOString().slice(0, 7)
+    const snap = await getDoc(doc(db, 'asset_snapshots', `${uid}_${ym}`))
+    if (snap.exists()) return snap.data() as AssetSnapshot
+  }
+  return null
+}
+
 // ── Payment Methods ───────────────────────────────────────────
 
 export const subscribePaymentMethods = (uid: string, cb: (methods: PaymentMethodDef[] | null) => void): Unsubscribe =>
