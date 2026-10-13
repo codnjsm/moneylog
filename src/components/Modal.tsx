@@ -26,8 +26,10 @@ export default function Modal({ onClose, children }: Props) {
     }
   }, [onClose])
 
+  // 바깥을 눌러도 닫지 않는다. 입력하다 잘못 누르면 적어둔 내용이 통째로 사라지는데,
+  // 되돌릴 방법이 없어서 얻는 편의보다 잃는 쪽이 크다. 닫기는 X 버튼과 ESC 로만 한다.
   return (
-    <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
+    <div className="modal-overlay">
       {children}
     </div>
   )
