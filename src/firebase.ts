@@ -166,7 +166,9 @@ export const subscribeExpenses = (uid: string, yearMonth: string, cb: (items: Ex
     cb(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Expense)).sort((a, b) => {
       const dateDiff = b.date.localeCompare(a.date)
       if (dateDiff !== 0) return dateDiff
-      return (a.createdAt ?? 0) - (b.createdAt ?? 0)
+      // 같은 날짜 안에서는 나중에 저장한 것이 위로. 방금 적은 내역을 바로 확인할 수 있다.
+      // createdAt 이 없는 예전 문서는 0 이라 같은 날짜의 맨 아래로 간다.
+      return (b.createdAt ?? 0) - (a.createdAt ?? 0)
     })))
 
 export const addExpense = (uid: string, data: Omit<Expense, 'id' | 'uid'>) =>
