@@ -157,8 +157,9 @@ export default function ExpenseModal({ expense, yearMonth, initialDate, methods,
             <input id="expense-label" value={label} onChange={(e) => setLabel(e.target.value)} placeholder="내용 입력" />
           </div>
 
-          {expense && onDelete && (
-            <button className="modal-delete-link" onClick={() => { if (confirm('이 항목만 삭제할까요?')) onDelete() }} disabled={saving}>이 항목만 삭제</button>
+          {/* 할부는 회차 하나만 지우면 남은 회차와 총액이 어긋나므로 전체 삭제만 둔다. */}
+          {expense && onDelete && !onDeleteGroup && (
+            <button className="modal-delete-link" onClick={() => { if (confirm('항목을 삭제할까요?')) onDelete() }} disabled={saving}>항목 삭제</button>
           )}
           {expense && onDeleteGroup && (
             <button className="modal-delete-link" onClick={() => { if (confirm('할부 전체를 삭제할까요?')) onDeleteGroup() }} disabled={saving}>할부 전체 삭제</button>
