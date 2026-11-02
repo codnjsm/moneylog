@@ -9,6 +9,8 @@
   /* 올려둔 표시. 회색으로 하면 페이지 배경(--bg)과 명도가 겹쳐 카드가 묻히므로,
      색상이 다른 연한 하늘색을 쓴다. 흰 배경·회색 배경 어디서나 같은 값으로 구분된다. */
   --surface-hover: #F2F7FF;
+  /* 비유동 자산. 유동(accent)과 같은 무게로 보여야 해서 회색이 아닌 제 색을 준다. */
+  --illiquid: #C3D9F2;
   --border: rgba(60,60,67,0.12);
   --text: #1C1C1E;
   --text-dim: #6A6A6F;
@@ -32,6 +34,7 @@
   --surface: #1C1C1E;
   --surface-2: #2C2C2E;
   --surface-hover: #1F232D;
+  --illiquid: #44618C;
   --border: rgba(255,255,255,0.1);
   --text: #FFFFFF;
   --text-dim: #8E8E93;
@@ -475,12 +478,13 @@ textarea { resize: vertical; min-height: 80px; }
 .assets-asof.stale { color: var(--danger); font-weight: 500; }
 
 .asset-split { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
-.asset-split-track { display: flex; height: 8px; border-radius: 999px; overflow: hidden; background: var(--surface-2); }
+/* 채워지지 않은 부분이 그대로 비유동이라, 트랙 배경이 비유동 색이 된다. */
+.asset-split-track { display: flex; height: 8px; border-radius: 999px; overflow: hidden; background: var(--illiquid); }
 .asset-split-fill { height: 100%; background: var(--accent); }
 .asset-split-legend { display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px; color: var(--text-dim); }
 .asset-split-dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
 .asset-split-dot.liquid { background: var(--accent); }
-.asset-split-dot.illiquid { background: var(--surface-2); border: 1px solid var(--border); }
+.asset-split-dot.illiquid { background: var(--illiquid); }
 
 .asset-edit-box { background: var(--surface); border-radius: 16px; padding: 16px; margin-bottom: 12px; }
 .asset-edit-title { font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
