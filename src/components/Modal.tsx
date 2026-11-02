@@ -6,16 +6,18 @@ export default function Modal({ onClose, children }: Props) {
   const overlayRef = useRef<HTMLDivElement>(null)
 
   // 오버레이는 fixed 라 레이아웃 뷰포트 기준인데, 키보드가 올라와도 그건 줄지 않는다.
-  // 그래서 보이는 영역(visualViewport)에 직접 맞춰주지 않으면 바텀시트가 키보드 뒤로 들어간다.
+  // 그래서 보이는 영역(visualViewport)에 맞춰주지 않으면 모달이 키보드 뒤로 들어간다.
+  // 크기를 줄이는 대신 가려진 만큼을 패딩으로 주는 이유는, 어두운 배경은 화면 끝까지
+  // 덮으면서 모달 위치만 보이는 영역 기준으로 잡히게 하기 위해서다.
   useEffect(() => {
     const vv = window.visualViewport
     const el = overlayRef.current
     if (!vv || !el) return
 
     const fit = () => {
-      el.style.height = `${vv.height}px`
-      el.style.top = `${vv.offsetTop}px`
-      el.style.bottom = 'auto'
+      const viewport = document.documentElement.clientHeight
+      el.style.paddingTop = `${vv.offsetTop}px`
+      el.style.paddingBottom = `${Math.max(0, viewport - vv.offsetTop - vv.height)}px`
     }
     fit()
 
