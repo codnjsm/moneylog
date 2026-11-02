@@ -27,6 +27,23 @@ export default function Modal({ onClose, children }: Props) {
     }
   }, [])
 
+  // 어두운 배경을 문지르면 iOS 가 뒤 화면을 고무줄처럼 끌어당긴다. body 를 잠가도 막히지 않는다.
+  // 모달 안의 스크롤은 살려야 하므로, 손가락을 처음 댄 곳이 .modal-body 바깥일 때만 막는다.
+  // preventDefault 가 먹으려면 passive 가 아니어야 한다.
+  useEffect(() => {
+    const el = overlayRef.current
+    if (!el) return
+
+    const onTouchMove = (e: TouchEvent) => {
+      const target = e.target
+      if (target instanceof Element && target.closest('.modal-body')) return
+      e.preventDefault()
+    }
+
+    el.addEventListener('touchmove', onTouchMove, { passive: false })
+    return () => el.removeEventListener('touchmove', onTouchMove)
+  }, [])
+
   // 고정 오버레이 안이라 브라우저가 포커스된 입력칸을 알아서 올려주지 못한다.
   // 키보드가 올라와 보이는 영역이 줄어든 뒤에 불러야 제자리로 가므로 한 박자 늦춘다.
   // nearest 라서 이미 다 보이는 칸은 건드리지 않는다.
