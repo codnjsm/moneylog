@@ -21,24 +21,32 @@ export default function AssetsTab({ accounts, snapshot, previousSnapshot, assetT
   const today = new Date().toISOString().slice(0, 10)
   const [editing, setEditing] = useState(false)
   const [filterType, setFilterType] = useState('all')
-  // 그 달 기록이 있으면 그걸, 없으면 지난 기록을 미리 채운다.
-  // 빈칸으로 열면 몇 개만 채워 저장했을 때 나머지가 0원으로 덮어써진다.
-  const draftAmounts = () => {
-    const base = snapshot?.amounts ?? previousSnapshot?.amounts ?? {}
-    return Object.fromEntries(accounts.map((a) => [a.id, String(base[a.id] ?? '')]))
-  }
-  const [amounts, setAmounts] = useState<Record<string, string>>(draftAmounts)
+  // 그 달 기록이 없으면 지난 기록을 대신 쓴다. 달이 바뀌어도 총 자산이 0 이 되지 않는다.
+  const effective = snapshot ?? previousSnapshot
+  const baseAmounts = effective?.amounts ?? {}
+  // 지난 기록을 보여주고 있는 중인지. 맞으면 언제 기준인지 눈에 띄게 알린다.
+  const isStale = !snapshot && !!previousSnapshot
+
+  // 입력칸은 비워 두고 기존 금액은 placeholder 로만 띄운다.
+  // 값을 채워 넣으면 내가 고친 칸인지 그대로 둔 칸인지 구분되지 않는다.
+  const [amounts, setAmounts] = useState<Record<string, string>>({})
   const [asOf, setAsOf] = useState(snapshot?.asOf ?? today)
 
   const handleEdit = () => {
-    setAmounts(draftAmounts())
+    setAmounts({})
     setAsOf(snapshot?.asOf ?? today)
     setEditing(true)
   }
 
   const handleSave = () => {
+    // 비워 둔 칸은 고치지 않았다는 뜻이므로 기존 금액을 그대로 넘긴다.
+    // 0 을 적은 것과 손대지 않은 것은 다르다 — 빈 문자열인지로만 가른다.
     const parsed = Object.fromEntries(
-      Object.entries(amounts).map(([id, v]) => [id, Number(v) || 0])
+      accounts.map((a) => {
+        const typed = amounts[a.id]
+        const kept = baseAmounts[a.id] ?? 0
+        return [a.id, typed === undefined || typed === '' ? kept : Number(typed) || 0]
+      })
     )
     onSaveSnapshot(parsed, asOf)
     setEditing(false)
@@ -46,7 +54,7 @@ export default function AssetsTab({ accounts, snapshot, previousSnapshot, assetT
 
   const getType = (id: string) => assetTypes.find(t => t.id === id) ?? { id, label: id, color: '#94A3B8' }
 
-  const currentAmounts = snapshot?.amounts ?? {}
+  const currentAmounts = baseAmounts
   const total = accounts.reduce((s, a) => s + (currentAmounts[a.id] ?? 0), 0)
   const allLiquidTotal = accounts.filter((a) => a.liquid !== false).reduce((s, a) => s + (currentAmounts[a.id] ?? 0), 0)
   const allIlliquidTotal = accounts.filter((a) => a.liquid === false).reduce((s, a) => s + (currentAmounts[a.id] ?? 0), 0)
@@ -108,7 +116,9 @@ export default function AssetsTab({ accounts, snapshot, previousSnapshot, assetT
           </div>
         </div>
         <div className="assets-total">{fmt(total)}</div>
-        {snapshot?.asOf && <div className="assets-asof">{snapshot.asOf} 기준</div>}
+        {isStale
+          ? <div className="assets-asof stale">{Number(effective!.yearMonth.slice(5))}월 기준</div>
+          : effective?.asOf && <div className="assets-asof">{effective.asOf} 기준</div>}
         {allLiquidTotal > 0 && allIlliquidTotal > 0 && (
           <div className="asset-split">
             <div className="asset-split-track">
@@ -144,7 +154,7 @@ export default function AssetsTab({ accounts, snapshot, previousSnapshot, assetT
                 type="number"
                 value={amounts[a.id] ?? ''}
                 onChange={(e) => setAmounts((prev) => ({ ...prev, [a.id]: e.target.value }))}
-                placeholder="0"
+                placeholder={String(baseAmounts[a.id] ?? 0)}
                 min={0}
                 style={{ width: 180, textAlign: 'right' }}
               />

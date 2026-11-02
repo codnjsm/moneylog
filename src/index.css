@@ -471,6 +471,8 @@ textarea { resize: vertical; min-height: 80px; }
 .assets-total-label::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 17px; border-radius: 2px; background: var(--income); }
 .assets-total { font-size: 28px; font-weight: 700; color: var(--text); letter-spacing: -0.5px; }
 .assets-asof { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+/* 지난달 금액을 대신 보여주는 중. 확인한 값이 아니라는 걸 분명히 한다. */
+.assets-asof.stale { color: var(--danger); font-weight: 500; }
 
 .asset-split { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
 .asset-split-track { display: flex; height: 8px; border-radius: 999px; overflow: hidden; background: var(--surface-2); }
