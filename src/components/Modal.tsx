@@ -27,6 +27,28 @@ export default function Modal({ onClose, children }: Props) {
     }
   }, [])
 
+  // 고정 오버레이 안이라 브라우저가 포커스된 입력칸을 알아서 올려주지 못한다.
+  // 키보드가 올라와 보이는 영역이 줄어든 뒤에 불러야 제자리로 가므로 한 박자 늦춘다.
+  // nearest 라서 이미 다 보이는 칸은 건드리지 않는다.
+  useEffect(() => {
+    const el = overlayRef.current
+    if (!el) return
+
+    let timer: number
+    const onFocusIn = (e: FocusEvent) => {
+      const target = e.target
+      if (!(target instanceof HTMLElement)) return
+      clearTimeout(timer)
+      timer = setTimeout(() => target.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 300)
+    }
+
+    el.addEventListener('focusin', onFocusIn)
+    return () => {
+      clearTimeout(timer)
+      el.removeEventListener('focusin', onFocusIn)
+    }
+  }, [])
+
   useEffect(() => {
     const scrollY = window.scrollY
     const { body } = document
