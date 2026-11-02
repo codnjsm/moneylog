@@ -1,5 +1,6 @@
 import type { Expense, FixedItem, SavingsItem, CategoryDef, PaymentMethodDef, AssetAccount, AssetSnapshot, AssetTypeDef } from '../../types'
 import DonutChart from '../DonutChart'
+import HomeFab from '../HomeFab'
 import { fmtNum, fmtWon } from '../../utils'
 
 interface Props {
@@ -249,6 +250,8 @@ export default function HomeTab({ yearMonth, expenses, fixedItems, savingsItems,
           )}
         </>
       )}
+
+      <HomeFab onAddIncome={onAddIncome} onAddExpense={onAddExpense} />
     </div>
   )
 }

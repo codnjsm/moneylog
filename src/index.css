@@ -180,7 +180,18 @@ header {
 .edit-btn { background: none; border: 1px solid var(--border); color: var(--text-dim); padding: 9px 14px; border-radius: 7px; font-size: 13px; cursor: pointer; }
 .edit-btn:hover { color: var(--text); }
 
-.fab { position: fixed; bottom: calc(var(--tab-height) + env(safe-area-inset-bottom) + 16px); right: max(16px, calc(50% - 284px)); width: 54px; height: 54px; border-radius: 50%; background: var(--accent); color: #fff; border: none; font-size: 28px; line-height: 1; cursor: pointer; box-shadow: var(--shadow); display: flex; align-items: center; justify-content: center; z-index: 70; }
+.fab { position: fixed; bottom: calc(var(--tab-height) + env(safe-area-inset-bottom) + 16px); right: max(16px, calc(50% - 284px)); width: 54px; height: 54px; border-radius: 50%; background: var(--accent); color: #fff; border: none; font-size: 28px; line-height: 1; cursor: pointer; box-shadow: var(--shadow); display: flex; align-items: center; justify-content: center; z-index: 70; transition: transform 0.2s; }
+/* 홈 빠른 추가. 스택이 .fab 의 자리를 대신 잡으므로 그 안에서는 흐름에 맡긴다.
+   지출·주식 탭의 단독 .fab 은 그대로 fixed 로 둔다.
+   어두운 배경 위에는 스크롤할 것이 없어서 touch-action 으로 뒤 화면 스크롤을 통째로 막는다. */
+.fab.open { transform: rotate(45deg); }
+.fab-stack { position: fixed; bottom: calc(var(--tab-height) + env(safe-area-inset-bottom) + 16px); right: max(16px, calc(50% - 284px)); display: flex; flex-direction: column; align-items: flex-end; gap: 14px; z-index: 95; }
+.fab-stack .fab { position: static; }
+.fab-stack.open { touch-action: none; }
+.fab-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 90; touch-action: none; }
+.fab-action { display: flex; align-items: center; gap: 10px; background: none; border: none; padding: 0; cursor: pointer; }
+.fab-action-label { font-size: 14px; font-weight: 500; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.4); white-space: nowrap; }
+.fab-action-icon { width: 44px; height: 44px; border-radius: 50%; background: #fff; color: var(--accent); display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow); flex-shrink: 0; }
 
 /* ── Login ───────────────────────────────────────────────────── */
 /* 세로가 짧으면 회원가입 카드가 화면보다 높아진다. align-items: center 로 가운데 두면
@@ -763,7 +774,7 @@ button.more-card { width: 100%; text-align: left; font: inherit; color: inherit;
     padding: 32px 40px 48px;
   }
 
-  .fab {
+  .fab, .fab-stack {
     bottom: 32px;
     right: 40px;
   }
@@ -798,6 +809,7 @@ button.more-card { width: 100%; text-align: left; font: inherit; color: inherit;
 .btn-danger:active:not(:disabled),
 .modal-delete-link:active { background: rgba(255,59,48,0.08); }
 .fab:active { background: var(--accent-hover); }
+.fab-action:active .fab-action-icon { background: #EBEBF0; }
 .google-btn:active { background: #f1f3f4; }
 
 .btn-income:active, .btn-expense:active,
