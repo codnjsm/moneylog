@@ -334,14 +334,33 @@ export default function App() {
           recurring={modal.recurring}
           yearMonth={yearMonth}
           initialDate={modal.initialDate}
-          onSaveOnce={withErrorAlert('저장', async (d) => { const item = modal.item; closeModal(); noticeSavedMonth(d.yearMonth); await (item ? data.updateExpense(item.id, d) : data.addExpense(d)) })}
+          onSaveOnce={withErrorAlert('저장', async (d) => {
+            const item = modal.item
+            const wasRecurring = modal.recurring
+            const cur = data.recurringIncome
+            closeModal()
+            noticeSavedMonth(d.yearMonth)
+            if (wasRecurring) {
+              // 반복 → 이번만. 이 달부터 반복에서 빼고 고른 날짜의 기록 하나로 남긴다.
+              // 지난 달들은 그 달의 이월분을 그대로 쓰므로 영향이 없다.
+              await data.setRecurringIncome(cur.filter(i => i.id !== wasRecurring.id))
+              await data.addExpense(d)
+            } else if (item) {
+              await data.updateExpense(item.id, d)
+            } else {
+              await data.addExpense(d)
+            }
+          })}
           onSaveRecurring={withErrorAlert('저장', async (item) => {
+            const wasOnce = modal.item
             const cur = data.recurringIncome
             closeModal()
             // 고친 항목은 자리에서 바꾸고, 새 항목은 뒤에 붙인다. 이 달 문서로 저장되므로
             // 다음 달부터는 이게 이월되고 지난 달은 건드리지 않는다.
             const next = cur.some(i => i.id === item.id) ? cur.map(i => (i.id === item.id ? item : i)) : [...cur, item]
             await data.setRecurringIncome(next)
+            // 이번만 → 반복. 원래 줄을 지워야 한다. 안 지우면 이 달에 두 번 더해진다.
+            if (wasOnce) await data.deleteExpense(wasOnce.id)
           })}
           onDelete={
             modal.recurring

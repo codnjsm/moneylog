@@ -18,17 +18,23 @@ interface Props {
 
 export default function IncomeEntryModal({ expense, recurring, yearMonth, initialDate, onSaveOnce, onSaveRecurring, onDelete, onClose }: Props) {
   const today = new Date().toISOString().slice(0, 10)
-  const defaultDate = initialDate ?? (today.startsWith(yearMonth) ? today : `${yearMonth}-01`)
+  const [y, m] = yearMonth.split('-').map(Number)
+  const lastDay = new Date(y, m, 0).getDate()
   const isEdit = !!(expense || recurring)
 
-  // 수정할 때는 종류를 못 바꾼다. 반복↔일시 전환은 저장 위치가 달라 지웠다 다시 만드는 일이라,
-  // 조용히 처리하면 어느 달까지 영향이 가는지 알기 어렵다. 바꾸려면 지우고 새로 적는다.
+  // 반복 항목을 일시로 바꿀 때 쓸 날짜. 지정일이 그 달 말일을 넘으면 말일로 당긴다.
+  const recurringDate = recurring ? `${yearMonth}-${String(Math.min(recurring.paymentDay, lastDay)).padStart(2, '0')}` : null
+  const initial = expense?.date ?? recurringDate ?? initialDate ?? (today.startsWith(yearMonth) ? today : `${yearMonth}-01`)
+
   const [recurringMode, setRecurringMode] = useState(!!recurring)
 
   const [label, setLabel] = useState(expense?.label ?? recurring?.label ?? '')
   const [amount, setAmount] = useState((expense?.amount ?? recurring?.amount)?.toString() ?? '')
-  const [date, setDate] = useState(expense?.date ?? defaultDate)
-  const [day, setDay] = useState((recurring?.paymentDay ?? Number(defaultDate.slice(8, 10))).toString())
+  const [date, setDate] = useState(initial)
+  const [day, setDay] = useState((recurring?.paymentDay ?? Number(initial.slice(8, 10))).toString())
+
+  /** 수정 중에 종류를 바꾸면 저장 위치가 옮겨간다. 어떤 일이 벌어지는지 미리 알려준다. */
+  const switched = isEdit && recurringMode !== !!recurring
 
   const { saving, runSave } = useSaveGuard()
 
@@ -62,25 +68,21 @@ export default function IncomeEntryModal({ expense, recurring, yearMonth, initia
           <div className="form-group">
             <label>종류</label>
             <div className="mode-toggle" role="group" aria-label="수입 종류">
-              <button
-                className={`mode-btn${!recurringMode ? ' active' : ''}`}
-                onClick={() => setRecurringMode(false)}
-                disabled={isEdit}
-              >
+              <button className={`mode-btn${!recurringMode ? ' active' : ''}`} onClick={() => setRecurringMode(false)}>
                 이번만
               </button>
-              <button
-                className={`mode-btn${recurringMode ? ' active' : ''}`}
-                onClick={() => setRecurringMode(true)}
-                disabled={isEdit}
-              >
+              <button className={`mode-btn${recurringMode ? ' active' : ''}`} onClick={() => setRecurringMode(true)}>
                 매달 반복
               </button>
             </div>
             <p className="form-hint">
-              {recurringMode
-                ? '다음 달부터도 자동으로 이어져요. 금액을 바꾸면 그 달부터 바뀌고 지난 달은 그대로예요.'
-                : '이 달에만 기록돼요.'}
+              {switched
+                ? (recurringMode
+                    ? '이 달 기록을 반복으로 옮겨요. 지난 달 기록은 그대로 남아요.'
+                    : '반복을 이 달부터 끊고, 고른 날짜의 기록 하나로 남겨요.')
+                : recurringMode
+                  ? '다음 달부터도 자동으로 이어져요. 금액을 바꾸면 그 달부터 바뀌고 지난 달은 그대로예요.'
+                  : '이 달에만 기록돼요.'}
             </p>
           </div>
           <div className="form-group">
