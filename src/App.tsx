@@ -115,6 +115,15 @@ export default function App() {
   }, [])
 
   const yearMonth = getYearMonth(monthOffset)
+
+  /**
+   * 집계 달은 고른 날짜를 따라간다. 보고 있는 달이 아닌 곳으로 저장되면 화면에서 그대로
+   * 사라지므로, 어디로 갔는지 알려준다. 같은 달이면 아무 말도 하지 않는다.
+   */
+  const noticeSavedMonth = (savedYm: string | undefined) => {
+    if (!savedYm || savedYm === yearMonth) return
+    showToast(`${Number(savedYm.slice(5))}월 가계부에 저장했어요`)
+  }
   const household = useHousehold(user?.uid ?? '')
   const data = useData(household.spaceId, yearMonth)
 
@@ -300,6 +309,7 @@ export default function App() {
           onSave={withErrorAlert('저장', async (items) => {
             const item = modal.item
             closeModal()
+            noticeSavedMonth(items[0]?.yearMonth)
             if (item && items.length === 1) {
               await data.updateExpense(item.id, items[0])
             } else {
@@ -316,7 +326,7 @@ export default function App() {
           expense={modal.item}
           yearMonth={yearMonth}
           initialDate={modal.initialDate}
-          onSave={withErrorAlert('저장', async (d) => { const item = modal.item; closeModal(); await (item ? data.updateExpense(item.id, d) : data.addExpense(d)) })}
+          onSave={withErrorAlert('저장', async (d) => { const item = modal.item; closeModal(); noticeSavedMonth(d.yearMonth); await (item ? data.updateExpense(item.id, d) : data.addExpense(d)) })}
           onDelete={modal.item ? withErrorAlert('삭제', async () => { closeModal(); await data.deleteExpense(modal.item!.id) }) : undefined}
           onClose={closeModal}
         />

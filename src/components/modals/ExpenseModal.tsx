@@ -45,11 +45,14 @@ export default function ExpenseModal({ expense, yearMonth, initialDate, methods,
   const { saving, runSave } = useSaveGuard()
 
   const handleSave = () => {
-    if (!label.trim() || Number(amount) <= 0 || !method) return
+    // 날짜가 비면 집계 달(date.slice)이 빈 문자열이 되어 어느 달에서도 안 보인다.
+    if (!label.trim() || Number(amount) <= 0 || !method || !date) return
 
     if (installments <= 1 || isEdit) {
       const data: Omit<Expense, 'id' | 'uid'> = {
-        yearMonth: expense?.yearMonth ?? yearMonth,
+        // 집계 달은 고른 날짜에서 뽑는다. 후불결제처럼 다음 달 날짜를 적으면 그 달로 들어간다.
+        // 할부(아래)도 같은 규칙이라 입력 방식에 따라 결과가 갈리지 않는다.
+        yearMonth: date.slice(0, 7),
         label: label.trim(),
         amount: totalAmount,
         paymentMethod: method,
@@ -139,7 +142,7 @@ export default function ExpenseModal({ expense, yearMonth, initialDate, methods,
 
           <div className="form-group">
             <label htmlFor="expense-date">날짜 <span className="required">*</span></label>
-            <input id="expense-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} max={today} />
+            <input id="expense-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
           </div>
 
           <div className="form-group">

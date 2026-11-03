@@ -23,8 +23,10 @@ export default function IncomeEntryModal({ expense, yearMonth, initialDate, onSa
   const { saving, runSave } = useSaveGuard()
 
   const handleSave = () => {
-    if (!label.trim() || Number(amount) <= 0) return
-    runSave(() => onSave({ yearMonth, label: label.trim(), amount: Number(amount), paymentMethod: '', date, type: 'income' }))
+    // 날짜가 비면 집계 달이 빈 문자열이 되어 어느 달에서도 안 보인다.
+    if (!label.trim() || Number(amount) <= 0 || !date) return
+    // 집계 달은 고른 날짜에서 뽑는다 (ExpenseModal 과 같은 규칙).
+    runSave(() => onSave({ yearMonth: date.slice(0, 7), label: label.trim(), amount: Number(amount), paymentMethod: '', date, type: 'income' }))
   }
 
   return (
@@ -41,7 +43,7 @@ export default function IncomeEntryModal({ expense, yearMonth, initialDate, onSa
           </div>
           <div className="form-group">
             <label htmlFor="income-entry-date">날짜 <span className="required">*</span></label>
-            <input id="income-entry-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} max={today} />
+            <input id="income-entry-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
           </div>
           <div className="form-group">
             <label htmlFor="income-entry-label">내용 <span className="required">*</span></label>
