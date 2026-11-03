@@ -1,18 +1,23 @@
 import { useState, useEffect, useMemo } from 'react'
-import type { Expense, PaymentMethodDef } from '../../types'
+import type { Expense, PaymentMethodDef, IncomeItem } from '../../types'
 
 interface Props {
   expenses: Expense[]
+  recurringIncome: IncomeItem[]
   yearMonth: string
   methods: PaymentMethodDef[]
   onAddIncome: (date: string) => void
   onAddExpense: (date: string) => void
   onEditEntry: (item: Expense) => void
+  onEditRecurringIncome: (item: IncomeItem) => void
 }
+
+/** 반복 수입은 달력에 찍으려고 그 달의 가짜 항목으로 만들어 쓴다. recurringId 로 구분한다. */
+type CalItem = Expense & { recurringId?: string }
 
 const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토']
 
-export default function CalendarTab({ expenses, yearMonth, methods, onAddIncome, onAddExpense, onEditEntry }: Props) {
+export default function CalendarTab({ expenses, recurringIncome, yearMonth, methods, onAddIncome, onAddExpense, onEditEntry, onEditRecurringIncome }: Props) {
   const today = new Date().toISOString().slice(0, 10)
   const [selectedDate, setSelectedDate] = useState<string | null>(
     today.startsWith(yearMonth) ? today : null
@@ -26,17 +31,33 @@ export default function CalendarTab({ expenses, yearMonth, methods, onAddIncome,
   const firstDow = new Date(year, month - 1, 1).getDay()
   const daysInMonth = new Date(year, month, 0).getDate()
 
+  // 반복 수입을 이 달의 항목으로 펼친다. 31일로 잡아둔 것이 2월에 사라지지 않도록 말일로 당긴다.
+  const items: CalItem[] = useMemo(() => [
+    ...expenses,
+    ...recurringIncome.map((i) => ({
+      id: `recurring-${i.id}`,
+      uid: '',
+      yearMonth,
+      date: `${yearMonth}-${String(Math.min(i.paymentDay, daysInMonth)).padStart(2, '0')}`,
+      label: i.label,
+      amount: i.amount,
+      paymentMethod: '',
+      type: 'income' as const,
+      recurringId: i.id,
+    })),
+  ], [expenses, recurringIncome, yearMonth, daysInMonth])
+
   const byDate = useMemo(() => {
-    const map: Record<string, Expense[]> = {}
-    for (const e of expenses) {
+    const map: Record<string, CalItem[]> = {}
+    for (const e of items) {
       if (!map[e.date]) map[e.date] = []
       map[e.date].push(e)
     }
     return map
-  }, [expenses])
+  }, [items])
 
-  const monthExpense = useMemo(() => expenses.filter(e => e.type !== 'income').reduce((s, e) => s + e.amount, 0), [expenses])
-  const monthIncome = useMemo(() => expenses.filter(e => e.type === 'income').reduce((s, e) => s + e.amount, 0), [expenses])
+  const monthExpense = useMemo(() => items.filter(e => e.type !== 'income').reduce((s, e) => s + e.amount, 0), [items])
+  const monthIncome = useMemo(() => items.filter(e => e.type === 'income').reduce((s, e) => s + e.amount, 0), [items])
 
   const cells: (number | null)[] = []
   for (let i = 0; i < firstDow; i++) cells.push(null)
@@ -125,13 +146,21 @@ export default function CalendarTab({ expenses, yearMonth, methods, onAddIncome,
                 const isIncome = item.type === 'income'
                 const m = item.paymentMethod ? getMethod(item.paymentMethod) : undefined
                 return (
-                  <div key={item.id} className="cal-item" onClick={() => onEditEntry(item)}>
+                  <div
+                    key={item.id}
+                    className="cal-item"
+                    onClick={() => {
+                      const r = item.recurringId && recurringIncome.find(i => i.id === item.recurringId)
+                      if (r) onEditRecurringIncome(r)
+                      else onEditEntry(item)
+                    }}
+                  >
                     <div className="cal-item-icon">
                       <span className="cal-item-dot" style={{ background: isIncome ? 'var(--income)' : (m?.color ?? 'var(--text-dim)') }} />
                     </div>
                     <div className="cal-item-info">
                       <span className="cal-item-label">{item.label}</span>
-                      <span className="cal-item-sub">{isIncome ? '수입' : (m?.label ?? '')}</span>
+                      <span className="cal-item-sub">{item.recurringId ? '매월' : isIncome ? '수입' : (m?.label ?? '')}</span>
                     </div>
                     <span className={`cal-item-amount ${isIncome ? 'cal-income-amt' : 'cal-expense-amt'}`}>{fmtWon(item.amount)}</span>
                   </div>

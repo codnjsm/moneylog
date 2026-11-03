@@ -187,13 +187,28 @@ export const deleteExpensesByGroupId = async (uid: string, groupId: string) => {
   await Promise.all(snap.docs.map(d => deleteDoc(d.ref)))
 }
 
-// ── Monthly Income ────────────────────────────────────────────
-export const subscribeMonthlyIncome = (uid: string, yearMonth: string, cb: (income: MonthlyIncome | null) => void): Unsubscribe =>
-  onSnapshot(doc(db, 'monthly_income', `${uid}_${yearMonth}`), (snap) =>
-    cb(snap.exists() ? (snap.data() as MonthlyIncome) : null))
+// ── Recurring Income ──────────────────────────────────────────
+// 예전 monthly_income 컬렉션은 쓰지 않는다. 거기엔 지금 화면과 뜻이 다른 옛 문서가 남아 있어,
+// 이월 규칙을 붙이면 그 문서가 이후 모든 달로 퍼진다. 그래서 새 컬렉션에서 시작한다.
+// (monthly_income 문서 자체는 내보내기·탈퇴 처리에 그대로 포함되므로 유실되지 않는다.)
+export const subscribeRecurringIncome = (uid: string, yearMonth: string, cb: (items: IncomeItem[] | null) => void): Unsubscribe =>
+  onSnapshot(doc(db, 'recurring_income', `${uid}_${yearMonth}`), (snap) =>
+    cb(snap.exists() ? ((snap.data().items ?? []) as IncomeItem[]) : null))
 
-export const setMonthlyIncome = (uid: string, yearMonth: string, items: IncomeItem[]) =>
-  setDoc(doc(db, 'monthly_income', `${uid}_${yearMonth}`), { uid, yearMonth, items })
+export const setRecurringIncome = (uid: string, yearMonth: string, items: IncomeItem[]) =>
+  setDoc(doc(db, 'recurring_income', `${uid}_${yearMonth}`), { uid, yearMonth, items })
+
+/** 고정 지출·적금과 같은 이월 규칙. 그 달 문서가 없으면 가장 가까운 과거 달을 그대로 쓴다. */
+export const getRecurringIncomeFallback = async (uid: string, yearMonth: string): Promise<IncomeItem[]> => {
+  for (let i = 1; i <= 12; i++) {
+    const d = new Date(yearMonth + '-01')
+    d.setMonth(d.getMonth() - i)
+    const ym = d.toISOString().slice(0, 7)
+    const snap = await getDoc(doc(db, 'recurring_income', `${uid}_${ym}`))
+    if (snap.exists()) return (snap.data().items ?? []) as IncomeItem[]
+  }
+  return []
+}
 
 // ── Stock Trades ───────────────────────────────────────────────
 export const subscribeStockTrades = (uid: string, yearMonth: string, cb: (items: StockTrade[]) => void): Unsubscribe =>
@@ -382,7 +397,7 @@ export const exportAllData = async (spaceId: string) => {
 /** uid 필드로 본인 문서를 찾는 컬렉션들. 월별 문서도 안에 uid 를 갖고 있어 같은 방식으로 지운다. */
 const OWNED_COLLECTIONS = [
   'expenses', 'stock_trades', 'asset_accounts', 'fixed_items', 'savings_items',
-  'fixed_monthly', 'savings_monthly', 'monthly_income', 'asset_accounts_monthly', 'asset_snapshots',
+  'fixed_monthly', 'savings_monthly', 'monthly_income', 'recurring_income', 'asset_accounts_monthly', 'asset_snapshots',
 ]
 
 /** 문서 id 가 곧 spaceId 인 컬렉션들. */

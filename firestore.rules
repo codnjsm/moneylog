@@ -106,6 +106,13 @@ service cloud.firestore {
       allow update: if ownsSpace(resource.data.uid) && request.resource.data.uid == resource.data.uid;
       allow delete: if ownsSpace(resource.data.uid);
     }
+    // 반복 수입. monthly_income 과 같은 규칙이지만 컬렉션을 나눠 옛 문서와 섞이지 않게 한다.
+    match /recurring_income/{id} {
+      allow read: if ownsMonthlyDoc(id);
+      allow create: if ownsSpace(request.resource.data.uid);
+      allow update: if ownsSpace(resource.data.uid) && request.resource.data.uid == resource.data.uid;
+      allow delete: if ownsSpace(resource.data.uid);
+    }
     match /asset_accounts_monthly/{id} {
       allow read: if ownsMonthlyDoc(id);
       allow create: if ownsSpace(request.resource.data.uid);

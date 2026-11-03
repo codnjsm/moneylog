@@ -296,6 +296,10 @@ header {
 .form-row { display: flex; gap: 12px; align-items: center; }
 .form-row .form-group { flex: 1; }
 .required { color: var(--danger); }
+/* 선택한 종류가 어떻게 동작하는지 한 줄로 알려준다. 라벨보다 작고 흐리게. */
+.form-hint { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+/* 숫자 칸 좌우의 '매월 … 일' 같은 고정 문구. 칸처럼 보이지 않게 배경 없이 둔다. */
+.form-prefix { font-size: 14px; color: var(--text-dim); flex-shrink: 0; }
 .optional-label-row { display: flex; align-items: center; justify-content: space-between; }
 .clear-btn { background: none; border: none; font-size: 11px; color: var(--text-dim); cursor: pointer; padding: 0; text-decoration: underline; }
 
@@ -686,7 +690,7 @@ button.more-card { width: 100%; text-align: left; font: inherit; color: inherit;
 
   .btn-sm, .form-group label, .expense-date,
   .assets-asof, .household-code-label, .household-hint, .cal-item-sub,
-  .asset-sub, .home-prog-sub, .home-highlight-pct { font-size: 11px; }
+  .asset-sub, .home-prog-sub, .home-highlight-pct, .form-hint { font-size: 11px; }
   .btn.btn-sm { font-size: 11px; }
   .add-btn { font-size: 13px; }
 
@@ -706,7 +710,7 @@ button.more-card { width: 100%; text-align: left; font: inherit; color: inherit;
   .fixed-row-label, .fixed-row-amount, .asset-edit-label,
   .login-card p, .google-btn, .expense-label, .expense-amount,
   .asset-label, .asset-amount, .cal-item-label,
-  .more-row-left, .verify-title { font-size: 14px; }
+  .more-row-left, .verify-title, .form-prefix { font-size: 14px; }
 
   .modal-header h3, .month-label, .cal-item-amount,
   .account-name { font-size: 16px; }

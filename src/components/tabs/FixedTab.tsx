@@ -1,8 +1,10 @@
-import type { FixedItem, SavingsItem, Expense } from '../../types'
+import type { FixedItem, SavingsItem, Expense, IncomeItem } from '../../types'
 import { fmtWon as fmt } from '../../utils'
 
 interface Props {
   incomeEntries: Expense[]
+  recurringIncome: IncomeItem[]
+  onEditRecurringIncome: (item: IncomeItem) => void
   fixedItems: FixedItem[]
   savingsItems: SavingsItem[]
   onAddIncome: () => void
@@ -12,10 +14,10 @@ interface Props {
 }
 
 
-export default function FixedTab({ incomeEntries, fixedItems, savingsItems, onAddIncome, onEditIncomeEntry, onManageFixed, onManageSavings }: Props) {
+export default function FixedTab({ incomeEntries, recurringIncome, fixedItems, savingsItems, onAddIncome, onEditIncomeEntry, onEditRecurringIncome, onManageFixed, onManageSavings }: Props) {
   const totalFixed = fixedItems.reduce((s, i) => s + i.amount, 0)
   const totalSavings = savingsItems.reduce((s, i) => s + i.amount, 0)
-  const totalIncome = incomeEntries.reduce((s, e) => s + e.amount, 0)
+  const totalIncome = incomeEntries.reduce((s, e) => s + e.amount, 0) + recurringIncome.reduce((s, i) => s + i.amount, 0)
 
   const sortedIncome = [...incomeEntries].sort((a, b) => b.date.localeCompare(a.date))
   const sortedSavings = [...savingsItems].sort((a, b) => {
@@ -35,20 +37,32 @@ export default function FixedTab({ incomeEntries, fixedItems, savingsItems, onAd
           <h2 className="fixed-section-title" data-accent="income">수입</h2>
           <button className="add-btn" onClick={onAddIncome}>+ 추가</button>
         </div>
-        {sortedIncome.length === 0 ? (
+        {sortedIncome.length === 0 && recurringIncome.length === 0 ? (
           <div className="fixed-empty-block">
             <div className="fixed-empty">항목이 없어요</div>
           </div>
         ) : (
-          sortedIncome.map((item) => (
-            <div key={item.id} className="fixed-row clickable" onClick={() => onEditIncomeEntry(item)}>
-              <span className="fixed-row-label">
-                {item.label}
-                <span className="fixed-row-sub">{item.date.slice(5).replace('-', '/')}</span>
-              </span>
-              <span className="fixed-row-amount">{fmt(item.amount)}</span>
-            </div>
-          ))
+          <>
+            {/* 반복분을 위에 둔다. 매달 같은 자리에 있는 것이 먼저 읽히는 편이 낫다. */}
+            {[...recurringIncome].sort((a, b) => a.paymentDay - b.paymentDay).map((item) => (
+              <div key={item.id} className="fixed-row clickable" onClick={() => onEditRecurringIncome(item)}>
+                <span className="fixed-row-label">
+                  {item.label}
+                  <span className="fixed-row-sub">매월 {item.paymentDay}일</span>
+                </span>
+                <span className="fixed-row-amount">{fmt(item.amount)}</span>
+              </div>
+            ))}
+            {sortedIncome.map((item) => (
+              <div key={item.id} className="fixed-row clickable" onClick={() => onEditIncomeEntry(item)}>
+                <span className="fixed-row-label">
+                  {item.label}
+                  <span className="fixed-row-sub">{item.date.slice(5).replace('-', '/')}</span>
+                </span>
+                <span className="fixed-row-amount">{fmt(item.amount)}</span>
+              </div>
+            ))}
+          </>
         )}
         {totalIncome > 0 && (
           <div className="fixed-row total">

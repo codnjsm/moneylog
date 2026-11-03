@@ -48,10 +48,13 @@ export const LEGACY_PAYMENT_METHODS: PaymentMethodDef[] = [
   { id: 'safebox', label: '세이프박스', color: '#F472B6' },
 ]
 
+/** 매달 반복되는 수입. 일시 수입은 Expense(type: 'income') 로 따로 들어간다. */
 export interface IncomeItem {
   id: string
   label: string
   amount: number
+  /** 매월 며칠에 들어오는지. 캘린더에 찍으려면 있어야 해서 입력 때 필수로 받는다. */
+  paymentDay: number
 }
 
 export interface FixedItem {
