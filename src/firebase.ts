@@ -429,8 +429,8 @@ export const deleteAccount = async (householdCode: string | null, password?: str
     await deleteDoc(doc(db, name, uid))
   }
 
-  // 공유 가계부에서는 데이터를 지우지 않고 멤버에서만 빠진다
-  if (householdCode) await updateDoc(doc(db, 'households', householdCode), { members: arrayRemove(uid) })
+  // 공유 가계부에서는 데이터를 지우지 않고 멤버에서만 빠진다 (내가 마지막이면 그 문서도 지운다)
+  if (householdCode) await leaveHousehold(uid, householdCode)
 
   await deleteDoc(doc(db, 'user_profiles', uid))
   await deleteUser(current)
@@ -468,5 +468,12 @@ export const joinHousehold = async (uid: string, code: string): Promise<boolean>
 }
 
 export const leaveHousehold = async (uid: string, code: string): Promise<void> => {
-  await updateDoc(doc(db, 'households', code), { members: arrayRemove(uid) })
+  const ref = doc(db, 'households', code)
+  const snap = await getDoc(ref)
+  if (!snap.exists()) return
+  const members: string[] = snap.data().members ?? []
+  // 마지막 한 명이 그냥 빠지면 members 가 빈 문서가 그대로 남는다. 아예 지운다.
+  // 보안 규칙도 '내가 유일한 멤버일 때'만 삭제를 허용하므로 남을 밀어내는 데는 쓸 수 없다.
+  if (members.length === 1 && members[0] === uid) await deleteDoc(ref)
+  else await updateDoc(ref, { members: arrayRemove(uid) })
 }

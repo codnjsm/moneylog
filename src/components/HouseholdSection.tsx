@@ -32,9 +32,15 @@ export default function HouseholdSection({ mode, householdCode, onSwitchMode, on
   const handleJoin = async () => {
     const code = joinCode.trim().toUpperCase()
     if (code.length < 4) return
-    const ok = await onJoin(code)
-    if (ok) { setView('main'); setJoinCode('') }
-    else setJoinError('유효하지 않은 코드예요')
+    // onJoin 은 boolean 을 돌려줘야 해서 withErrorAlert 로 감쌀 수 없다. 여기서 직접 잡는다.
+    // 코드가 틀린 것과 통신·권한 실패는 원인이 달라 문구를 구분한다.
+    try {
+      const ok = await onJoin(code)
+      if (ok) { setView('main'); setJoinCode('') }
+      else setJoinError('유효하지 않은 코드예요')
+    } catch (e) {
+      setJoinError('참여하지 못했어요: ' + (e instanceof Error ? e.message : String(e)))
+    }
   }
 
   const handleLeave = async () => {

@@ -278,10 +278,10 @@ export default function App() {
             householdCode={household.householdCode}
             theme={theme}
             onSetTheme={setTheme}
-            onSwitchMode={household.switchMode}
-            onCreate={household.create}
+            onSwitchMode={withErrorAlert('모드 변경', household.switchMode)}
+            onCreate={withErrorAlert('공유 가계부 만들기', household.create)}
             onJoin={household.join}
-            onLeave={household.leave}
+            onLeave={withErrorAlert('나가기', household.leave)}
             onSignOut={signOutUser}
             onExport={() => exportAllData(household.spaceId)}
           />
