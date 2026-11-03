@@ -93,7 +93,7 @@ export default function FixedTab({ incomeEntries, fixedItems, savingsItems, onAd
           <h2 className="fixed-section-title" data-accent="savings">
             적금
             {totalIncome > 0 && (
-              <span className="fixed-section-sub" style={{ color: 'var(--accent)' }}>(저축률 {Math.round((totalSavings / totalIncome) * 100)}%)</span>
+              <span className="fixed-section-sub" style={{ color: 'var(--accent-text)' }}>(저축률 {Math.round((totalSavings / totalIncome) * 100)}%)</span>
             )}
           </h2>
           <button className="add-btn" onClick={onManageSavings}>{savingsItems.length === 0 ? '+ 추가' : '수정'}</button>

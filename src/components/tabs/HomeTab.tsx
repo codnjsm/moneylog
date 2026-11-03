@@ -240,7 +240,7 @@ export default function HomeTab({ yearMonth, expenses, fixedItems, savingsItems,
                     <span className="home-feed-dot" style={{ background: dotColor }} />
                     <span className="home-feed-label">{e.label}</span>
                     <span className="home-feed-date">{e.date.slice(5).replace('-', '/')}</span>
-                    <span className="home-feed-amount" style={{ color: isIncome ? 'var(--accent)' : 'var(--expense)' }}>
+                    <span className="home-feed-amount" style={{ color: isIncome ? 'var(--accent-text)' : 'var(--expense)' }}>
                       {isIncome ? '+' : '−'}{fmtNum(e.amount)}
                     </span>
                   </div>

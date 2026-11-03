@@ -16,6 +16,9 @@
   --text-dim: #6A6A6F;
   --accent: #007AFF;
   --accent-hover: #0066CC;
+  /* 글씨용. --accent 는 버튼 배경(흰 글씨) 기준으로 고른 값이라 흰 바탕 글씨로 쓰면
+     4.02:1 로 기준(4.5:1)에 못 미친다. 글자색에는 한 단계 진한 이 값을 쓴다. */
+  --accent-text: #0066CC;
   --accent-soft: rgba(0,122,255,0.12);
   --danger: #FF3B30;
   --ok: #16a34a;
@@ -39,6 +42,7 @@
   --text-dim: #8E8E93;
   --accent: #0A84FF;
   --accent-hover: #409CFF;
+  --accent-text: #409CFF;
   --accent-soft: rgba(10,132,255,0.15);
   --danger: #FF453A;
   --ok: #4ade80;
@@ -53,8 +57,8 @@
 /* ── Base ────────────────────────────────────────────────────── */
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Noto Sans KR", sans-serif;
-  /* 모바일 14px / 데스크톱 16px, 줄간격 1.6 — 북로그와 맞춘 값 */
-  font-size: 16px;
+  /* 본문: 데스크톱 15px / 모바일 13px, 줄간격 1.6 */
+  font-size: 15px;
   background: var(--bg);
   color: var(--text);
   line-height: 1.6;
@@ -62,7 +66,9 @@ body {
   -webkit-font-smoothing: antialiased;
   font-variant-numeric: tabular-nums;
 }
-input, select, textarea, button { font-family: inherit; font-size: 16px; }
+/* 입력칸도 본문과 같은 크기로 둔다. iOS 는 16px 미만 입력칸에 포커스하면 화면을 확대하는데,
+   index.html 의 viewport meta 에 maximum-scale=1.0 이 있어 그 동작을 막는다. */
+input, select, textarea, button { font-family: inherit; font-size: 15px; }
 
 /* 화면에는 안 보이지만 스크린리더는 읽는 텍스트 */
 .sr-only {
@@ -87,16 +93,10 @@ input, select, textarea, button { font-family: inherit; font-size: 16px; }
 .sidebar-header { display: flex; align-items: center; gap: 8px; padding: 0 8px; margin-bottom: 24px; }
 .sidebar-logo { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; font-family: "Source Code Pro", monospace; }
 
-.sidebar-month { display: flex; align-items: center; justify-content: space-between; padding: 0 4px; margin-bottom: 16px; }
-.sidebar-month-btn { background: none; border: none; color: var(--text-dim); font-size: 20px; cursor: pointer; padding: 4px 8px; line-height: 1; border-radius: 6px; transition: background 0.12s; }
-.sidebar-month-btn:hover { background: var(--surface-hover); }
-.sidebar-month-btn:disabled { color: var(--border); cursor: not-allowed; }
-.sidebar-month-label { font-size: 14px; font-weight: 600; color: var(--text); }
-
 .sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 2px; }
 .sidebar-item { display: flex; align-items: center; gap: 11px; padding: 9px 12px; border-radius: 10px; border: none; background: transparent; color: var(--text-dim); font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.12s, color 0.12s; text-align: left; width: 100%; font-family: inherit; }
 .sidebar-item:hover { background: var(--surface-hover); color: var(--text); }
-.sidebar-item.active { background: var(--accent-soft); color: var(--accent); font-weight: 500; }
+.sidebar-item.active { background: var(--accent-soft); color: var(--accent-text); font-weight: 500; }
 .sidebar-item-icon { display: flex; align-items: center; flex-shrink: 0; }
 
 .sidebar-bottom { border-top: 1px solid var(--border); padding-top: 12px; margin-top: 8px; }
@@ -156,7 +156,7 @@ header {
   z-index: 80;
 }
 .tab-item { flex: 1; background: none; border: none; color: var(--text-dim); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 0; transition: color 0.15s; position: relative; }
-.tab-item.active { color: var(--accent); }
+.tab-item.active { color: var(--accent-text); }
 .tab-item.active::after { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 20px; height: 3px; border-radius: 0 0 3px 3px; background: var(--accent); }
 .tab-icon { display: flex; align-items: center; justify-content: center; }
 .tab-label { font-size: 11px; font-weight: 500; }
@@ -165,20 +165,14 @@ header {
 .btn { border: none; padding: 11px 18px; border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all .15s; }
 .btn:disabled { opacity: 0.35; cursor: not-allowed; }
 .btn-primary { background: var(--accent); color: #fff; }
-.btn-primary:hover { background: var(--accent-hover); }
 .btn-secondary { background: var(--surface-2); color: var(--text); }
-.btn-secondary:hover { background: var(--border); }
 /* 수입·지출 추가는 같은 등급이라 색으로만 가른다. 캘린더 날짜별 추가 줄도 이걸 쓴다. */
 .btn-income { background: var(--income-soft); color: var(--income); }
 .btn-expense { background: rgba(255,59,48,0.1); color: var(--expense); }
 .btn-danger { background: transparent; color: var(--danger); border: 1px solid rgba(255,59,48,0.3); }
-.btn-danger:hover { background: rgba(255,59,48,0.08); }
 .btn-ghost { background: transparent; color: var(--text-dim); border: 1px solid var(--border); }
 .btn-sm { padding: 7px 12px; font-size: 13px; }
 .add-btn { background: none; border: 1px solid var(--border); color: var(--text-dim); padding: 4px 10px; border-radius: 7px; font-size: 14px; cursor: pointer; }
-.add-btn:hover { color: var(--text); }
-.edit-btn { background: none; border: 1px solid var(--border); color: var(--text-dim); padding: 9px 14px; border-radius: 7px; font-size: 13px; cursor: pointer; }
-.edit-btn:hover { color: var(--text); }
 
 .fab { position: fixed; bottom: calc(var(--tab-height) + env(safe-area-inset-bottom) + 16px); right: max(16px, calc(50% - 284px)); width: 54px; height: 54px; border-radius: 50%; background: var(--accent); color: #fff; border: none; font-size: 28px; line-height: 1; cursor: pointer; box-shadow: var(--shadow); display: flex; align-items: center; justify-content: center; z-index: 70; transition: transform 0.2s; }
 /* 홈 빠른 추가. 스택이 .fab 의 자리를 대신 잡으므로 그 안에서는 흐름에 맡긴다.
@@ -202,15 +196,10 @@ header {
 .login-card h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
 .login-card p { color: var(--text-dim); font-size: 14px; line-height: 1.5; margin-bottom: 28px; }
 .google-btn { width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 10px; background: #fff; color: #3c4043; border: 1px solid #dadce0; padding: 12px 18px; border-radius: 10px; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
-.google-btn:hover { background: #f8f9fa; box-shadow: 0 1px 3px rgba(60,64,67,0.15); }
-
-.login-loading { display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--text-dim); font-size: 14px; padding: 12px 0; }
-.login-spinner { width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: login-spin 0.7s linear infinite; }
-@keyframes login-spin { to { transform: rotate(360deg); } }
 
 .login-warning { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; font-size: 14px; color: var(--text); line-height: 1.6; }
 .login-warning p { color: var(--text); font-size: 14px; margin-bottom: 0; }
-.login-warning-url { margin-top: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; font-family: "Source Code Pro", monospace; font-size: 13px; color: var(--accent); word-break: break-all; }
+.login-warning-url { margin-top: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; font-family: "Source Code Pro", monospace; font-size: 13px; color: var(--accent-text); word-break: break-all; }
 
 .login-divider { display: flex; align-items: center; gap: 12px; margin: 18px 0 14px; }
 .login-divider::before, .login-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
@@ -222,7 +211,7 @@ header {
 .login-card .login-hint { font-size: 12px; color: var(--text-dim); line-height: 1.55; margin-bottom: 0; }
 .login-card .login-error { font-size: 13px; color: var(--danger); line-height: 1.5; margin-bottom: 0; }
 .login-card .login-reset-done { font-size: 14px; color: var(--text); line-height: 1.6; text-align: left; margin-bottom: 16px; }
-.login-link { align-self: flex-start; background: none; border: none; padding: 0; font-size: 13px; color: var(--accent); cursor: pointer; text-decoration: underline; }
+.login-link { align-self: flex-start; background: none; border: none; padding: 0; font-size: 13px; color: var(--accent-text); cursor: pointer; text-decoration: underline; }
 .login-block-btn { width: 100%; }
 .login-password-wrap { position: relative; display: flex; }
 .login-password-wrap input { flex: 1; padding-right: 40px; }
@@ -314,9 +303,7 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 textarea { resize: vertical; min-height: 80px; }
 
-/* ── Payment Method Pills ────────────────────────────────────── */
-.method-pills { display: flex; flex-wrap: wrap; gap: 6px; }
-.method-pill { padding: 7px 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text-dim); font-size: 13px; cursor: pointer; transition: all 0.15s; }
+/* ── Badges & Dots ───────────────────────────────────────────── */
 .method-badge, .category-badge, .asset-type-badge { font-size: 11px; padding: 2px 8px; border-radius: 999px; font-weight: 600; white-space: nowrap; color: color-mix(in srgb, var(--badge) 50%, #000); background: color-mix(in srgb, var(--badge) 15%, transparent); }
 [data-theme="dark"] .method-badge, [data-theme="dark"] .category-badge, [data-theme="dark"] .asset-type-badge { color: var(--badge); }
 .expense-badges { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
@@ -325,7 +312,6 @@ textarea { resize: vertical; min-height: 80px; }
 /* filter / custom select */
 .filter-row-wrap { display: flex; flex-direction: row; gap: 8px; }
 .filter-row-wrap .custom-select-btn { border: none; }
-.filter-select { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 9px 12px; font-size: 14px; color: var(--text); cursor: pointer; }
 
 .custom-select-wrap { position: relative; flex: 1; }
 .custom-select-btn { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 9px 12px; font-size: 15px; color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
@@ -334,8 +320,8 @@ textarea { resize: vertical; min-height: 80px; }
 .custom-select-option { display: block; width: 100%; text-align: left; padding: 12px 16px; background: none; border: none; border-bottom: 1px solid var(--border); font-size: 15px; color: var(--text); cursor: pointer; }
 .custom-select-option:last-child { border-bottom: none; }
 .custom-select-option:active { background: var(--surface-2); }
-.custom-select-option.selected { color: var(--income); font-weight: 600; }
-.custom-select-action { display: block; width: 100%; text-align: left; padding: 12px 16px; background: none; border: none; border-top: 1px solid var(--border); font-size: 14px; color: var(--accent); cursor: pointer; }
+.custom-select-option.selected { color: var(--accent-text); font-weight: 600; }
+.custom-select-action { display: block; width: 100%; text-align: left; padding: 12px 16px; background: none; border: none; border-top: 1px solid var(--border); font-size: 14px; color: var(--accent-text); cursor: pointer; }
 .custom-select-action:active { background: var(--surface-2); }
 
 /* ── Payment Methods Modal ───────────────────────────────────── */
@@ -343,20 +329,11 @@ textarea { resize: vertical; min-height: 80px; }
 .pm-row.dragging { opacity: 0.5; }
 .pm-drag-handle { background: none; border: none; color: var(--text-dim); cursor: grab; touch-action: none; font-size: 16px; padding: 4px 2px; flex-shrink: 0; line-height: 1; }
 .pm-color-btn { width: 26px; height: 26px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); cursor: pointer; flex-shrink: 0; transition: border-color 0.15s; }
-.pm-color-btn:hover { border-color: rgba(255,255,255,0.7); }
 .pm-row input { flex: 1; }
 .pm-delete-btn { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 14px; padding: 4px 6px; flex-shrink: 0; line-height: 1; }
-.pm-delete-btn:hover { color: var(--danger); }
 .pm-add-btn { background: none; border: 1px dashed var(--border); color: var(--text-dim); width: 100%; padding: 10px; border-radius: 10px; cursor: pointer; font-size: 13px; transition: all 0.15s; }
 .savings-card { border: 1px solid var(--border); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; position: relative; }
 .savings-card-delete { position: absolute; top: 10px; right: 10px; background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 13px; padding: 2px 4px; }
-.savings-card-header { display: flex; align-items: flex-start; gap: 4px; }
-.pm-add-btn:hover { border-color: var(--accent); color: var(--accent); }
-
-/* ── Asset Type Pills ────────────────────────────────────────── */
-.type-pills { display: flex; flex-wrap: wrap; gap: 6px; }
-.type-pill { padding: 7px 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text-dim); font-size: 13px; cursor: pointer; transition: all 0.15s; }
-.type-pill.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 
 /* ── Dashboard ───────────────────────────────────────────────── */
 .dash-section { background: var(--surface); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 2px; }
@@ -364,7 +341,6 @@ textarea { resize: vertical; min-height: 80px; }
 .dash-remaining-item { flex: 1; display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 6px; }
 .dash-remaining-value { font-size: 18px; font-weight: 700; }
 .section-divider { height: 1px; background: var(--border); margin: 4px 0; }
-.dash-remaining-sub { font-size: 12px; color: var(--text-dim); margin-left: auto; }
 .dash-chart-row { display: flex; align-items: center; gap: 16px; margin-top: 8px; }
 .dash-chart-donut { flex: 0 0 calc(60% - 8px); width: calc(60% - 8px); display: flex; justify-content: center; }
 .dash-chart-donut svg { width: 50%; height: auto; }
@@ -382,21 +358,8 @@ textarea { resize: vertical; min-height: 80px; }
 @media (min-width: 768px) {
   .dash-legend { padding-right: 40px; }
 }
-.dash-section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .dash-section-title { font-size: 13px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; }
-.dash-row { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; }
-.dash-row.total { border-top: 1px solid var(--border); margin-top: 6px; padding-top: 10px; font-weight: 700; }
-.dash-row-label { font-size: 15px; color: var(--text-dim); display: flex; align-items: center; gap: 4px; flex: 1; min-width: 0; }
-.dash-row-amount { font-size: 15px; font-weight: 500; color: var(--text); }
-.dash-sub { font-size: 11px; color: var(--text-dim); opacity: 0.7; }
-.dash-empty { color: var(--text-dim); font-size: 15px; text-align: center; padding: 12px 0; cursor: pointer; }
 .dash-empty-sm { color: var(--text-dim); font-size: 13px; padding: 8px 0; }
-
-.dash-summary { background: var(--surface-2); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
-.summary-row { display: flex; justify-content: space-between; align-items: center; font-size: 15px; }
-.summary-row.remaining { font-size: 17px; font-weight: 700; margin-top: 4px; }
-.summary-divider { border-top: 1px solid var(--border); margin: 2px 0; }
-.summary-pct { font-size: 12px; color: var(--text-dim); text-align: right; margin-top: 4px; }
 
 .income { color: var(--income); }
 .expense { color: var(--expense); }
@@ -451,8 +414,6 @@ textarea { resize: vertical; min-height: 80px; }
     gap: 4px;
 }
 .expense-date { font-size: 12px; color: var(--text-dim); flex-shrink: 0; }
-.expense-total { text-align: right; font-size: 13px; color: var(--text-dim); padding: 8px 4px; }
-.expense-total strong { color: var(--text); font-weight: 600; }
 
 .method-summary { background: var(--surface); border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
 .method-summary-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-dim); }
@@ -498,7 +459,6 @@ textarea { resize: vertical; min-height: 80px; }
 .asset-split-dot.illiquid { background: var(--illiquid); }
 
 .asset-edit-box { background: var(--surface); border-radius: 16px; padding: 16px; margin-bottom: 12px; }
-.asset-edit-title { font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
 .asset-edit-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
 .asset-edit-label { font-size: 15px; color: var(--text); flex: 1; }
 .asset-edit-row input { width: 140px; flex: none; text-align: right; }
@@ -510,7 +470,6 @@ textarea { resize: vertical; min-height: 80px; }
 .asset-card-left { display: flex; flex-direction: row; gap: 6px; flex: 1; min-width: 0; align-items: center; }
 .asset-card-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
 .asset-delete-btn { background: none; border: none; font-size: 13px; color: var(--text-dim); cursor: pointer; padding: 4px; line-height: 1; }
-.asset-delete-btn:hover { color: var(--danger); }
 .asset-label { font-size: 15px; font-weight: 500; color: var(--text); }
 .asset-sub { font-size: 12px; color: var(--text-dim); }
 .asset-amount { font-size: 15px; font-weight: 600; color: var(--text); white-space: nowrap; }
@@ -580,7 +539,9 @@ textarea { resize: vertical; min-height: 80px; }
 /* 카드가 여럿 쌓이는 화면이라 공용 12px 보다 좁게 둔다. */
 .more-page { margin-top: 20px; gap: 8px; }
 .more-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
-.more-row { display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; }
+/* 테마 행처럼 안에 토글만 든 칸도 이 클래스를 쓴다. 눌리는 것은 button 쪽뿐이라 커서도 거기만 준다. */
+.more-row { display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; }
+button.more-row { cursor: pointer; }
 .more-row-left { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 400; color: var(--text); }
 .more-row-hint { font-size: 12px; color: var(--text-dim); }
 /* 클릭되는 more-row 는 button 이므로 기본 버튼 스타일을 덜어낸다 */
@@ -608,7 +569,7 @@ button.more-card { width: 100%; text-align: left; font: inherit; color: inherit;
 .verify-title { font-size: 15px; font-weight: 700; color: var(--text); }
 .verify-body { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
 .verify-body b { color: var(--text); font-weight: 600; word-break: break-all; }
-.verify-msg { font-size: 13px; color: var(--accent); line-height: 1.5; }
+.verify-msg { font-size: 13px; color: var(--accent-text); line-height: 1.5; }
 .verify-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 
 .more-footer-brand { font-weight: 700; color: var(--text); font-family: "Source Code Pro", monospace; margin-bottom: 4px; }
@@ -653,16 +614,6 @@ button.more-card { width: 100%; text-align: left; font: inherit; color: inherit;
 .cal-summary-label { font-size: 12px; color: var(--text-dim); }
 .cal-summary-value { font-size: 16px; font-weight: 700; }
 
-.cal-pill-wrap { display: flex; justify-content: center; padding: 18px 0 10px; }
-.cal-pill {
-  background: var(--surface-2);
-  border-radius: 999px;
-  padding: 11px 32px;
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: -0.3px;
-}
-
 .cal-day-section { background: var(--surface); border-radius: 18px; overflow: hidden; margin-top: 16px; }
 .cal-day-add-row { display: flex; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--border); }
 .cal-add-btn { flex: 1; padding: 7px 0; border-radius: 8px; border: none; font-size: 13px; font-weight: 500; cursor: pointer; }
@@ -672,8 +623,6 @@ button.more-card { width: 100%; text-align: left; font: inherit; color: inherit;
 .cal-day-amt-label { font-size: 11px; color: var(--text-dim); }
 .cal-day-amounts .cal-income-amt, .cal-day-amounts .cal-expense-amt { font-weight: 700; }
 .cal-day-title { font-size: 13px; color: var(--text-dim); font-weight: 500; }
-.cal-day-net { font-size: 17px; font-weight: 700; color: var(--text); }
-.cal-day-empty { padding: 40px 16px; text-align: center; color: var(--text-dim); font-size: 15px; }
 
 .cal-item { display: flex; align-items: center; gap: 0px; padding: 15px 18px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; }
 .cal-item:last-child { border-bottom: none; }
@@ -688,41 +637,51 @@ button.more-card { width: 100%; text-align: left; font: inherit; color: inherit;
 
 /* ── Mobile font scale (-1px for all sizes below 18px) ────────── */
 @media (max-width: 767px) {
-  body { font-size: 14px; }
+  body { font-size: 13px; }
 
   .mode-badge, .tab-label, .asset-type-badge, .cal-day-num, .cal-amount,
-  .dash-sub, .method-badge, .category-badge,
-  .fixed-row-sub, .asset-edit-title, .clear-btn { font-size: 10px; }
+  .method-badge, .category-badge,
+  .fixed-row-sub, .clear-btn,
+  .home-hero-days, .home-upcoming-title, .home-upcoming-day,
+  .home-feed-date { font-size: 10px; }
   .assets-total-label { font-size: 15px; }
   .assets-total-label::before { height: 15px; }
 
   .fixed-section-title { font-size: 15px; }
   .fixed-section-title::before { height: 15px; }
 
-  .btn-sm, .form-group label, .summary-pct, .expense-date,
+  .btn-sm, .form-group label, .expense-date,
   .assets-asof, .household-code-label, .household-hint, .cal-item-sub,
-  .asset-sub { font-size: 11px; }
+  .asset-sub, .home-prog-sub, .home-highlight-pct { font-size: 11px; }
   .btn.btn-sm { font-size: 11px; }
   .add-btn { font-size: 13px; }
 
   .dash-section-title { font-size: 12px; }
 
-  .edit-btn, .method-pill, .type-pill, .pm-add-btn, .cal-weekday,
-  .cal-day-title, .user-avatar, .expense-total,
-  .method-summary-row, .dash-empty-sm, .fixed-empty, .empty-sub { font-size: 12px; }
+  .pm-add-btn, .cal-weekday,
+  .cal-day-title, .user-avatar,
+  .method-summary-row, .dash-empty-sm, .fixed-empty, .empty-sub,
+  .home-upcoming-row, .home-prog-pct, .home-highlight-chip { font-size: 12px; }
 
-  .btn, .pm-delete-btn, .filter-select,
+  .btn, .pm-delete-btn,
   .custom-select-action { font-size: 13px; }
   .modal-close { font-size: 20px !important; }
 
-  .dash-row-label, .dash-row-amount, .dash-empty, .summary-row,
+  input, select, textarea, button,
   .custom-select-btn, .custom-select-option, .mode-btn,
-  .fixed-row-label, .fixed-row-amount, .asset-edit-label, .cal-day-empty,
+  .fixed-row-label, .fixed-row-amount, .asset-edit-label,
   .login-card p, .google-btn, .expense-label, .expense-amount,
-  .asset-label, .asset-amount, .cal-item-label { font-size: 14px; }
+  .asset-label, .asset-amount, .cal-item-label,
+  .more-row-left, .verify-title { font-size: 13px; }
 
-  .modal-header h3, .month-label, .cal-day-net, .cal-item-amount,
-  .summary-row.remaining, .account-name, .cal-pill { font-size: 16px; }
+  .modal-header h3, .month-label, .cal-item-amount,
+  .account-name { font-size: 16px; }
+
+  /* 홈 피드·다가오는 지출만 쓰는 반 픽셀 값. 축소폭은 다른 것과 같은 -1px 로 맞춘다.
+     .home-hero-value(26px)·.home-highlight-amount(16px)는 각각 .assets-total·
+     .cal-summary-value 와 짝이 맞아 축소하지 않는다 — 줄이면 오히려 어긋난다. */
+  .home-feed-label, .home-feed-amount { font-size: 12.5px; }
+  .home-upcoming-amount { font-size: 11.5px; }
 }
 
 /* ── Mobile small ─────────────────────────────────────────────── */
@@ -799,6 +758,24 @@ button.more-card { width: 100%; text-align: left; font: inherit; color: inherit;
   /* 여백은 건드리지 않는다. 마우스를 올려둔 내내 유지되는 표시라,
      폭을 바꾸면 이름과 금액이 좌우로 밀려 글자가 커진 것처럼 보인다. */
   .fixed-row.clickable:hover { background: var(--surface-hover); border-radius: 6px; }
+  /* 더보기 탭은 카드 하나가 통째로 버튼이라 눌리는 것처럼 안 생겼다. 표시가 더 필요하다. */
+  button.more-row:hover { background: var(--surface-hover); }
+  /* 드롭다운. 고른 항목은 글자색으로 표시하므로 회색으로 덮지 않는다. */
+  .custom-select-btn:hover,
+  .custom-select-option:not(.selected):hover,
+  .custom-select-action:hover { background: var(--surface-hover); }
+
+  /* 아래는 원래 미디어쿼리 밖에 있던 것들이다. 터치 기기에서는 :hover 가 탭한 요소에
+     그대로 남아, 모달을 닫고 돌아와도 그 버튼만 눌린 것처럼 보였다. */
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-secondary:hover { background: var(--border); }
+  .btn-danger:hover { background: rgba(255,59,48,0.08); }
+  .add-btn:hover { color: var(--text); }
+  .google-btn:hover { background: #f8f9fa; box-shadow: 0 1px 3px rgba(60,64,67,0.15); }
+  .pm-color-btn:hover { border-color: rgba(255,255,255,0.7); }
+  .pm-delete-btn:hover { color: var(--danger); }
+  .pm-add-btn:hover { border-color: var(--accent); color: var(--accent-text); }
+  .asset-delete-btn:hover { color: var(--danger); }
 }
 
 /* ── Press Feedback ──────────────────────────────────────────── */
@@ -811,21 +788,23 @@ button.more-card { width: 100%; text-align: left; font: inherit; color: inherit;
 .fab:active { background: var(--accent-hover); }
 .fab-action:active .fab-action-icon { background: #EBEBF0; }
 .google-btn:active { background: #f1f3f4; }
+button.more-row:active { background: var(--surface-2); }
+.custom-select-btn:active { background: var(--surface-2); }
 
 .btn-income:active, .btn-expense:active,
-.btn-ghost:active:not(:disabled), .add-btn:active, .edit-btn:active, .pm-add-btn:active,
-.method-pill:active, .type-pill:active, .mode-btn:active,
+.btn-ghost:active:not(:disabled), .add-btn:active, .pm-add-btn:active,
+.mode-btn:active,
 .modal-close:active, .pm-delete-btn:active, .asset-delete-btn:active,
 .savings-card-delete:active, .clear-btn:active, .month-btn:active:not(:disabled),
-.sidebar-month-btn:active, .tab-item:active, .sidebar-item:active,
+.tab-item:active, .sidebar-item:active,
 .pm-drag-handle:active { opacity: 0.55; }
 
 /* ── Touch Targets ───────────────────────────────────────────── */
 /* 주변 요소의 클릭을 가로채지 않는 선에서 손가락이 닿는 범위를 넓힌다. */
 
 /* 옆이 비어 있어 투명 영역을 덧대도 안전한 것들 */
-.modal-close, .month-btn, .sidebar-month-btn { position: relative; }
-.modal-close::after, .month-btn::after, .sidebar-month-btn::after {
+.modal-close, .month-btn { position: relative; }
+.modal-close::after, .month-btn::after {
   content: '';
   position: absolute;
   top: 50%;
