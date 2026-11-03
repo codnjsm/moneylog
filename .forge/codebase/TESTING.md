@@ -1,6 +1,6 @@
 ---
-last_mapped_commit: a28aa9e61a6b8610bdfe37adc648b11f2eb413de
-mapped: 2026-09-15
+last_mapped_commit: ebc284377e9b3c5c5fea2a12cc2a8f1485f13a97
+mapped: 2026-11-03
 ---
 
 # TESTING
@@ -23,7 +23,7 @@ mapped: 2026-09-15
 테스트 프레임워크 대신 다음 세 가지가 "검증"의 전부입니다.
 
 1. **`npm run build`** (`tsc -b && vite build`) — 타입 체크. `tsconfig.app.json`의 `noUnusedLocals`/`noUnusedParameters`/`noFallthroughCasesInSwitch` 등으로 일부 정적 오류를 잡습니다.
-2. **`npm run lint`** (`eslint .`) — `eslint.config.js` 기준 `typescript-eslint` recommended + `eslint-plugin-react-hooks` recommended + `eslint-plugin-react-refresh`(vite) 규칙 검사. 현재 알려진 채로 남겨둔 lint 에러가 2개 있습니다(`react-hooks/set-state-in-effect`, `src/components/tabs/CalendarTab.tsx`와 `src/hooks/useData.ts`) — `CLAUDE.md`에 의도적으로 방치한 것으로 기록되어 있습니다.
+2. **`npm run lint`** (`eslint .`) — `eslint.config.js` 기준 `typescript-eslint` recommended + `eslint-plugin-react-hooks` recommended + `eslint-plugin-react-refresh`(vite) 규칙 검사. 현재 에러 2개와 경고 2개가 **알려진 상태로 의도적으로 남아 있습니다**(`react-hooks/set-state-in-effect`, `react-hooks/exhaustive-deps` — `src/components/tabs/CalendarTab.tsx`, `src/hooks/useData.ts`). `CLAUDE.md`에 "실제 동작에는 문제 없고 핵심 구독 로직 구조를 바꿔야 해서 보류"한 수용된 상태로 기록되어 있으므로 결함으로 보고 임의로 고치지 않으며, 고치려면 먼저 확인받습니다. 새 변경이 이 4건 외의 lint 문제를 추가하지 않는지가 확인 기준입니다.
 3. **수동 UI 확인 / Firestore 에뮬레이터** — 코드 동작이나 Firestore 보안 규칙(`firestore.rules`) 검증은 사람이 `npm run dev`로 직접 켜보거나 `firebase emulators:exec`로 에뮬레이터를 띄워 시나리오를 확인하는 방식으로 이루어집니다. 이 과정을 코드로 남긴 스크립트/픽스처는 저장소에 없습니다(`.claude/settings.local.json`의 허용 명령 목록에 `firebase emulators:exec ...` 실행 이력이 남아 있지만, 실행됐던 임시 스크립트 자체는 저장소에 커밋되어 있지 않습니다).
 
 ## 커버리지

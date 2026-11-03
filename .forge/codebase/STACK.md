@@ -1,6 +1,6 @@
 ---
-last_mapped_commit: a28aa9e61a6b8610bdfe37adc648b11f2eb413de
-mapped: 2026-09-15
+last_mapped_commit: ebc284377e9b3c5c5fea2a12cc2a8f1485f13a97
+mapped: 2026-11-03
 ---
 
 # STACK
@@ -88,6 +88,7 @@ Flat config (`eslint/config`의 `defineConfig`) 사용.
   - `hosting.public` → `dist`
   - `hosting.ignore` → `["firebase.json", "**/.*", "**/node_modules/**"]`
   - `hosting.rewrites` → `[{ "source": "**", "destination": "/index.html" }]` (SPA 라우팅용 catch-all)
+  - `hosting.headers` → 전체 `**`는 `Cache-Control: no-cache`, `/assets/**`(해시 파일명 번들)는 `public, max-age=31536000, immutable`
 - `.firebaserc`
   - `projects.default` → `moneylog-3c3d6`
 - `firestore.rules` — Firestore 보안 규칙 (컬렉션별 접근 제어; 상세는 `INTEGRATIONS.md` 참고)
@@ -97,11 +98,13 @@ CI/CD 파이프라인 없음(`.github` 디렉터리 없음). 배포는 수동으
 
 ## 기타 정적 자산 / 엔트리포인트
 
-- `index.html` — Vite 엔트리 HTML. Google Fonts(`fonts.googleapis.com`)의 `Noto Sans KR`, `Source Code Pro` 웹폰트를 `<link rel="stylesheet">`로 로드. OG 메타태그(`og:image` 등)가 `https://moneylog-3c3d6.web.app`를 하드코딩. 인라인 `<script>`가 테마(라이트/다크)를 초기화하는데, `localStorage`의 `moneylog-theme` 값(`light`/`dark`)이 있으면 그걸 우선 적용하고 없을 때만 `prefers-color-scheme` 미디어쿼리로 폴백.
+- `index.html` — Vite 엔트리 HTML. Google Fonts(`fonts.googleapis.com`)의 `Noto Sans KR`, `Source Code Pro` 웹폰트를 `<link rel="stylesheet">`로 로드. PWA/모바일 메타(`<link rel="manifest" href="/manifest.json">`, `apple-touch-icon`, `theme-color`, `apple-mobile-web-app-*`, `viewport-fit=cover`)와 OG 메타태그(`og:image`=`https://moneylog-3c3d6.web.app/og-image.jpg` 등, 도메인 하드코딩)를 가짐. 인라인 `<script>`가 테마를 초기화: `localStorage`의 `moneylog-theme`(`light`/`dark`)가 없으면 첫 진입 때 `prefers-color-scheme`로 한 번만 정한 뒤 그 값을 `localStorage`에 저장해 고정(이후 기기 테마 변경은 따라가지 않음). 결정된 테마를 `<html data-theme>`와 `meta[name=theme-color]`(라이트 `#F2F2F7`, 다크 `#000000`)에 반영.
+- `public/manifest.json` — PWA 웹 앱 매니페스트(`display: standalone`, `start_url: /`, `background_color`/`theme_color` `#F2F2F7`, 아이콘은 `/favicon.png` 하나). 서비스 워커는 없음(`src`/`index.html`에 `serviceWorker` 참조 없음) — 홈 화면 설치용 메타만 제공하고 오프라인 캐시는 Firestore 로컬 캐시가 담당(INTEGRATIONS.md 참고).
 - `src/main.tsx` — React 엔트리(`createRoot` + `StrictMode`).
-- `public/` — favicon, apple-touch-icon, og-image 등 정적 이미지 자산.
+- `public/` — `favicon.ico`, `favicon.png`, `apple-touch-icon.png`, `og-image.jpg`, `manifest.json`. (이전의 `favicon.svg`, `icons.svg`, `og-image.png`와 `src/assets/`의 `hero.png`, `vite.svg`는 삭제됨.)
+- `src/lib/image.ts` — 브라우저 Canvas/`URL.createObjectURL` 기반 이미지 로드·프로필 사진 크롭(정사각 JPEG 데이터 URI) 유틸. 외부 이미지 라이브러리 없음.
 
 ## 저장소 메타
 
 - Git remote(`origin`): `https://github.com/codnjsm/moneylog.git`
-- 매핑 시점 HEAD 커밋: `d7cb05506bb3373788498af458bd8c8e4ef63412`
+- 매핑 시점 HEAD 커밋: `ebc284377e9b3c5c5fea2a12cc2a8f1485f13a97`
