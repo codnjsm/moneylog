@@ -18,6 +18,24 @@ export default function CustomSelect({ value, options, onChange, action, name }:
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
+  const trackRef = useRef<HTMLSpanElement>(null)
+  const barRef = useRef<HTMLSpanElement>(null)
+
+  // iOS 는 ::-webkit-scrollbar 를 무시해 네이티브 인디케이터의 두께도 둥글기도 바꿀 수 없다.
+  // 그래서 네이티브는 숨기고 막대를 직접 그린다. 길이는 보이는 비율, 위치는 스크롤 비율이다.
+  // state 가 아니라 style 을 직접 만지는 이유는, 스크롤할 때마다 목록 전체를 다시 그리지 않기 위해서다.
+  const drawBar = () => {
+    const list = listRef.current, track = trackRef.current, bar = barRef.current
+    if (!list || !track || !bar) return
+    const { scrollHeight, clientHeight, scrollTop } = list
+    if (scrollHeight - clientHeight < 2) { track.style.display = 'none'; return }
+    track.style.display = ''
+    const trackH = track.clientHeight
+    const h = Math.max(28, Math.round((trackH * clientHeight) / scrollHeight))
+    const y = Math.round(((trackH - h) * scrollTop) / (scrollHeight - clientHeight))
+    bar.style.height = `${h}px`
+    bar.style.transform = `translateY(${y}px)`
+  }
 
   useEffect(() => {
     if (!open) return
@@ -36,6 +54,7 @@ export default function CustomSelect({ value, options, onChange, action, name }:
     if (!open || !list) return
     const sel = list.querySelector<HTMLElement>('.custom-select-option.selected')
     if (sel) list.scrollTop = sel.offsetTop - list.clientHeight / 2 + sel.clientHeight / 2
+    drawBar()
   }, [open])
 
   const selectedLabel = options.find(o => o.value === value)?.label ?? value
@@ -55,26 +74,31 @@ export default function CustomSelect({ value, options, onChange, action, name }:
         </svg>
       </button>
       {open && (
-        <div className="custom-select-dropdown" ref={listRef}>
-          {options.map(o => (
-            <button
-              key={o.value}
-              type="button"
-              className={`custom-select-option${value === o.value ? ' selected' : ''}`}
-              onClick={() => { onChange(o.value); setOpen(false) }}
-            >
-              {o.label}
-            </button>
-          ))}
-          {action && (
-            <button
-              type="button"
-              className="custom-select-action"
-              onClick={() => { action.onClick(); setOpen(false) }}
-            >
-              {action.label}
-            </button>
-          )}
+        <div className="custom-select-dropdown">
+          <div className="custom-select-list" ref={listRef} onScroll={drawBar}>
+            {options.map(o => (
+              <button
+                key={o.value}
+                type="button"
+                className={`custom-select-option${value === o.value ? ' selected' : ''}`}
+                onClick={() => { onChange(o.value); setOpen(false) }}
+              >
+                {o.label}
+              </button>
+            ))}
+            {action && (
+              <button
+                type="button"
+                className="custom-select-action"
+                onClick={() => { action.onClick(); setOpen(false) }}
+              >
+                {action.label}
+              </button>
+            )}
+          </div>
+          <span className="custom-select-track" ref={trackRef} aria-hidden="true">
+            <span className="custom-select-bar" ref={barRef} />
+          </span>
         </div>
       )}
     </div>
