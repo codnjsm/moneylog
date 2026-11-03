@@ -189,10 +189,12 @@ export default function App() {
           <div className="month-nav">
             <button className="month-btn" onClick={() => setMonthOffset((o) => o - 1)} aria-label="이전 달">‹</button>
             <span className="month-label">{yearMonth.replace('-', '년 ').replace(/(\d+)$/, (m) => `${Number(m)}월`)}</span>
-            {/* 과거에 있을 때는 언제나 앞으로 올 수 있어야 한다. 기록이 없는 달이 중간에
-                하나라도 있으면 거기서 막혀 이번 달로 돌아오지 못했다.
-                기록 유무를 보는 것은 이번 달을 넘어 미래로 갈 때뿐이다. */}
-            <button className="month-btn" onClick={() => setMonthOffset((o) => o + 1)} disabled={monthOffset >= 0 && !data.nextMonthHasData} aria-label="다음 달">›</button>
+            {/* 과거에서는 언제나 앞으로 올 수 있어야 한다. 기록이 없는 달이 중간에 하나라도
+                있으면 거기서 막혀 이번 달로 돌아오지 못했다.
+                앞으로도 6개월까지는 열어둔다 — 반복 수입은 미래 달에 문서를 만들지 않고
+                그 달에 가서야 이월받으므로, 기록 유무로 막으면 확인할 방법이 없다.
+                그 너머는 기록이 있을 때만. 끝없이 넘어가는 것은 막는다. */}
+            <button className="month-btn" onClick={() => setMonthOffset((o) => o + 1)} disabled={monthOffset >= 6 && !data.nextMonthHasData} aria-label="다음 달">›</button>
           </div>
         )}
         {tab === 'calendar' && (
