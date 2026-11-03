@@ -16,7 +16,13 @@ interface Props {
 
 export default function CustomSelect({ value, options, onChange, action, name }: Props) {
   const [open, setOpen] = useState(false)
+  // 열었을 때는 스크롤바를 띄워 두고, 한 번 굴리고 나면 숨긴다.
+  const [scrollIdle, setScrollIdle] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+  const listRef = useRef<HTMLDivElement>(null)
+  // 아래의 '고른 항목으로 맞추기'가 일으킨 scroll 이벤트를 사용자 스크롤로 세지 않기 위한 표시
+  const skipScroll = useRef(false)
+  const idleTimer = useRef<number | undefined>(undefined)
 
   useEffect(() => {
     if (!open) return
@@ -27,6 +33,33 @@ export default function CustomSelect({ value, options, onChange, action, name }:
     return () => document.removeEventListener('mousedown', handler)
   }, [open])
 
+  // 목록이 max-height 를 넘으면 고른 항목이 접힌 부분에 있을 수 있다. 열 때 가운데로 맞춘다.
+  // scrollIntoView 대신 목록의 scrollTop 을 직접 만지는 이유는, 모달 안에서 쓰일 때
+  // 바깥 스크롤 컨테이너(.modal-body)까지 같이 움직이는 것을 막기 위해서다.
+  useEffect(() => {
+    const list = listRef.current
+    if (!open || !list) return
+    const sel = list.querySelector<HTMLElement>('.custom-select-option.selected')
+    if (!sel) return
+    const target = Math.max(0, sel.offsetTop - list.clientHeight / 2 + sel.clientHeight / 2)
+    // 실제로 움직일 때만 표시를 세운다. 0 이면 scroll 이벤트가 안 나서 표시가 남고,
+    // 그러면 사용자의 첫 스크롤을 대신 삼켜버린다.
+    if (target > 0) {
+      skipScroll.current = true
+      list.scrollTop = target
+    }
+  }, [open])
+
+  useEffect(() => () => clearTimeout(idleTimer.current), [])
+
+  const handleScroll = () => {
+    if (skipScroll.current) { skipScroll.current = false; return }
+    if (scrollIdle) return
+    clearTimeout(idleTimer.current)
+    // 굴리는 동안은 보이게 두고, 손을 뗀 뒤에 사라지게 한다.
+    idleTimer.current = setTimeout(() => setScrollIdle(true), 600)
+  }
+
   const selectedLabel = options.find(o => o.value === value)?.label ?? value
 
   return (
@@ -34,7 +67,7 @@ export default function CustomSelect({ value, options, onChange, action, name }:
       <button
         className="custom-select-btn"
         type="button"
-        onClick={() => setOpen(o => !o)}
+        onClick={() => { setOpen(o => !o); setScrollIdle(false); clearTimeout(idleTimer.current) }}
         aria-label={name ? `${name}: ${selectedLabel}` : undefined}
         aria-expanded={open}
       >
@@ -44,7 +77,7 @@ export default function CustomSelect({ value, options, onChange, action, name }:
         </svg>
       </button>
       {open && (
-        <div className="custom-select-dropdown">
+        <div className={`custom-select-dropdown${scrollIdle ? ' scroll-idle' : ''}`} ref={listRef} onScroll={handleScroll}>
           {options.map(o => (
             <button
               key={o.value}
