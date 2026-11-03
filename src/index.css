@@ -57,7 +57,7 @@
 /* ── Base ────────────────────────────────────────────────────── */
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Noto Sans KR", sans-serif;
-  /* 본문: 데스크톱 15px / 모바일 13px, 줄간격 1.6 */
+  /* 본문: 데스크톱 15px / 모바일 14px, 줄간격 1.6 */
   font-size: 15px;
   background: var(--bg);
   color: var(--text);
@@ -67,7 +67,8 @@ body {
   font-variant-numeric: tabular-nums;
 }
 /* 입력칸도 본문과 같은 크기로 둔다. iOS 는 16px 미만 입력칸에 포커스하면 화면을 확대하는데,
-   index.html 의 viewport meta 에 maximum-scale=1.0 이 있어 그 동작을 막는다. */
+   index.html 의 viewport meta 에 maximum-scale=1.0 이 있어 그 동작을 막는다.
+   실제 아이폰에서 모달 입력칸을 눌러 줌이 뜨지 않는 것을 확인했다(2026-11-03). */
 input, select, textarea, button { font-family: inherit; font-size: 15px; }
 
 /* 화면에는 안 보이지만 스크린리더는 읽는 텍스트 */
@@ -637,7 +638,7 @@ button.more-card { width: 100%; text-align: left; font: inherit; color: inherit;
 
 /* ── Mobile font scale (-1px for all sizes below 18px) ────────── */
 @media (max-width: 767px) {
-  body { font-size: 13px; }
+  body { font-size: 14px; }
 
   .mode-badge, .tab-label, .asset-type-badge, .cal-day-num, .cal-amount,
   .method-badge, .category-badge,
@@ -672,7 +673,7 @@ button.more-card { width: 100%; text-align: left; font: inherit; color: inherit;
   .fixed-row-label, .fixed-row-amount, .asset-edit-label,
   .login-card p, .google-btn, .expense-label, .expense-amount,
   .asset-label, .asset-amount, .cal-item-label,
-  .more-row-left, .verify-title { font-size: 13px; }
+  .more-row-left, .verify-title { font-size: 14px; }
 
   .modal-header h3, .month-label, .cal-item-amount,
   .account-name { font-size: 16px; }
