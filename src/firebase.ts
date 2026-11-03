@@ -195,18 +195,6 @@ export const subscribeMonthlyIncome = (uid: string, yearMonth: string, cb: (inco
 export const setMonthlyIncome = (uid: string, yearMonth: string, items: IncomeItem[]) =>
   setDoc(doc(db, 'monthly_income', `${uid}_${yearMonth}`), { uid, yearMonth, items })
 
-/** 고정 지출·적금과 같은 이월 규칙. 그 달 문서가 없으면 가장 가까운 과거 달을 그대로 쓴다. */
-export const getMonthlyIncomeFallback = async (uid: string, yearMonth: string): Promise<IncomeItem[]> => {
-  for (let i = 1; i <= 12; i++) {
-    const d = new Date(yearMonth + '-01')
-    d.setMonth(d.getMonth() - i)
-    const ym = d.toISOString().slice(0, 7)
-    const snap = await getDoc(doc(db, 'monthly_income', `${uid}_${ym}`))
-    if (snap.exists()) return (snap.data().items ?? []) as IncomeItem[]
-  }
-  return []
-}
-
 // ── Stock Trades ───────────────────────────────────────────────
 export const subscribeStockTrades = (uid: string, yearMonth: string, cb: (items: StockTrade[]) => void): Unsubscribe =>
   onSnapshot(query(collection(db, 'stock_trades'), where('uid', '==', uid), where('yearMonth', '==', yearMonth)), (snap) =>
