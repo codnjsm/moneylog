@@ -1,4 +1,4 @@
-import type { Expense, FixedItem, SavingsItem, CategoryDef, PaymentMethodDef, AssetAccount, AssetSnapshot, AssetTypeDef } from '../../types'
+import type { Expense, FixedItem, SavingsItem, CategoryDef, PaymentMethodDef, AssetAccount, AssetSnapshot, AssetTypeDef, IncomeItem } from '../../types'
 import DonutChart from '../DonutChart'
 import HomeFab from '../HomeFab'
 import { fmtNum, fmtWon } from '../../utils'
@@ -8,6 +8,8 @@ interface Props {
   expenses: Expense[]
   fixedItems: FixedItem[]
   savingsItems: SavingsItem[]
+  recurringIncome: IncomeItem[]
+  onEditRecurringIncome: (item: IncomeItem) => void
   categories: CategoryDef[]
   methods: PaymentMethodDef[]
   assetAccounts: AssetAccount[]
@@ -18,7 +20,7 @@ interface Props {
   onEditIncomeEntry: (item: Expense) => void
 }
 
-export default function HomeTab({ yearMonth, expenses, fixedItems, savingsItems, categories, methods, assetAccounts, assetSnapshot, assetTypes, onAddExpense, onAddIncome, onEditIncomeEntry }: Props) {
+export default function HomeTab({ yearMonth, expenses, fixedItems, savingsItems, recurringIncome, categories, methods, assetAccounts, assetSnapshot, assetTypes, onAddExpense, onAddIncome, onEditIncomeEntry, onEditRecurringIncome }: Props) {
   const today = new Date()
   const isCurrentMonth = yearMonth === today.toISOString().slice(0, 7)
   const todayDate = today.getDate()
@@ -31,13 +33,13 @@ export default function HomeTab({ yearMonth, expenses, fixedItems, savingsItems,
   const incomeEntries = expenses.filter((e) => e.type === 'income')
   const expenseEntries = expenses.filter((e) => e.type !== 'income')
   const regularExpenseEntries = expenseEntries.filter((e) => !specialCategory || e.category !== specialCategory.id)
-  const totalIncome = incomeEntries.reduce((s, e) => s + e.amount, 0)
+  const totalIncome = incomeEntries.reduce((s, e) => s + e.amount, 0) + recurringIncome.reduce((s, i) => s + i.amount, 0)
   const totalFixed = fixedItems.reduce((s, i) => s + i.amount, 0)
   const totalSavings = savingsItems.reduce((s, i) => s + i.amount, 0)
   const totalExpense = regularExpenseEntries.reduce((s, e) => s + e.amount, 0)
   const budget = totalIncome - totalFixed - totalSavings
   const remaining = budget - totalExpense
-  const hasAnyData = totalIncome > 0 || expenses.length > 0
+  const hasAnyData = totalIncome > 0 || expenses.length > 0 || recurringIncome.length > 0
 
   const upcoming = isCurrentMonth
     ? [
@@ -189,12 +191,21 @@ export default function HomeTab({ yearMonth, expenses, fixedItems, savingsItems,
             </div>
           )}
 
-          {incomeEntries.length > 0 && (
+          {(incomeEntries.length > 0 || recurringIncome.length > 0) && (
             <div className="fixed-section">
               <div className="fixed-section-header">
                 <h2 className="fixed-section-title" data-accent="income">수입</h2>
                 <button className="add-btn" onClick={onAddIncome}>+ 추가</button>
               </div>
+              {[...recurringIncome].sort((a, b) => a.paymentDay - b.paymentDay).map((item) => (
+                <div key={item.id} className="fixed-row clickable" onClick={() => onEditRecurringIncome(item)}>
+                  <span className="fixed-row-label">
+                    {item.label}
+                    <span className="fixed-row-sub">매월 {item.paymentDay}일</span>
+                  </span>
+                  <span className="fixed-row-amount">{fmtWon(item.amount)}</span>
+                </div>
+              ))}
               {sortedIncome.map((item) => (
                 <div key={item.id} className="fixed-row clickable" onClick={() => onEditIncomeEntry(item)}>
                   <span className="fixed-row-label">

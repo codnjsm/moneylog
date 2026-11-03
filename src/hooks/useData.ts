@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import type { FixedItem, SavingsItem, Expense, MonthlyIncome, AssetAccount, AssetSnapshot, IncomeItem, PaymentMethodDef, CategoryDef, AssetTypeDef, StockTrade, StockCategoryDef } from '../types'
 import { DEFAULT_PAYMENT_METHODS, LEGACY_PAYMENT_METHODS, DEFAULT_CATEGORIES, DEFAULT_ASSET_TYPES, DEFAULT_STOCK_CATEGORIES } from '../types'
 import { stockProfitOf } from '../utils'
@@ -6,7 +6,7 @@ import {
   subscribeFixedItemsMonthly, setFixedItemsMonthly, getFixedItemsFallback,
   subscribeSavingsItemsMonthly, setSavingsItemsMonthly, getSavingsItemsFallback,
   subscribeExpenses, addExpense, updateExpense, deleteExpense, deleteExpensesByGroupId, subscribeExpensesExist,
-  subscribeMonthlyIncome, setMonthlyIncome,
+  subscribeMonthlyIncome, setMonthlyIncome, getMonthlyIncomeFallback,
   subscribeStockTrades, addStockTradeWithExpense, updateStockTradeWithExpense, deleteStockTradeWithExpense,
   subscribeAssetAccountsMonthly, setAssetAccountsMonthly as firebaseSetAssetAccountsMonthly, getAssetAccountsFallback,
   subscribeAssetSnapshot, setAssetSnapshot as firebaseSetAssetSnapshot, getAssetSnapshotFallback,
@@ -24,6 +24,7 @@ export function useData(uid: string, yearMonth: string) {
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [nextMonthHasData, setNextMonthHasData] = useState(false)
   const [income, setIncome] = useState<MonthlyIncome | null>(null)
+  const [incomeFallback, setIncomeFallback] = useState<IncomeItem[]>([])
   const [stockTrades, setStockTrades] = useState<StockTrade[]>([])
   const [assetAccountsMonthly, setAssetAccountsMonthly] = useState<AssetAccount[] | null>(null)
   const [assetAccountsFallback, setAssetAccountsFallback] = useState<AssetAccount[]>([])
@@ -75,6 +76,11 @@ export function useData(uid: string, yearMonth: string) {
   }, [uid, yearMonth, savingsMonthly])
 
   useEffect(() => {
+    if (!uid || income !== null) return
+    getMonthlyIncomeFallback(uid, yearMonth).then(setIncomeFallback)
+  }, [uid, yearMonth, income])
+
+  useEffect(() => {
     if (!uid || assetAccountsMonthly !== null) return
     getAssetAccountsFallback(uid, yearMonth).then(setAssetAccountsFallback)
   }, [uid, yearMonth, assetAccountsMonthly])
@@ -85,6 +91,16 @@ export function useData(uid: string, yearMonth: string) {
     getAssetSnapshotFallback(uid, yearMonth).then(setAssetSnapshotFallback)
   }, [uid, yearMonth, assetSnapshot])
 
+  // monthly_income 은 예전에도 쓰이던 컬렉션이라 paymentDay 가 없는 문서가 남아 있을 수 있다.
+  // 그대로 두면 Math.min(undefined, …) 가 NaN 이 되어 캘린더에서 통째로 사라진다. 1일로 본다.
+  // 새 배열을 만들므로 useMemo 로 묶는다 — 안 그러면 이걸 의존하는 쪽 메모가 매번 깨진다.
+  const recurringIncome: IncomeItem[] = useMemo(
+    () => (income?.items ?? incomeFallback).map((i) => ({
+      ...i,
+      paymentDay: Number.isInteger(i.paymentDay) && i.paymentDay >= 1 && i.paymentDay <= 31 ? i.paymentDay : 1,
+    })),
+    [income, incomeFallback],
+  )
   const fixedItems: FixedItem[] = fixedMonthly ?? fixedFallback
   const savingsItems: SavingsItem[] = savingsMonthly ?? savingsFallback
   const assetAccounts: AssetAccount[] = assetAccountsMonthly ?? assetAccountsFallback
@@ -100,7 +116,7 @@ export function useData(uid: string, yearMonth: string) {
   const stockCategories: StockCategoryDef[] = customStockCategories ?? DEFAULT_STOCK_CATEGORIES
 
   return {
-    fixedItems, savingsItems, expenses, income, stockTrades, assetAccounts, assetSnapshot, assetSnapshotFallback, paymentMethods, categories, assetTypes, stockCategories, nextMonthHasData,
+    fixedItems, savingsItems, expenses, income, recurringIncome, stockTrades, assetAccounts, assetSnapshot, assetSnapshotFallback, paymentMethods, categories, assetTypes, stockCategories, nextMonthHasData,
     bulkSaveFixedItems: async (newItems: Array<{ id: string; label: string; amount: number; paymentDay?: number }>) => {
       const items: FixedItem[] = newItems.map((n, i) => ({
         id: n.id.startsWith('new-') ? Date.now().toString() + i : n.id,
@@ -128,7 +144,8 @@ export function useData(uid: string, yearMonth: string) {
     updateExpense,
     deleteExpense,
     deleteExpenseGroup: (groupId: string) => deleteExpensesByGroupId(uid, groupId),
-    setIncome: (items: IncomeItem[]) => setMonthlyIncome(uid, yearMonth, items),
+    // 이 달 문서로 저장한다. 다음 달부터 이월되고 지난 달은 그대로다.
+    setRecurringIncome: (items: IncomeItem[]) => setMonthlyIncome(uid, yearMonth, items),
     addStockTrade: async (data: Omit<StockTrade, 'id' | 'uid' | 'yearMonth' | 'linkedExpenseId'>) => {
       const profit = stockProfitOf(data)
       const tradeYearMonth = data.sellDate.slice(0, 7)

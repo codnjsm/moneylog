@@ -26,7 +26,7 @@ import PaymentLabelsModal from './components/modals/PaymentLabelsModal'
 import CategoryModal from './components/modals/CategoryModal'
 import StockCategoryModal from './components/modals/StockCategoryModal'
 import CalendarTab from './components/tabs/CalendarTab'
-import type { Expense, AssetAccount, StockTrade } from './types'
+import type { Expense, AssetAccount, StockTrade, IncomeItem } from './types'
 
 const TAB_TITLES: Record<Tab, string> = {
   home: '홈',
@@ -40,7 +40,7 @@ const TAB_TITLES: Record<Tab, string> = {
 
 type ModalState =
   | { type: 'expense'; item?: Expense; initialDate?: string }
-  | { type: 'incomeEntry'; item?: Expense; initialDate?: string }
+  | { type: 'incomeEntry'; item?: Expense; recurring?: IncomeItem; initialDate?: string }
   | { type: 'stockTrade'; item?: StockTrade }
   | { type: 'fixed' }
   | { type: 'savings' }
@@ -137,6 +137,7 @@ export default function App() {
   const incomeEntries = data.expenses.filter(e => e.type === 'income')
   const expenseEntries = data.expenses.filter(e => e.type !== 'income')
   const totalIncome = incomeEntries.reduce((s, e) => s + e.amount, 0)
+    + data.recurringIncome.reduce((s, i) => s + i.amount, 0)
 
   const openIncomeEntry = (item: Expense) => {
     const linkedTrade = data.stockTrades.find(t => t.linkedExpenseId === item.id)
@@ -194,11 +195,13 @@ export default function App() {
         {tab === 'calendar' && (
           <CalendarTab
             expenses={data.expenses}
+            recurringIncome={data.recurringIncome}
             yearMonth={yearMonth}
             methods={data.paymentMethods}
             onAddIncome={(date) => setModal({ type: 'incomeEntry', initialDate: date })}
             onAddExpense={(date) => setModal({ type: 'expense', initialDate: date })}
             onEditEntry={(item) => item.type === 'income' ? openIncomeEntry(item) : setModal({ type: 'expense', item })}
+            onEditRecurringIncome={(item) => setModal({ type: 'incomeEntry', recurring: item })}
           />
         )}
         {tab === 'home' && (
@@ -207,6 +210,7 @@ export default function App() {
             expenses={data.expenses}
             fixedItems={data.fixedItems}
             savingsItems={data.savingsItems}
+            recurringIncome={data.recurringIncome}
             categories={data.categories}
             methods={data.paymentMethods}
             assetAccounts={data.assetAccounts}
@@ -215,6 +219,7 @@ export default function App() {
             onAddExpense={() => setModal({ type: 'expense' })}
             onAddIncome={() => setModal({ type: 'incomeEntry' })}
             onEditIncomeEntry={openIncomeEntry}
+            onEditRecurringIncome={(item) => setModal({ type: 'incomeEntry', recurring: item })}
           />
         )}
         {tab === 'expense' && (
@@ -244,9 +249,11 @@ export default function App() {
         {tab === 'fixed' && (
           <FixedTab
             incomeEntries={incomeEntries}
+            recurringIncome={data.recurringIncome}
             fixedItems={data.fixedItems}
             savingsItems={data.savingsItems}
             onAddIncome={() => setModal({ type: 'incomeEntry' })}
+            onEditRecurringIncome={(item) => setModal({ type: 'incomeEntry', recurring: item })}
             onEditIncomeEntry={openIncomeEntry}
             onManageFixed={() => setModal({ type: 'fixed' })}
             onManageSavings={() => setModal({ type: 'savings' })}
@@ -324,10 +331,23 @@ export default function App() {
       {modal?.type === 'incomeEntry' && (
         <IncomeEntryModal
           expense={modal.item}
+          recurring={modal.recurring}
           yearMonth={yearMonth}
           initialDate={modal.initialDate}
-          onSave={withErrorAlert('저장', async (d) => { const item = modal.item; closeModal(); noticeSavedMonth(d.yearMonth); await (item ? data.updateExpense(item.id, d) : data.addExpense(d)) })}
-          onDelete={modal.item ? withErrorAlert('삭제', async () => { closeModal(); await data.deleteExpense(modal.item!.id) }) : undefined}
+          onSaveOnce={withErrorAlert('저장', async (d) => { const item = modal.item; closeModal(); noticeSavedMonth(d.yearMonth); await (item ? data.updateExpense(item.id, d) : data.addExpense(d)) })}
+          onSaveRecurring={withErrorAlert('저장', async (item) => {
+            const cur = data.recurringIncome
+            closeModal()
+            // 고친 항목은 자리에서 바꾸고, 새 항목은 뒤에 붙인다. 이 달 문서로 저장되므로
+            // 다음 달부터는 이게 이월되고 지난 달은 건드리지 않는다.
+            const next = cur.some(i => i.id === item.id) ? cur.map(i => (i.id === item.id ? item : i)) : [...cur, item]
+            await data.setRecurringIncome(next)
+          })}
+          onDelete={
+            modal.recurring
+              ? withErrorAlert('삭제', async () => { const id = modal.recurring!.id; const cur = data.recurringIncome; closeModal(); await data.setRecurringIncome(cur.filter(i => i.id !== id)) })
+              : modal.item ? withErrorAlert('삭제', async () => { closeModal(); await data.deleteExpense(modal.item!.id) }) : undefined
+          }
           onClose={closeModal}
         />
       )}
