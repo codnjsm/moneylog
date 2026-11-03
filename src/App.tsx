@@ -188,7 +188,10 @@ export default function App() {
           <div className="month-nav">
             <button className="month-btn" onClick={() => setMonthOffset((o) => o - 1)} aria-label="이전 달">‹</button>
             <span className="month-label">{yearMonth.replace('-', '년 ').replace(/(\d+)$/, (m) => `${Number(m)}월`)}</span>
-            <button className="month-btn" onClick={() => setMonthOffset((o) => o + 1)} disabled={!data.nextMonthHasData} aria-label="다음 달">›</button>
+            {/* 과거에 있을 때는 언제나 앞으로 올 수 있어야 한다. 기록이 없는 달이 중간에
+                하나라도 있으면 거기서 막혀 이번 달로 돌아오지 못했다.
+                기록 유무를 보는 것은 이번 달을 넘어 미래로 갈 때뿐이다. */}
+            <button className="month-btn" onClick={() => setMonthOffset((o) => o + 1)} disabled={monthOffset >= 0 && !data.nextMonthHasData} aria-label="다음 달">›</button>
           </div>
         )}
         {tab === 'calendar' && (
