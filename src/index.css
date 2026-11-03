@@ -2,7 +2,10 @@
 
 /* ── Design Tokens ───────────────────────────────────────────── */
 :root {
-  color-scheme: light dark;
+  /* 테마는 data-theme 으로 직접 고정하는데, light dark 로 두면 네이티브 UI(스크롤바,
+     날짜 선택기 등)만 OS 설정을 따라간다. OS 가 라이트인데 앱이 다크면 모달 스크롤바가
+     밝게 나온다. 그래서 테마마다 못박는다. */
+  color-scheme: light;
   --bg: #F2F2F7;
   --surface: #FFFFFF;
   --surface-2: #EBEBF0;
@@ -37,9 +40,12 @@
 }
 
 [data-theme="dark"] {
+  color-scheme: dark;
   --bg: #000000;
   --surface: #1C1C1E;
   --surface-2: #2C2C2E;
+  /* 지각 밝기(L*) 기준으로 카드(#1C1C1E) 대비 ΔL*=3.38 — 라이트의 2.93 보다 오히려 크다.
+     상대 명도의 절대 차이로 보면 작아 보이지만 그 값은 어두운 색을 과소평가한다. 건드리지 말 것. */
   --surface-hover: #1F232D;
   --illiquid: #44618C;
   --border: rgba(255,255,255,0.1);
@@ -806,6 +812,25 @@ button.more-card { width: 100%; text-align: left; font: inherit; color: inherit;
   .pm-delete-btn:hover { color: var(--danger); }
   .pm-add-btn:hover { border-color: var(--accent); color: var(--accent-text); }
   .asset-delete-btn:hover { color: var(--danger); }
+
+  /* 여기부터는 마우스로만 쓰는 것들이다. 올려둔 내내 유지되는 표시라
+     배경색·글자색·투명도만 바꾼다. 폭이나 여백을 건드리면 글자가 밀려 보인다. */
+  .modal-delete-link:hover,
+  .fixed-empty:hover,
+  .account-menu button:hover { background: var(--surface-hover); }
+
+  .modal-close:hover,
+  .month-btn:hover:not(:disabled),
+  .clear-btn:hover,
+  .savings-card-delete:hover,
+  .login-eye:hover { color: var(--text); }
+
+  .login-link:hover { color: var(--accent-hover); }
+  .fab:hover { background: var(--accent-hover); }
+  .fab-action:hover .fab-action-icon { background: #EBEBF0; }
+
+  .account-avatar-btn:hover:not(:disabled),
+  .account-name-btn:hover { opacity: 0.8; }
 }
 
 /* ── Press Feedback ──────────────────────────────────────────── */
