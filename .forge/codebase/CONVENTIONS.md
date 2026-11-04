@@ -1,6 +1,6 @@
 ---
-last_mapped_commit: ebc284377e9b3c5c5fea2a12cc2a8f1485f13a97
-mapped: 2026-11-03
+last_mapped_commit: 9f44a98b1a28c5ded66cf41de8ee1280b6467f64
+mapped: 2026-11-04
 ---
 
 # CONVENTIONS
@@ -33,8 +33,9 @@ mapped: 2026-11-03
 - **CSS 커스텀 프로퍼티(디자인 토큰)**: `--bg`, `--surface`, `--surface-2`, `--border`, `--text`, `--text-dim`, `--accent`, `--accent-text`, `--danger`, `--income`, `--expense` 등. `src/index.css`의 `:root`(라이트)와 `[data-theme="dark"]`(다크)에서 동일한 이름을 재정의하는 라이트/다크 이중 정의 패턴을 따릅니다.
   - **`color-scheme`을 테마마다 고정**: `:root`는 `color-scheme: light`, `[data-theme="dark"]`는 `color-scheme: dark`. `light dark`로 두면 스크롤바·날짜 선택기 같은 네이티브 UI만 OS 설정을 따라가 앱 테마와 어긋나기 때문입니다.
   - **텍스트에는 `--accent-text`, 배경/테두리에는 `--accent`**: `--accent`는 라이트 배경에서 WCAG 대비가 모자라 글자색으로 쓰면 안 되고, 텍스트용으로 `--accent-text`를 따로 둡니다(`.sidebar-item.active`, `.tab-item.active`, `.login-link` 등). 새 강조 텍스트는 `--accent-text`를 씁니다.
+- **드롭다운 스크롤바는 직접 그립니다**: iOS Safari가 `::-webkit-scrollbar`를 무시하므로 `src/components/CustomSelect.tsx`의 목록에 `.custom-select-track` / `.custom-select-bar`(`src/index.css`)로 손으로 그린 스크롤바를 둡니다. 색은 `--scroll-track` 토큰을 씁니다.
 - **hover 규칙은 `@media (hover: hover) { ... }` 블록 안에만** 둡니다(`src/index.css` 하단 블록, 예: `.pm-add-btn:hover`). 터치 기기에서 탭한 뒤 hover 상태가 눌린 채 남는 걸 막기 위함입니다. 새 `:hover` 스타일은 이 블록에 추가합니다.
-- **모바일 폰트 스케일**: `@media (max-width: 767px)`에서 `body { font-size: 14px }`로 낮추고, 작은 라벨류(`.tab-label`, `.method-badge`, `.cal-amount` 등)는 한 규칙에 묶어 10px로 내립니다. 그 외 레이아웃 분기는 `(min-width: 768px)`, `(max-width: 480px)` 미디어쿼리를 씁니다.
+- **모바일 폰트 스케일**: `@media (max-width: 767px)`에서 `body { font-size: 14px }`(데스크톱 기본은 15px)로 낮추고, 작은 라벨류(`.tab-label`, `.method-badge`, `.cal-amount` 등)는 한 규칙에 묶어 10px로 내립니다. 그 외 레이아웃 분기는 `(min-width: 768px)`, `(max-width: 480px)` 미디어쿼리를 씁니다.
 
 ## 파일/모듈 구조
 
@@ -83,7 +84,7 @@ mapped: 2026-11-03
 여러 화면에서 재사용할 상태 있는 UI 블록은 모달 안에 인라인으로 두지 않고 독립 컴포넌트로 뽑아 `src/components/` 바로 아래 둡니다. 계정 설정을 담당하던 `src/components/modals/AccountModal.tsx`가 삭제되고, 그 안에 있던 두 덩어리의 상태 로직이 각각 독립 컴포넌트로 추출된 것이 실제 사례입니다: 가계부 모드 전환/초대코드 참여 로직은 `src/components/HouseholdSection.tsx`, 데이터 내보내기 로직은 `src/components/ExportModal.tsx`. 두 컴포넌트 모두 자체 로컬 `useState`를 갖고, 부모로부터는 콜백(`onCreate`, `onJoin`, `onLeave`, `onExport` 등)만 props로 받아 Firestore를 직접 호출하지 않습니다(아래 "데이터 흐름/콜백 관례" 그대로 따름). 현재는 `src/components/tabs/MoreTab.tsx`가 두 컴포넌트를 함께 소비하는 유일한 화면입니다.
 
 ### 저장 중복 방지: `useSaveGuard`
-저장 버튼을 연타해 같은 내역이 두 번 기록되는 것을 막기 위해, 대부분의 저장 모달(`ExpenseModal`, `IncomeEntryModal`, `IncomeModal`, `FixedListModal`, `CategoryModal`류 목록 모달, `AssetAccountModal`, `FixedItemModal` 등)이 `src/hooks/useSaveGuard.ts`를 씁니다. `const { saving, runSave } = useSaveGuard()`로 받아 저장 버튼 핸들러에서 `runSave(() => onSave(...))`로 호출하고, `saving`으로 버튼을 비활성화합니다. `onSave`가 Promise를 돌려주면 끝날 때까지 `useRef` 플래그로 잠급니다. 새 저장 모달도 이 훅을 재사용합니다.
+저장 버튼을 연타해 같은 내역이 두 번 기록되는 것을 막기 위해, 대부분의 저장 모달(`ExpenseModal`, `IncomeEntryModal`, `FixedListModal`, `SavingsListModal`, `CategoryModal`류 목록 모달, `AssetAccountModal`, `StockTradeModal` 등; 개별 항목 모달 `FixedItemModal`/`IncomeModal`/`SavingsItemModal`은 삭제됨)이 `src/hooks/useSaveGuard.ts`를 씁니다. `const { saving, runSave } = useSaveGuard()`로 받아 저장 버튼 핸들러에서 `runSave(() => onSave(...))`로 호출하고, `saving`으로 버튼을 비활성화합니다. `onSave`가 Promise를 돌려주면 끝날 때까지 `useRef` 플래그로 잠급니다. 새 저장 모달도 이 훅을 재사용합니다.
 
 ### 데이터 흐름/콜백 관례
 - 탭·모달 컴포넌트는 Firestore를 직접 호출하지 않고 `useData()`가 반환한 함수(`addExpense`, `updateStockTrade` 등)만 props로 내려받아 호출합니다.
@@ -112,5 +113,5 @@ mapped: 2026-11-03
 - 에러 표시는 여전히 `alert()`가 기본이며, 호출 지점은 `src/App.tsx`의 `withErrorAlert`, `src/components/ExportModal.tsx`의 `handleExport`, `src/components/tabs/MoreTab.tsx`의 프로필 이름/사진 저장 실패 2곳(`이름을 저장하지 못했어요`, `사진을 저장하지 못했어요`)입니다 — `withErrorAlert`가 위 10개 모달에 재사용되므로 실질적으로 적용되는 콜백 수는 더 많습니다.
 - `console.error`/`console.warn`/`console.log` 등 콘솔 로깅은 `src/` 어디에도 없습니다(0건).
 - **입력 검증은 HTML5 제약(`<input min={0}>` 등)에 의존하지 않습니다.** 모달은 `<form>`으로 감싸여 있지 않고 버튼 `onClick`으로 직접 저장을 트리거하므로 브라우저 constraint validation이 동작하지 않습니다(`.forge/retro/260812-200000-stock-profit-percent.md`에서 실제로 발견·기록된 사실). 실질적인 검증은 JS 레벨에서 저장 직전에 계산되는 `valid`/`canSave` 같은 boolean으로 처리됩니다(예: `FixedListModal.tsx`의 `rows.filter(r => r.label.trim() && Number(r.amount) > 0)`, `CategoryModal.tsx`의 `items.filter(c => c.label.trim())`). 이 검증이 없거나 불완전한 모달이 있을 수 있다는 점이 회고 문서에 후속 점검 후보로 남아 있습니다.
-- Firebase 함수(`signIn`, `joinHousehold` 등) 자체는 실패 시 Promise를 reject하거나(예: `signInWithPopup`), 명시적으로 `boolean`을 리턴해 실패를 나타냅니다(`joinHousehold`가 코드 없으면 `false`). 호출부(`src/components/HouseholdSection.tsx`, 과거엔 `AccountModal.tsx`)는 이 boolean을 받아 자체적으로 에러 메시지 상태(`joinError`)를 세팅하는 방식을 씁니다(`try`/`catch` 없이 리턴값 체크).
+- Firebase 함수(`signIn`, `joinHousehold` 등) 자체는 실패 시 Promise를 reject하거나(예: `signInWithPopup`), 명시적으로 `boolean`을 리턴해 실패를 나타냅니다(`joinHousehold`가 코드 없으면 `false`). `withErrorAlert`는 `Promise<void>`만 받으므로 값을 돌려줘야 하는 함수(예: `household.join`의 boolean)는 감쌀 수 없고, 호출부(`src/components/HouseholdSection.tsx`의 `onJoin` 처리, 주석에 이유 명시)가 직접 에러를 처리합니다. 이 호출부는 이 boolean을 받아 자체적으로 에러 메시지 상태(`joinError`)를 세팅하는 방식을 씁니다(`try`/`catch` 없이 리턴값 체크).
 - 서로 연동된 두 문서를 함께 쓰는 경우(위 "Firestore 접근 함수"의 `XWithY` 패턴) 원자성은 애플리케이션 코드의 `try`/`catch`가 아니라 Firestore `writeBatch`의 all-or-nothing 커밋으로 보장합니다.

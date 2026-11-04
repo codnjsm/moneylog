@@ -1,6 +1,6 @@
 ---
-last_mapped_commit: ebc284377e9b3c5c5fea2a12cc2a8f1485f13a97
-mapped: 2026-11-03
+last_mapped_commit: 9f44a98b1a28c5ded66cf41de8ee1280b6467f64
+mapped: 2026-11-04
 ---
 
 # 아키텍처
@@ -19,7 +19,7 @@ mapped: 2026-11-03
 
 코드는 4개 레이어로 나뉘며, 각 레이어는 실제 파일의 import/export 관계로 확인된다.
 
-### 레이어 1 — Firebase 접근 계층: `src/firebase.ts` (472줄)
+### 레이어 1 — Firebase 접근 계층: `src/firebase.ts` (494줄)
 - `initializeApp`, `getAuth`를 호출해 `auth`를, `initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) })`로 오프라인 영속 캐시가 켜진 `db`를 export한다(쓰기 Promise는 서버 수신 시점에 풀리고, 오프라인에서도 로컬 캐시에 즉시 반영된다).
 - 인증: `signIn`(Google 팝업), `signInWithEmail`, `signUpWithEmail`, `sendVerificationEmail`, `sendPasswordReset`, `authErrorMessage`(에러 코드를 한국어 문구로 변환), `signOutUser`, `onAuth`. 계정 관리: `isPasswordAccount`, `deleteAccount(householdCode, password?)`(재인증 -> `OWNED_COLLECTIONS`를 `uid` 필드로 조회해 400건씩 배치 삭제 -> `KEYED_COLLECTIONS` 문서 삭제 -> household 멤버에서만 제외 -> `user_profiles` 삭제 -> 마지막에 Auth 계정 삭제).
 - Firestore 컬렉션별로 `subscribe*`(onSnapshot 실시간 구독), `get*Fallback`(1회성 폴백 조회), `add*`/`update*`/`set*`/`delete*`(쓰기) 함수를 flat하게 export한다(예: `subscribeExpenses`, `addExpense`, `updateExpense`, `deleteExpense`, `subscribeFixedItemsMonthly`, `setFixedItemsMonthly`, `getFixedItemsFallback` 등).
@@ -30,13 +30,13 @@ mapped: 2026-11-03
 ### 레이어 2 — 데이터 훅 계층: `src/hooks/*.ts`
 - `useAuth.ts`(29줄): `onAuth`를 `useEffect`로 구독해 `{ user, loading, refreshUser }`를 반환한다. `refreshUser`는 `reload()` 후 얕은 복사로 `user` 참조를 바꿔 리렌더시키고 `emailVerified`를 반환한다.
 - `useHousehold.ts`(48줄): `subscribeUserProfile`을 구독해 `householdCode`, `mode`('personal' | 'shared'), `profileName`, `profilePhoto`를 state로 관리하고, `create`/`join`/`leave`/`switchMode`/`setName`/`setPhoto` 액션과 `spaceId`(계산된 값)를 반환한다. 인자 `uid`는 진짜 auth uid다(`user_profiles/{uid}` 키).
-- `useData.ts`(184줄): `(uid, yearMonth)`를 받아 `firebase.ts`의 모든 `subscribe*` 함수를 `useEffect`로 구독해 `expenses`, `fixedItems`, `savingsItems`, `assetAccounts`, `assetSnapshot`, `stockTrades`, `paymentMethods`, `categories`, `assetTypes`, `stockCategories` 등을 state로 노출하고, 각 도메인에 대한 CRUD 콜백(`addExpense`, `updateExpense`, `bulkSaveFixedItems`, `addStockTrade` 등)을 함께 반환한다.
+- `useData.ts`(201줄): `(uid, yearMonth)`를 받아 `firebase.ts`의 모든 `subscribe*` 함수를 `useEffect`로 구독해 `expenses`, `fixedItems`, `savingsItems`, `assetAccounts`, `assetSnapshot`, `stockTrades`, `paymentMethods`, `categories`, `assetTypes`, `stockCategories`, `recurringIncome`, `nextMonthHasData` 등을 state로 노출하고, 각 도메인에 대한 CRUD 콜백(`addExpense`, `updateExpense`, `bulkSaveFixedItems`, `addStockTrade`, `setRecurringIncome` 등)을 함께 반환한다.
 - `useSaveGuard.ts`(22줄): Firebase와 무관한 UI 보조 훅. `{ saving, runSave(fn) }`을 반환하며 `useRef` 플래그로 저장 중 재호출을 무시해 중복 기록을 막고, `fn`이 Promise를 돌려주면 끝날 때까지 `saving`을 true로 유지한다. `src/components/modals/`의 폼 모달 대부분이 저장 버튼에 사용한다.
 - 데이터 훅은 `firebase.ts`의 함수만 import하며, 컴포넌트를 import하지 않는다.
 
-### 레이어 3 — 최상위 컨테이너: `src/App.tsx` (406줄)
+### 레이어 3 — 최상위 컨테이너: `src/App.tsx` (460줄)
 - `useAuth`, `useHousehold`, `useData`를 호출해 데이터와 콜백을 얻는다.
-- `tab`(현재 탭), `theme`, `monthOffset`(조회 월), `modal`(현재 열린 모달과 그 payload), `toast`(`showToast(msg, type)`가 2.6초 뒤 자동 해제)를 자체 `useState`로 관리한다.
+- `tab`(현재 탭), `theme`, `monthOffset`(조회 월; 다음 달 버튼은 `monthOffset >= 6 && !data.nextMonthHasData`일 때만 비활성화되므로 과거는 항상 이동 가능하고 앞으로 6개월까지는 기록이 없어도 넘어갈 수 있다), `modal`(현재 열린 모달과 그 payload), `toast`(`showToast(msg, type)`가 2.6초 뒤 자동 해제)를 자체 `useState`로 관리한다.
 - 로그인 전에는 `LoginOverlay`(구글/이메일 로그인·가입·비밀번호 재설정)를 렌더링하고, 가입/탈퇴 결과는 `Toast`로 알린다. 쓰기 핸들러는 `withErrorAlert`로 감싸 실패를 `alert`로 알리며, 오프라인에서 모달이 닫히지 않도록 쓰기를 기다리지 않고 화면을 먼저 닫는다.
 - 숫자 입력칸 포커스 중 휠 스크롤로 값이 바뀌지 않도록 `window` `wheel` 리스너로 `blur()`하는 전역 `useEffect`도 이 파일에 있다.
 - 모든 Tab 컴포넌트와 Modal 컴포넌트를 import하여, `data`에서 얻은 값과 `data`의 CRUD 함수를 각 컴포넌트에 props로 전달한다.
@@ -69,6 +69,13 @@ mapped: 2026-11-03
 - `useData.ts`의 `addStockTrade`는 매도 데이터를 받아 `utils.ts`의 `stockProfitOf`로 `profit`을 계산한 뒤, 수익 소득 항목(`expenses` 문서 초안)과 매매 데이터(`stock_trades` 문서 초안)를 함께 `firebase.ts`의 `addStockTradeWithExpense(uid, stockData, expenseData)`로 넘긴다.
 - `addStockTradeWithExpense`는 `writeBatch(db)`로 `expenses`와 `stock_trades` 두 문서를 미리 만든 `doc()` ref에 `batch.set`하고 `linkedExpenseId`로 서로를 연결한 뒤 `batch.commit()`한다. 즉 두 컬렉션에 대한 쓰기가 하나의 원자적 배치로 묶여, 중간 실패로 인해 한쪽 문서만 생성되는 상태(orphan)가 발생하지 않는다. 수정/삭제도 각각 `updateStockTradeWithExpense`/`deleteStockTradeWithExpense`가 동일하게 `writeBatch`로 `stock_trades`와 연결된 `expenses` 문서를 함께 갱신/삭제한다(이전에는 `addExpense` 후 별도로 `addStockTrade`를 호출하는 순차 쓰기였으나, 배치 쓰기로 교체됨).
 
+예시 3 — 수입 저장(일회성 `expenses` vs 반복 `recurring_income`, 종류 전환 시 교차 컬렉션 이동):
+- `IncomeEntryModal`(`src/components/modals/IncomeEntryModal.tsx`)은 `onSaveOnce`/`onSaveRecurring`/`onDelete` 콜백을 받고, `App.tsx`의 `ModalState`는 `{ type: 'incomeEntry'; item?: Expense; recurring?: IncomeItem; initialDate? }`로 수정 대상이 일회성(`item`)인지 반복(`recurring`)인지 구분한다.
+- 일회성 저장(`onSaveOnce`)은 `data.addExpense`/`data.updateExpense`로 `expenses`에 쓴다. 단, 수정 대상이 반복 항목이었다면(반복 -> 이번만) 먼저 `data.setRecurringIncome(cur.filter(...))`로 `recurring_income`에서 그 항목을 빼고 `addExpense`로 새 기록을 만든다.
+- 반복 저장(`onSaveRecurring`)은 `data.recurringIncome`에서 같은 `id`면 교체·아니면 뒤에 붙인 배열을 `data.setRecurringIncome`으로 쓴다. 수정 대상이 일회성이었다면(이번만 -> 반복) 이어서 `data.deleteExpense`로 원래 `expenses` 문서를 지워 이중 합산을 막는다.
+- 이 두 컬렉션에 걸친 이동은 `writeBatch`가 아니라 순차 `await`이라 원자적이지 않다(예시 2의 주식 매도 배치와 대조). 삭제도 `modal.recurring`이면 `setRecurringIncome`, 아니면 `deleteExpense`로 갈린다.
+- 소비 측: `App.tsx`의 월 수입 합계는 `expenses`의 수입분에 `data.recurringIncome` 금액 합을 더하고, `HomeTab`/`FixedTab`/`CalendarTab`이 `recurringIncome`과 `onEditRecurringIncome` prop을 받는다. `CalendarTab`은 반복 수입을 지역 타입 `CalItem = Expense & { recurringId?: string }`의 가짜 지출 항목으로 합성해(날짜 = 그 달 `paymentDay`를 `daysInMonth`로 clamp) 기존 날짜별 그룹핑과 월 합계 로직을 그대로 재사용하고, `recurringId`로 클릭 시 반복 항목 편집으로 분기한다.
+
 이처럼 전 구간에서 상태 관리 라이브러리(Redux 등)는 사용되지 않고, "Firestore `onSnapshot` 구독 → React `useState` → props 전달"이 유일한 갱신 경로다.
 
 ## 4. 핵심 추상화
@@ -83,7 +90,7 @@ const stockCategories: StockCategoryDef[] = customStockCategories ?? DEFAULT_STO
 ```
 `customMethods`, `customCategories`, `customAssetTypes`, `customStockCategories`는 `firebase.ts`의 `subscribePaymentMethods`/`subscribeCategories`/`subscribeAssetTypes`/`subscribeStockCategories`가 문서가 없을 때 `null`을 콜백으로 전달하는 값이며, `DEFAULT_PAYMENT_METHODS`/`DEFAULT_CATEGORIES`/`DEFAULT_ASSET_TYPES`/`DEFAULT_STOCK_CATEGORIES`는 `src/types.ts`에 하드코딩된 상수 배열이다.
 
-### 4.2 월별 데이터 + 과거 12개월 폴백 패턴
+### 4.2 월별 데이터 + 과거 12개월 폴백 패턴 (고정지출·적금·자산계정·반복수입)
 `useData.ts`에도 같은 형태의 `??` 패턴이 쓰인다:
 ```ts
 const fixedItems: FixedItem[] = fixedMonthly ?? fixedFallback
@@ -91,6 +98,8 @@ const savingsItems: SavingsItem[] = savingsMonthly ?? savingsFallback
 const assetAccounts: AssetAccount[] = assetAccountsMonthly ?? assetAccountsFallback
 ```
 `fixedMonthly` 등은 `{spaceId}_{yearMonth}` 문서(`fixed_monthly` 등 컬렉션)의 실시간 구독 결과이고, 해당 월 문서가 없으면(`null`) `getFixedItemsFallback`/`getSavingsItemsFallback`/`getAssetAccountsFallback`(모두 `firebase.ts`)이 실행되어 최대 12개월 전까지 역순으로 문서를 조회하거나, 끝까지 없으면 레거시 컬렉션(`fixed_items`, `savings_items`, `asset_accounts`)을 조회한다.
+
+`recurring_income/{spaceId}_{YYYY-MM}`(반복 수입)도 같은 규칙을 따른다: `subscribeRecurringIncome`이 해당 월 문서를 구독해 없으면 `null`, `getRecurringIncomeFallback`이 최대 12개월 전까지 역순 조회(없으면 `[]`)하며, `useData.ts`가 `useMemo`로 `incomeMonthly ?? incomeFallback`을 `recurringIncome`으로 합치고 `paymentDay`가 1~31 정수가 아니면 1로 보정한다. 레거시 컬렉션 폴백은 없다 — 예전 `monthly_income` 컬렉션은 읽지 않고(이월 규칙이 옛 문서를 퍼뜨리므로) 내보내기/탈퇴 대상 목록에만 남아 있다. 쓰기는 `setRecurringIncome(items)`가 현재 `yearMonth` 문서 전체를 `setDoc`으로 덮어쓰는 방식이라 그 달부터 이후 달에 적용된다.
 
 ### 4.3 `spaceId` — 개인/공유 모드 전환 추상화
 `src/hooks/useHousehold.ts`:
@@ -114,4 +123,4 @@ const spaceId = mode === 'shared' && householdCode ? householdCode : uid
 
 ## 6. PWA/정적 자산
 
-`index.html`이 `public/manifest.json`(standalone PWA 매니페스트), `public/apple-touch-icon.png`, `public/og-image.jpg`를 참조한다. 서비스워커는 없다. 테마 변경 시 `App.tsx`가 `meta[name="theme-color"]`도 함께 갱신한다.
+`index.html`이 `public/manifest.json`(standalone PWA 매니페스트), `public/apple-touch-icon.png`, `public/og-image.jpg`(이전 `og-image.png` 대체)를 참조한다. 서비스워커는 없다. 테마 변경 시 `App.tsx`가 `meta[name="theme-color"]`도 함께 갱신한다.

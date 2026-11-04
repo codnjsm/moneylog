@@ -1,6 +1,6 @@
 ---
-last_mapped_commit: ebc284377e9b3c5c5fea2a12cc2a8f1485f13a97
-mapped: 2026-11-03
+last_mapped_commit: 9f44a98b1a28c5ded66cf41de8ee1280b6467f64
+mapped: 2026-11-04
 ---
 
 # TESTING
@@ -24,7 +24,9 @@ mapped: 2026-11-03
 
 1. **`npm run build`** (`tsc -b && vite build`) — 타입 체크. `tsconfig.app.json`의 `noUnusedLocals`/`noUnusedParameters`/`noFallthroughCasesInSwitch` 등으로 일부 정적 오류를 잡습니다.
 2. **`npm run lint`** (`eslint .`) — `eslint.config.js` 기준 `typescript-eslint` recommended + `eslint-plugin-react-hooks` recommended + `eslint-plugin-react-refresh`(vite) 규칙 검사. 현재 에러 2개와 경고 2개가 **알려진 상태로 의도적으로 남아 있습니다**(`react-hooks/set-state-in-effect`, `react-hooks/exhaustive-deps` — `src/components/tabs/CalendarTab.tsx`, `src/hooks/useData.ts`). `CLAUDE.md`에 "실제 동작에는 문제 없고 핵심 구독 로직 구조를 바꿔야 해서 보류"한 수용된 상태로 기록되어 있으므로 결함으로 보고 임의로 고치지 않으며, 고치려면 먼저 확인받습니다. 새 변경이 이 4건 외의 lint 문제를 추가하지 않는지가 확인 기준입니다.
-3. **수동 UI 확인 / Firestore 에뮬레이터** — 코드 동작이나 Firestore 보안 규칙(`firestore.rules`) 검증은 사람이 `npm run dev`로 직접 켜보거나 `firebase emulators:exec`로 에뮬레이터를 띄워 시나리오를 확인하는 방식으로 이루어집니다. 이 과정을 코드로 남긴 스크립트/픽스처는 저장소에 없습니다(`.claude/settings.local.json`의 허용 명령 목록에 `firebase emulators:exec ...` 실행 이력이 남아 있지만, 실행됐던 임시 스크립트 자체는 저장소에 커밋되어 있지 않습니다).
+3. **수동 UI 확인 / Firestore 에뮬레이터** — 코드 동작이나 Firestore 보안 규칙(`firestore.rules`) 검증은 사람이 `npm run dev`로 직접 켜보거나 `firebase emulators:exec`로 에뮬레이터를 띄워 시나리오를 확인하는 방식으로 이루어집니다. 이 과정을 코드로 남긴 스크립트/픽스처는 저장소에 없습니다(실행됐던 임시 스크립트는 커밋되지 않음).
+
+   **보안 규칙 검증이 이 프로젝트의 유일한 실질적 테스트 경로입니다.** 규칙을 바꾸면 배포 전에 `firebase emulators:exec --only firestore '<node 스크립트>' --project moneylog-3c3d6`로 에뮬레이터를 띄우고, 작은 일회용 Node 스크립트가 에뮬레이터 REST API를 서명 없는 JWT(unsigned)로 호출해 허용/차단 시나리오(본인·타인·공유 멤버/비멤버)를 확인합니다. 추가 npm 의존성은 없습니다. `households` 삭제 규칙과 새 `recurring_income` 규칙 둘 다 이 방식으로 배포 전 검증했습니다. 스크립트는 scratchpad/임시 파일이라 저장소에 남지 않고, 에뮬레이터는 Java가 필요하며 셸 `node`/Java 경로는 환경마다 따로 맞춰야 합니다.
 
 ## 커버리지
 

@@ -1,6 +1,6 @@
 ---
-last_mapped_commit: ebc284377e9b3c5c5fea2a12cc2a8f1485f13a97
-mapped: 2026-11-03
+last_mapped_commit: 9f44a98b1a28c5ded66cf41de8ee1280b6467f64
+mapped: 2026-11-04
 ---
 
 # INTEGRATIONS
@@ -55,7 +55,7 @@ const firebaseConfig = {
 | 컬렉션 | 문서 ID 패턴 | 비고 |
 |---|---|---|
 | `user_profiles` | `{uid}` (실제 auth uid) | `subscribeUserProfile`, `setUserProfile`, `updateUserName`, `updateUserPhoto` (`displayName`, `photoURL` 등을 `merge`로 저장) |
-| `households` | `{code}` (초대코드) | `createHousehold`, `joinHousehold`, `leaveHousehold` |
+| `households` | `{code}` (초대코드) | `createHousehold`, `joinHousehold`, `leaveHousehold` (마지막 멤버가 나가면 문서 자체를 `deleteDoc`) |
 | `expenses` | auto-id | `subscribeExpenses`, `addExpense`, `updateExpense`, `deleteExpense`, `subscribeExpensesExist`, `deleteExpensesByGroupId` |
 | `stock_trades` | auto-id | `subscribeStockTrades`, `addStockTradeWithExpense`, `updateStockTradeWithExpense`, `deleteStockTradeWithExpense` — 각각 연결된 `expenses` 문서를 `writeBatch`로 같이 쓰고 지우며, 트레이드 문서의 `linkedExpenseId` 필드로 연결됨 |
 | `asset_accounts` | auto-id | fallback 조회 대상 (`getAssetAccountsFallback`) |
@@ -63,7 +63,8 @@ const firebaseConfig = {
 | `savings_items` | auto-id | fallback 조회 대상 (`getSavingsItemsFallback`) |
 | `fixed_monthly` | `{uid}_{yearMonth}` | `subscribeFixedItemsMonthly`, `setFixedItemsMonthly` |
 | `savings_monthly` | `{uid}_{yearMonth}` | `subscribeSavingsItemsMonthly`, `setSavingsItemsMonthly` |
-| `monthly_income` | `{uid}_{yearMonth}` | `subscribeMonthlyIncome`, `setMonthlyIncome` |
+| `recurring_income` | `{uid}_{yearMonth}` | 반복 수입 저장소. 문서 `{uid, yearMonth, items: IncomeItem[]}`. `subscribeRecurringIncome`, `setRecurringIncome`, `getRecurringIncomeFallback`(가장 가까운 과거 달 최대 12개월 역추적) — `fixed_monthly`와 같은 월 이월 방식. `src/hooks/useData.ts`가 구독/저장 |
+| `monthly_income` | `{uid}_{yearMonth}` | **더 이상 쓰지 않는 죽은 컬렉션.** `useData.ts`의 구독/저장 경로에서 제거됨. `exportAllData`와 회원 탈퇴 삭제 목록(`OWNED_COLLECTIONS`)에만 남아 기존 문서가 유실되지 않게 함 |
 | `asset_accounts_monthly` | `{uid}_{yearMonth}` | `subscribeAssetAccountsMonthly`, `setAssetAccountsMonthly` |
 | `asset_snapshots` | `{uid}_{yearMonth}` | `subscribeAssetSnapshot`, `setAssetSnapshot` |
 | `payment_labels` | `{uid}` | `subscribePaymentMethods`, `setPaymentMethods` |
@@ -81,17 +82,17 @@ const firebaseConfig = {
 - 일회성 조회는 `getDoc`/`getDocs` 기반(fallback 함수들, `exportAllData`).
 - `stock_trades` 추가/수정/삭제는 연결된 `expenses` 문서와 함께 `writeBatch`로 원자적으로 처리(`addStockTradeWithExpense`, `updateStockTradeWithExpense`, `deleteStockTradeWithExpense`) — 중간 실패로 트레이드와 연결 지출이 서로 어긋나는 상태를 방지.
 - 쿼리는 전부 단일 필드 `where` 조건(`uid ==`, 일부는 `yearMonth ==`, `installmentGroupId ==` 추가) + 경우에 따라 `limit(1)`. 복합 인덱스 필요 여부를 명시하는 별도 `firestore.indexes.json` 파일은 저장소에 없음.
-- `exportAllData(spaceId)`: 위 컬렉션들을 `Promise.all`로 병렬 조회해 사용자의 전체 데이터를 하나의 객체로 반환하는 데이터 export 함수.
+- `exportAllData(spaceId)`: 위 컬렉션들(`monthly_income`은 포함, `recurring_income`은 `src/firebase.ts`의 조회 목록에 없어 내보내기에서 누락됨 — 탈퇴 삭제 목록에는 포함)을 `Promise.all`로 병렬 조회해 사용자의 전체 데이터를 하나의 객체로 반환하는 데이터 export 함수.
 
 ### Firestore 보안 규칙 (`firestore.rules`)
 
 - `rules_version = '2'`.
 - 핵심 헬퍼 함수: `signedIn()` (`request.auth != null`), `isHouseholdMember(code)` (`households/{code}` 문서의 `members` 배열에 uid 포함 여부 확인), `ownsSpace(spaceId)` (`signedIn() && (request.auth.uid == spaceId || isHouseholdMember(spaceId))`).
-- `ownsMonthlyDoc(id)`: `fixed_monthly`/`savings_monthly`/`monthly_income`/`asset_accounts_monthly`/`asset_snapshots`(문서 ID가 `{spaceId}_{yearMonth}`)의 `read` 규칙 전용 헬퍼. 앱의 "가장 가까운 과거 달로 폴백" 로직은 존재하지 않는 달의 문서도 정확한 ID로 읽으려 시도하는데, 이때 `resource`가 `null`이라 `resource.data.uid`에 접근하면 규칙이 예외를 던지며 거부됨. `ownsMonthlyDoc`은 `resource == null`이면 문서 ID를 `_`로 split한 앞부분(spaceId)으로 `ownsSpace`를 검사하고, 문서가 있으면 기존처럼 `resource.data.uid`로 검사함 — 월별 carry-forward 폴백이 깨지던 버그 수정(`9d8ccbd` 커밋).
+- `ownsMonthlyDoc(id)`: `fixed_monthly`/`savings_monthly`/`monthly_income`/`recurring_income`/`asset_accounts_monthly`/`asset_snapshots`(문서 ID가 `{spaceId}_{yearMonth}`)의 `read` 규칙 전용 헬퍼. 앱의 "가장 가까운 과거 달로 폴백" 로직은 존재하지 않는 달의 문서도 정확한 ID로 읽으려 시도하는데, 이때 `resource`가 `null`이라 `resource.data.uid`에 접근하면 규칙이 예외를 던지며 거부됨. `ownsMonthlyDoc`은 `resource == null`이면 문서 ID를 `_`로 split한 앞부분(spaceId)으로 `ownsSpace`를 검사하고, 문서가 있으면 기존처럼 `resource.data.uid`로 검사함 — 월별 carry-forward 폴백이 깨지던 버그 수정(`9d8ccbd` 커밋).
 - `user_profiles/{uid}`: 본인만 read/write.
-- `households/{code}`: `get`은 로그인 사용자 누구나 가능, `list`는 항상 `false`(전체 목록 열람 차단), `create`는 `createdBy`와 `members`가 생성자 본인으로 제한, `delete`는 항상 `false`. `update`는 로그인 사용자면 누구나가 아니라 `members` 필드만 변경 가능하고, 그마저도 호출자 자신의 uid를 추가(`concat`)하거나 제거(`removeAll`)하는 경우로만 제한(임의의 필드 덮어쓰기 차단).
+- `households/{code}`: `get`은 로그인 사용자 누구나 가능, `list`는 항상 `false`(전체 목록 열람 차단), `create`는 `createdBy`와 `members`가 생성자 본인으로 제한, `delete`는 호출자가 로그인 상태이고 `members`가 정확히 `[호출자 uid]`일 때만 허용(마지막 한 명이 나갈 때만; 멤버가 남아 있으면 불가). `update`는 로그인 사용자면 누구나가 아니라 `members` 필드만 변경 가능하고, 그마저도 호출자 자신의 uid를 추가(`concat`)하거나 제거(`removeAll`)하는 경우로만 제한(임의의 필드 덮어쓰기 차단).
 - `expenses`, `stock_trades`, `asset_accounts`, `fixed_items`, `savings_items`: `read`/`delete`는 `resource.data.uid`/`request.resource.data.uid` 기준 `ownsSpace` 검사. `update` 시 `uid` 필드 값 변경은 금지(`request.resource.data.uid == resource.data.uid`).
-- `fixed_monthly`, `savings_monthly`, `monthly_income`, `asset_accounts_monthly`, `asset_snapshots`: `read`는 위의 `ownsMonthlyDoc(id)`, `create`/`update`는 기존과 동일한 `ownsSpace` 패턴. `delete`는 `ownsSpace(resource.data.uid)`로 허용 — 회원 탈퇴 시 본인 공간 문서를 지우기 위한 것(주석 명시).
+- `fixed_monthly`, `savings_monthly`, `monthly_income`, `recurring_income`, `asset_accounts_monthly`, `asset_snapshots`: `read`는 위의 `ownsMonthlyDoc(id)`, `create`/`update`는 기존과 동일한 `ownsSpace` 패턴. `delete`는 `ownsSpace(resource.data.uid)`로 허용 — 회원 탈퇴 시 본인 공간 문서를 지우기 위한 것(주석 명시).
 - `payment_labels/{spaceId}`, `expense_categories/{spaceId}`, `asset_types/{spaceId}`, `stock_categories/{spaceId}`: 문서 ID 자체가 space id이며 `ownsSpace(spaceId)`로 read/write 모두 검사.
 - 규칙 배포 명령: `firebase deploy --only firestore:rules --project moneylog-3c3d6` (README.md, CLAUDE.md에 기재).
 

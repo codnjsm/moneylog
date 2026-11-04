@@ -13,6 +13,7 @@ export function filterByRange(data: ExportData, from: string, to: string): Expor
     fixedMonthly: data.fixedMonthly?.filter((e) => inRange(e.yearMonth)) ?? [],
     savingsMonthly: data.savingsMonthly?.filter((e) => inRange(e.yearMonth)) ?? [],
     monthlyIncome: data.monthlyIncome?.filter((e) => inRange(e.yearMonth)) ?? [],
+    recurringIncome: data.recurringIncome?.filter((e) => inRange(e.yearMonth)) ?? [],
     assetSnapshots: data.assetSnapshots?.filter((e) => inRange(e.yearMonth)) ?? [],
     stockTrades: data.stockTrades?.filter((e) => inRange(e.yearMonth)) ?? [],
   }
@@ -65,6 +66,16 @@ export function formatAsText(data: ExportData): string {
         const method = e.paymentMethod ? ` (${methodMap[e.paymentMethod] ?? e.paymentMethod})` : ''
         lines.push(`    ${e.date}  ${e.label}${cat}  -${won(e.amount)}${method}`)
       }
+    }
+  }
+
+  // 반복 수입
+  if (data.recurringIncome?.length) {
+    lines.push('\n\n━━━ 반복 수입 내역 ━━━')
+    for (const ri of [...data.recurringIncome].sort((a, b) => a.yearMonth.localeCompare(b.yearMonth))) {
+      lines.push(`\n[${ri.yearMonth}]`)
+      for (const item of ri.items ?? [])
+        lines.push(`  ${item.label}: ${won(item.amount)}${item.paymentDay ? ` (매월 ${item.paymentDay}일)` : ''}`)
     }
   }
 
