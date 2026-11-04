@@ -1,5 +1,5 @@
 ---
-last_mapped_commit: 9f44a98b1a28c5ded66cf41de8ee1280b6467f64
+last_mapped_commit: 12cf3105c447a688974ca72f5e410d925b65cdab
 mapped: 2026-11-04
 ---
 
@@ -108,4 +108,4 @@ CI/CD 파이프라인 없음(`.github` 디렉터리 없음). 배포는 수동으
 ## 저장소 메타
 
 - Git remote(`origin`): `https://github.com/codnjsm/moneylog.git`
-- 매핑 시점 HEAD 커밋: `9f44a98b1a28c5ded66cf41de8ee1280b6467f64`
+- 매핑 시점 HEAD 커밋: `12cf3105c447a688974ca72f5e410d925b65cdab`

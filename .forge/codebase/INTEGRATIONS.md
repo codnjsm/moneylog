@@ -1,5 +1,5 @@
 ---
-last_mapped_commit: 9f44a98b1a28c5ded66cf41de8ee1280b6467f64
+last_mapped_commit: 12cf3105c447a688974ca72f5e410d925b65cdab
 mapped: 2026-11-04
 ---
 
@@ -82,7 +82,7 @@ const firebaseConfig = {
 - 일회성 조회는 `getDoc`/`getDocs` 기반(fallback 함수들, `exportAllData`).
 - `stock_trades` 추가/수정/삭제는 연결된 `expenses` 문서와 함께 `writeBatch`로 원자적으로 처리(`addStockTradeWithExpense`, `updateStockTradeWithExpense`, `deleteStockTradeWithExpense`) — 중간 실패로 트레이드와 연결 지출이 서로 어긋나는 상태를 방지.
 - 쿼리는 전부 단일 필드 `where` 조건(`uid ==`, 일부는 `yearMonth ==`, `installmentGroupId ==` 추가) + 경우에 따라 `limit(1)`. 복합 인덱스 필요 여부를 명시하는 별도 `firestore.indexes.json` 파일은 저장소에 없음.
-- `exportAllData(spaceId)`: 위 컬렉션들(`monthly_income`은 포함, `recurring_income`은 `src/firebase.ts`의 조회 목록에 없어 내보내기에서 누락됨 — 탈퇴 삭제 목록에는 포함)을 `Promise.all`로 병렬 조회해 사용자의 전체 데이터를 하나의 객체로 반환하는 데이터 export 함수.
+- `exportAllData(spaceId)`: 위 컬렉션들(`monthly_income`과 `recurring_income` 모두 포함, `src/firebase.ts:350-388`)을 `Promise.all`로 병렬 조회해 사용자의 전체 데이터를 하나의 객체로 반환하는 데이터 export 함수. 반복 수입은 `recurringIncome` 키로 반환되며 `src/export.ts`가 기간(`inRange`)으로 거른 뒤(16행) "반복 수입 내역" 텍스트 섹션으로 출력함(73행~). 레거시 `monthlyIncome`도 조회·기간 필터(15행)는 되지만 내보내기 텍스트에서는 어디에도 출력되지 않음 — 사용자에게 보이는 결과가 아닌 불필요한 조회.
 
 ### Firestore 보안 규칙 (`firestore.rules`)
 
