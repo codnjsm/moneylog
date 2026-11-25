@@ -217,7 +217,6 @@ export default function App() {
             savingsItems={data.savingsItems}
             recurringIncome={data.recurringIncome}
             categories={data.categories}
-            methods={data.paymentMethods}
             assetAccounts={data.assetAccounts}
             assetSnapshot={data.assetSnapshot}
             assetTypes={data.assetTypes}

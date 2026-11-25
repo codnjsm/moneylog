@@ -1,4 +1,4 @@
-import type { Expense, FixedItem, SavingsItem, CategoryDef, PaymentMethodDef, AssetAccount, AssetSnapshot, AssetTypeDef, IncomeItem } from '../../types'
+import type { Expense, FixedItem, SavingsItem, CategoryDef, AssetAccount, AssetSnapshot, AssetTypeDef, IncomeItem } from '../../types'
 import DonutChart from '../DonutChart'
 import HomeFab from '../HomeFab'
 import { fmtNum, fmtWon } from '../../utils'
@@ -11,7 +11,6 @@ interface Props {
   recurringIncome: IncomeItem[]
   onEditRecurringIncome: (item: IncomeItem) => void
   categories: CategoryDef[]
-  methods: PaymentMethodDef[]
   assetAccounts: AssetAccount[]
   assetSnapshot: AssetSnapshot | null
   assetTypes: AssetTypeDef[]
@@ -20,7 +19,7 @@ interface Props {
   onEditIncomeEntry: (item: Expense) => void
 }
 
-export default function HomeTab({ yearMonth, expenses, fixedItems, savingsItems, recurringIncome, categories, methods, assetAccounts, assetSnapshot, assetTypes, onAddExpense, onAddIncome, onEditIncomeEntry, onEditRecurringIncome }: Props) {
+export default function HomeTab({ yearMonth, expenses, fixedItems, savingsItems, recurringIncome, categories, assetAccounts, assetSnapshot, assetTypes, onAddExpense, onAddIncome, onEditIncomeEntry, onEditRecurringIncome }: Props) {
   const today = new Date()
   const isCurrentMonth = yearMonth === today.toISOString().slice(0, 7)
   const todayDate = today.getDate()
@@ -245,7 +244,7 @@ export default function HomeTab({ yearMonth, expenses, fixedItems, savingsItems,
               <h2 className="dash-section-title" style={{ marginBottom: 11 }}>최근 활동</h2>
               {recent.map((e) => {
                 const isIncome = e.type === 'income'
-                const dotColor = isIncome ? 'var(--income)' : (methods.find((m) => m.id === e.paymentMethod)?.color ?? 'var(--text-dim)')
+                const dotColor = isIncome ? 'var(--income)' : (categories.find((c) => c.id === e.category)?.color ?? 'var(--text-dim)')
                 return (
                   <div key={e.id} className="home-feed-row">
                     <span className="home-feed-dot" style={{ background: dotColor }} />
