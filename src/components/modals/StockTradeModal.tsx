@@ -28,7 +28,9 @@ export default function StockTradeModal({ trade, categories, onSave, onDelete, o
   const profitPercent = stockProfitPercentOf({ buyPrice: Number(buyPrice), sellPrice: Number(sellPrice) })
   const profitPercentText = fmtStockPercent(profitPercent)
   const profitPercentColor = percentColor(profitPercent)
-  const valid = !!label.trim() && Number(buyPrice) > 0 && Number(sellPrice) > 0 && Number(quantity) > 0 && !!sellDate
+  // 아직 팔지 않은 날짜로 거래를 남길 수는 없다. input 의 max 는 저장을 막지 못한다.
+  const dateValid = !!sellDate && sellDate <= today
+  const valid = !!label.trim() && Number(buyPrice) > 0 && Number(sellPrice) > 0 && Number(quantity) > 0 && dateValid
 
   const { saving, runSave } = useSaveGuard()
 
@@ -68,6 +70,7 @@ export default function StockTradeModal({ trade, categories, onSave, onDelete, o
           <div className="form-group">
             <label htmlFor="stock-date">매도일 <span className="required">*</span></label>
             <input id="stock-date" type="date" value={sellDate} onChange={(e) => setSellDate(e.target.value)} max={today} />
+            {!!sellDate && sellDate > today && <p className="form-hint error">오늘까지만 선택할 수 있어요.</p>}
           </div>
           {buyPrice && sellPrice && quantity && (
             <div className="form-group">

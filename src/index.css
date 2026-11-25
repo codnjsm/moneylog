@@ -298,6 +298,8 @@ header {
 .required { color: var(--danger); }
 /* 선택한 종류가 어떻게 동작하는지 한 줄로 알려준다. 라벨보다 작고 흐리게. */
 .form-hint { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+/* 저장이 막힌 이유를 그 칸 바로 아래에 띄운다. 행이 여러 개인 모달에서 어느 행인지 알려주는 유일한 단서다. */
+.form-hint.error { color: var(--danger); }
 /* 숫자 칸 좌우의 '매월 … 일' 같은 고정 문구. 칸처럼 보이지 않게 배경 없이 둔다. */
 .form-prefix { font-size: 14px; color: var(--text-dim); flex-shrink: 0; }
 .optional-label-row { display: flex; align-items: center; justify-content: space-between; }

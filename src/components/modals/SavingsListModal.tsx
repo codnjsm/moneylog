@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Modal from '../Modal'
 import type { SavingsItem } from '../../types'
+import { isPaymentDay } from '../../utils'
 import { useSaveGuard } from '../../hooks/useSaveGuard'
 
 interface Props {
@@ -33,7 +34,11 @@ export default function SavingsListModal({ items, onSave, onClose }: Props) {
 
   const { saving, runSave } = useSaveGuard()
 
+  // 납입일은 선택 항목이라 비어 있는 건 정상이다. 적은 행만 범위를 본다.
+  const dayValid = (r: Row) => !r.paymentDay || isPaymentDay(Number(r.paymentDay))
+
   const handleSave = () => {
+    if (!canSave) return
     const valid = rows.filter(r => r.label.trim() && Number(r.amount) > 0)
     runSave(() => onSave(valid.map(r => ({
       id: r.id,
@@ -46,7 +51,7 @@ export default function SavingsListModal({ items, onSave, onClose }: Props) {
 
   // 마지막 항목까지 지운 뒤 저장할 수 있어야 한다 — rows.some() 은 빈 배열에서 false 라
   // 길이 0 을 따로 통과시키지 않으면 삭제 자체가 막힌다.
-  const canSave = rows.length === 0 || rows.some(r => r.label.trim() && Number(r.amount) > 0)
+  const canSave = rows.every(dayValid) && (rows.length === 0 || rows.some(r => r.label.trim() && Number(r.amount) > 0))
 
   return (
     <Modal onClose={onClose}>
@@ -73,6 +78,7 @@ export default function SavingsListModal({ items, onSave, onClose }: Props) {
                 <div className="form-group">
                   <label htmlFor={`sv-${r.id}-day`}>납입일</label>
                   <input id={`sv-${r.id}-day`} type="number" value={r.paymentDay} onChange={e => update(r.id, 'paymentDay', e.target.value)} placeholder="매월 N일" min={1} max={31} />
+                  {!dayValid(r) && <p className="form-hint error">1~31 사이로 적어주세요.</p>}
                 </div>
                 <div className="form-group">
                   <label htmlFor={`sv-${r.id}-maturity`}>만기일</label>

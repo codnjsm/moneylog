@@ -24,6 +24,10 @@ export const fmtStockPercent = (p: number | null) => {
   return abs > MAX_PERCENT_MAGNITUDE ? `${sign}${MAX_PERCENT_MAGNITUDE}%+` : `${sign}${abs.toFixed(1)}%`
 }
 
+// 납입일은 1~31 만 허용한다. <input min max> 는 <form> 없이 onClick 으로 저장하는
+// 이 프로젝트 구조에서 전혀 작동하지 않으니, 저장 전에 여기서 직접 걸러야 한다.
+export const isPaymentDay = (n: number) => Number.isInteger(n) && n >= 1 && n <= 31
+
 export const badgeStyle = (color: string) => ({ '--badge': color }) as CSSProperties
 
 export const signColor = (n: number) => n === 0 ? 'var(--text-dim)' : n < 0 ? 'var(--accent)' : 'var(--danger)'

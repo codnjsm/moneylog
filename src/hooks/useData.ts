@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import type { FixedItem, SavingsItem, Expense, AssetAccount, AssetSnapshot, IncomeItem, PaymentMethodDef, CategoryDef, AssetTypeDef, StockTrade, StockCategoryDef } from '../types'
 import { DEFAULT_PAYMENT_METHODS, LEGACY_PAYMENT_METHODS, DEFAULT_CATEGORIES, DEFAULT_ASSET_TYPES, DEFAULT_STOCK_CATEGORIES } from '../types'
-import { stockProfitOf } from '../utils'
+import { stockProfitOf, isPaymentDay } from '../utils'
 import {
   subscribeFixedItemsMonthly, setFixedItemsMonthly, getFixedItemsFallback,
   subscribeSavingsItemsMonthly, setSavingsItemsMonthly, getSavingsItemsFallback,
@@ -15,6 +15,19 @@ import {
   subscribeAssetTypes, setAssetTypes as firebaseSetAssetTypes,
   subscribeStockCategories, setStockCategories as firebaseSetStockCategories,
 } from '../firebase'
+
+// 이미 저장돼 있는 범위 밖 납입일은 없는 것으로 읽는다. 1이나 31로 당기면
+// 사용자가 넣지 않은 날짜를 넣은 것처럼 보여주게 되고, paymentDay 는 선택 필드라
+// 비우는 게 구조적으로 자연스럽다. 키를 undefined 로 두지 않고 지우는 이유는
+// 이 배열들이 그대로 Firestore 쓰기 원본으로도 쓰이는데, Firestore 가 undefined 를 거부하기 때문이다.
+function stripBadPaymentDay<T extends { paymentDay?: number }>(items: T[]): T[] {
+  return items.map((i) => {
+    if (i.paymentDay === undefined || isPaymentDay(i.paymentDay)) return i
+    const next = { ...i }
+    delete next.paymentDay
+    return next
+  })
+}
 
 export function useData(uid: string, yearMonth: string) {
   const [fixedMonthly, setFixedMonthly] = useState<FixedItem[] | null>(null)
@@ -93,17 +106,20 @@ export function useData(uid: string, yearMonth: string) {
 
   // paymentDay 가 깨진 값이면 Math.min(undefined, …) 가 NaN 이 되어 캘린더에서 통째로 사라진다.
   // 새 컬렉션이라 그럴 일은 없지만, 한 번 당한 자리라 그대로 두지 않는다.
+  // 여기만 1 로 당기는 건 IncomeItem.paymentDay 가 필수 필드라 비울 수 없어서다.
+  // 아래 셋(stripBadPaymentDay)과 규칙이 다른 건 실수가 아니니 맞추려 하지 말 것.
   // 새 배열을 만들므로 useMemo 로 묶는다 — 안 그러면 이걸 의존하는 쪽 메모가 매번 깨진다.
   const recurringIncome: IncomeItem[] = useMemo(
     () => (incomeMonthly ?? incomeFallback).map((i) => ({
       ...i,
-      paymentDay: Number.isInteger(i.paymentDay) && i.paymentDay >= 1 && i.paymentDay <= 31 ? i.paymentDay : 1,
+      paymentDay: isPaymentDay(i.paymentDay) ? i.paymentDay : 1,
     })),
     [incomeMonthly, incomeFallback],
   )
-  const fixedItems: FixedItem[] = fixedMonthly ?? fixedFallback
-  const savingsItems: SavingsItem[] = savingsMonthly ?? savingsFallback
-  const assetAccounts: AssetAccount[] = assetAccountsMonthly ?? assetAccountsFallback
+  // 같은 이유로 useMemo 가 필요하다 — stripBadPaymentDay 도 항상 새 배열을 돌려준다.
+  const fixedItems: FixedItem[] = useMemo(() => stripBadPaymentDay(fixedMonthly ?? fixedFallback), [fixedMonthly, fixedFallback])
+  const savingsItems: SavingsItem[] = useMemo(() => stripBadPaymentDay(savingsMonthly ?? savingsFallback), [savingsMonthly, savingsFallback])
+  const assetAccounts: AssetAccount[] = useMemo(() => stripBadPaymentDay(assetAccountsMonthly ?? assetAccountsFallback), [assetAccountsMonthly, assetAccountsFallback])
   // 결제수단을 따로 설정하지 않은 공간에서는 기본값을 쓰되, 예전 기본값 id 로 저장된
   // 지출이 남아 있으면 그 결제수단도 목록에 넣는다. 안 그러면 라벨이 id 로 깨지고
   // 결제수단별 합계에서도 빠진다. 해당 기록이 없어지면 선택지에서도 사라진다.

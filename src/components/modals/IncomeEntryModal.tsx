@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Modal from '../Modal'
 import type { Expense, IncomeItem } from '../../types'
+import { isPaymentDay } from '../../utils'
 import { useSaveGuard } from '../../hooks/useSaveGuard'
 
 interface Props {
@@ -39,7 +40,7 @@ export default function IncomeEntryModal({ expense, recurring, yearMonth, initia
   const { saving, runSave } = useSaveGuard()
 
   const dayNum = Number(day)
-  const dayValid = Number.isInteger(dayNum) && dayNum >= 1 && dayNum <= 31
+  const dayValid = isPaymentDay(dayNum)
   const canSave = !!label.trim() && Number(amount) > 0 && (recurringMode ? dayValid : !!date)
 
   const handleSave = () => {
@@ -97,6 +98,7 @@ export default function IncomeEntryModal({ expense, recurring, yearMonth, initia
                 <input id="income-entry-day" type="number" value={day} onChange={(e) => setDay(e.target.value)} placeholder="25" min={1} max={31} />
                 <span className="form-prefix">일</span>
               </div>
+              {!!day && !dayValid && <p className="form-hint error">1~31 사이로 적어주세요.</p>}
             </div>
           ) : (
             <div className="form-group">

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import Modal from '../Modal'
 import CustomSelect from '../CustomSelect'
 import type { AssetAccount, AssetTypeDef } from '../../types'
+import { isPaymentDay } from '../../utils'
 import { useSaveGuard } from '../../hooks/useSaveGuard'
 
 type SaveData = Omit<AssetAccount, 'id' | 'uid' | 'paymentDay' | 'maturityDate'> & { paymentDay?: number | null; maturityDate?: string | null }
@@ -24,8 +25,12 @@ export default function AssetAccountModal({ account, currentAmount, assetTypes, 
 
   const { saving, runSave } = useSaveGuard()
 
+  // 납입일은 선택 항목이라 비어 있는 건 정상이다. 적은 경우에만 범위를 본다.
+  const dayValid = !paymentDay || isPaymentDay(Number(paymentDay))
+  const canSave = !!label.trim() && Number(amount) >= 0 && dayValid
+
   const handleSave = () => {
-    if (!label.trim() || Number(amount) < 0) return
+    if (!canSave) return
     const isEdit = !!account
     const data: SaveData = {
       label: label.trim(),
@@ -77,6 +82,7 @@ export default function AssetAccountModal({ account, currentAmount, assetTypes, 
                 {paymentDay && <button type="button" className="clear-btn" aria-label="납입일 지우기" onClick={() => setPaymentDay('')}>지우기</button>}
               </div>
               <input id="asset-day" type="number" value={paymentDay} onChange={(e) => setPaymentDay(e.target.value)} placeholder="매월 N일" min={1} max={31} />
+              {!dayValid && <p className="form-hint error">1~31 사이로 적어주세요.</p>}
             </div>
             <div className="form-group">
               <div className="optional-label-row">
@@ -94,7 +100,7 @@ export default function AssetAccountModal({ account, currentAmount, assetTypes, 
         </div>
         <div className="modal-actions">
           <button className="btn btn-secondary" onClick={onClose}>취소</button>
-          <button className="btn btn-primary" onClick={handleSave} disabled={saving || !label.trim() || Number(amount) < 0}>{saving ? '저장 중…' : '저장'}</button>
+          <button className="btn btn-primary" onClick={handleSave} disabled={saving || !canSave}>{saving ? '저장 중…' : '저장'}</button>
         </div>
       </div>
     </Modal>
